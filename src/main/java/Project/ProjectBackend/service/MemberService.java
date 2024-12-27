@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,17 +30,20 @@ public class MemberService {
 
         // DTO를 엔티티로 변환
         Member member = Member.builder()
-                .id(requestDto.getId()) // 클라이언트로부터 받은 ID 설정
+                .memberId(requestDto.getMemberId()) // 클라이언트로부터 받은 ID 설정
                 .name(requestDto.getName())
                 .email(requestDto.getEmail())
                 .password(encodedPassword)
-                .address(requestDto.getAddress()) // Address 매핑
-                .age(requestDto.getAge()) // age 매핑
+                .address(requestDto.getAddress())
+                .birthDate(requestDto.getBirthDate())
+                .role(requestDto.getRole())
+                .phoneNum(requestDto.getPhoneNum())
+                .role("ROLE_USER")
                 .build();
 
         // 회원 저장
         Member savedMember = memberRepository.save(member);
-        return savedMember.getId();
+        return savedMember.getMemberId();
     }
 
     private void validateDuplicateEmail(String email) {
@@ -47,6 +51,19 @@ public class MemberService {
                 .ifPresent(m -> {
                     throw new IllegalStateException("이미 존재하는 이메일입니다.");
                 });
+    }
+
+
+    // authenticate
+    public Member authenticate(String memberId, String password) {
+        Optional<Member> optionalMember = memberRepository.findByMemberId(memberId);
+        if (optionalMember.isPresent()) {
+            Member member = optionalMember.get();
+            if (passwordEncoder.matches(password, member.getPassword())) {
+                return member;
+            }
+        }
+        return null;
     }
 
     // 회원 정보 수정
@@ -62,13 +79,12 @@ public class MemberService {
 
         if (updateRequestDto.getPassword() != null && !updateRequestDto.getPassword().isEmpty()) {
             String encodedPassword = passwordEncoder.encode(updateRequestDto.getPassword());
-            member.setPassword(encodedPassword); // 비밀번호도 변경
+            member.setPassword(encodedPassword); // 비밀번호 변경
         }
 
-        member.setAge(updateRequestDto.getAge());
 
         if (updateRequestDto.getAddress() != null) {
-            member.setAddress(updateRequestDto.getAddress()); // 주소도 변경
+            member.setAddress(updateRequestDto.getAddress()); // 주소 변경
         }
     }
 

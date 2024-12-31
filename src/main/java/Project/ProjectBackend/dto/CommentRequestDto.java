@@ -1,8 +1,7 @@
 package Project.ProjectBackend.dto;
 
-import Project.ProjectBackend.domain.Comment;
-import Project.ProjectBackend.domain.Member;
-import Project.ProjectBackend.domain.Post;
+import Project.ProjectBackend.entity.Comment;
+import Project.ProjectBackend.entity.Post;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 

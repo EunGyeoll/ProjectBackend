@@ -1,4 +1,4 @@
-package Project.ProjectBackend.domain;
+package Project.ProjectBackend.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -14,19 +14,32 @@ import static jakarta.persistence.FetchType.LAZY;
 @Table(name="orders")
 @Getter @Setter
 public class Order {
+    /**
+     * - 회원(Member)와 다대일 관계.
+     * - 주문상품(OrderItem)과 일대다 관계.
+     * - 배송(Delivery)와 일대일 관계.
+     */
+
     @Id
     @GeneratedValue
     @Column(name = "order_id")
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // 회원과 다대일 관계
     @JoinColumn(name="member_id")
     private Member member;
 
-    @OneToMany(mappedBy="order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
     // 이렇게 초기화해야 함. @OneToMany 관계에서 List는 기본적으로 null이다. 즉, Hibernate나 JPA가 초기화해 주지 않으므로, 직접 초기화해줘야 합니다.
     // 초기화하면 null이 아닌 빈 리스트가 설정된다. @OneToMany 같은 컬렉션 필드는 항상 초기화하는 것이 좋다. 이러면 NullPointException 방지 가능.
+
+    /**
+     * 주문상품(OrderItem)과 일대다 관계.
+     * - mappedBy="order": 연관 관계의 주인은 OrderItem의 "order" 필드.
+     * - cascade = CascadeType.ALL: Order 저장/삭제 시 OrderItem도 함께 처리.
+     * - orphanRemoval = true: Order에서 제거된 OrderItem은 자동으로 삭제.
+     */
 
     @OneToOne(fetch = LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name="delivery_id")
@@ -55,10 +68,7 @@ public class Order {
         orderItem.setOrder(this);
     }
 
-    //==비즈니스 로직==//
-    /**
-     * 주문 취소
-     */
+
     public void cancel() {
         if (delivery.getStatus() == DeliveryStatus.COMP) {
             throw new IllegalStateException("이미 배송완료된 상품은 취소가 불가능합니다.");
@@ -70,7 +80,6 @@ public class Order {
         }
     }
 
-    //==조회 로직==//
     /**
      * 전체 주문 가격 조회
      */

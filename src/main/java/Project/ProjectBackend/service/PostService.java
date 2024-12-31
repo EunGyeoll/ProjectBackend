@@ -1,7 +1,7 @@
 package Project.ProjectBackend.service;
 
-import Project.ProjectBackend.domain.Post;
-import Project.ProjectBackend.domain.Member;
+import Project.ProjectBackend.entity.Post;
+import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.dto.PostRequestDto;
 import Project.ProjectBackend.dto.PostResponseDto;
 import Project.ProjectBackend.repository.PostRepository;

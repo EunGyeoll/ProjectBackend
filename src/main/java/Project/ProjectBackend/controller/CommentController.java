@@ -1,7 +1,7 @@
 package Project.ProjectBackend.controller;
 
-import Project.ProjectBackend.domain.Comment;
-import Project.ProjectBackend.domain.Member;
+import Project.ProjectBackend.entity.Comment;
+import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.dto.CommentRequestDto;
 import Project.ProjectBackend.service.CommentService;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package Project.ProjectBackend.dto;
 
-import Project.ProjectBackend.domain.Address;
+import Project.ProjectBackend.entity.Address;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

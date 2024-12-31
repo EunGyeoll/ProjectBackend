@@ -1,4 +1,4 @@
-package Project.ProjectBackend.domain;
+package Project.ProjectBackend.entity;
 
 import jakarta.persistence.Embeddable;
 import lombok.Getter;

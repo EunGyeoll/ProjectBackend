@@ -1,0 +1,20 @@
+  spring:
+    datasource:
+      url: jdbc:h2:tcp://localhost/~/projectbackend
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
+
+    jpa:
+      hibernate:
+        ddl-auto: update # 데이터 유지
+      properties:
+        hibernate.dialect: org.hibernate.dialect.H2Dialect
+        hibernate.show_sql: true
+        hibernate.format_sql: true
+  jwt:
+    security:
+       key: for.ek.project.securitykeyaassdd
+
+  logging.level:
+    org.hibernate.SQL: debug

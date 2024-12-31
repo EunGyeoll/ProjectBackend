@@ -1,8 +1,8 @@
 package Project.ProjectBackend.service;
 
-import Project.ProjectBackend.domain.Comment;
-import Project.ProjectBackend.domain.Member;
-import Project.ProjectBackend.domain.Post;
+import Project.ProjectBackend.entity.Comment;
+import Project.ProjectBackend.entity.Member;
+import Project.ProjectBackend.entity.Post;
 import Project.ProjectBackend.dto.CommentRequestDto;
 import Project.ProjectBackend.repository.CommentRepository;
 import Project.ProjectBackend.repository.MemberRepository;

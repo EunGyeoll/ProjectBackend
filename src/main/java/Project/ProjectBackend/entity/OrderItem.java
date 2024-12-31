@@ -1,6 +1,6 @@
-package Project.ProjectBackend.domain;
+package Project.ProjectBackend.entity;
 
-import Project.ProjectBackend.domain.item.Item;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

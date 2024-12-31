@@ -1,4 +1,4 @@
-package Project.ProjectBackend.domain;
+package Project.ProjectBackend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -44,6 +44,24 @@ public class Member {
 
     @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL, orphanRemoval = true) // 양방향 관계 설정
     private List<Post> posts = new ArrayList<>(); // 작성한 게시글 목록
+
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore  // 직렬화에서 제외
+    private List<Item> items = new ArrayList<>(); // 회원이 등록한 상품 목록
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemberCoupon> memberCoupons = new ArrayList<>(); // 중간 엔티티
+
+    public void addItem(Item item) {
+        items.add(item);
+        item.setSeller(this); // 연관 관계 설정
+    }
+
+    public void removeItem(Item item) {
+        items.remove(item);
+        item.setSeller(null); // 연관 관계 해제
+    }
+
 
 
     @Builder

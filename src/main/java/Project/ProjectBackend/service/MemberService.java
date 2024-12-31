@@ -1,6 +1,6 @@
 package Project.ProjectBackend.service;
 
-import Project.ProjectBackend.domain.Member;
+import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.dto.MemberSignupRequestDto;
 import Project.ProjectBackend.dto.MemberUpdateRequestDto;
 import Project.ProjectBackend.repository.MemberRepository;

@@ -1,4 +1,4 @@
-package Project.ProjectBackend.domain;
+package Project.ProjectBackend.entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -8,12 +8,11 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
 @Getter
-@NoArgsConstructor // JPA를 위한 기본 생성자
+@NoArgsConstructor
 public class Post {
 
     @Id
@@ -39,10 +38,11 @@ public class Post {
 
 
     @Builder
-    public Post(Member writer, String title, String content) {
+    public Post(Member writer, String title, String content, LocalDateTime postDate) {
         this.writer = writer;
         this.title = title;
         this.content = content;
+        this.postDate = postDate;
     }
 
 }

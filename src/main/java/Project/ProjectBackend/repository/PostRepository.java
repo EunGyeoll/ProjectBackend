@@ -1,6 +1,6 @@
 package Project.ProjectBackend.repository;
 
-import Project.ProjectBackend.domain.Post;
+import Project.ProjectBackend.entity.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

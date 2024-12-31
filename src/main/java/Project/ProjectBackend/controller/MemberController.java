@@ -1,6 +1,6 @@
 package Project.ProjectBackend.controller;
 
-import Project.ProjectBackend.domain.Member;
+import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.dto.MemberSignupRequestDto;
 import Project.ProjectBackend.dto.MemberUpdateRequestDto;
 import Project.ProjectBackend.security.JwtTokenProvider;

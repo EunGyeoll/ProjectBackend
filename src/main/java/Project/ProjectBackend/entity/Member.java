@@ -49,8 +49,14 @@ public class Member {
     @JsonIgnore  // 직렬화에서 제외
     private List<Item> items = new ArrayList<>(); // 회원이 등록한 상품 목록
 
+    // 찜한 상품
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorite> favorites = new ArrayList<>(); // 사용자의 관심 상품 목록
+
+
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberCoupon> memberCoupons = new ArrayList<>(); // 중간 엔티티
+
 
     public void addItem(Item item) {
         items.add(item);

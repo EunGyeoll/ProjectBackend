@@ -8,9 +8,10 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -49,6 +50,10 @@ public class Item {
     @CreationTimestamp
     @Column(updatable = false) // 수정 시 값 변경되지 않도록 설정
     private LocalDateTime itemDate;
+
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorite> favorites = new ArrayList<>();
+    // orphanRemoval = true: Item과 관계가 끊어진 Favorites도 삭제됨
 
     public void addStock(int quantity) {
         this.stockQuantity += quantity;

@@ -2,8 +2,6 @@ package Project.ProjectBackend.controller;
 
 import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.service.FavoriteService;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

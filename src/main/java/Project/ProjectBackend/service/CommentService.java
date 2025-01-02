@@ -31,7 +31,7 @@ public class CommentService {
 
         Comment comment = Comment.builder()
                 .post(post)
-                .writerId(writer) // 영속 상태의 Member 객체 사용
+                .writer(writer) // 영속 상태의 Member 객체 사용
                 .content(requestDto.getContent())
                 .build();
 
@@ -39,25 +39,47 @@ public class CommentService {
     }
 
 
-    // 대댓글 작성
-    @Transactional
-    public Comment createReply(Long postNo, Long parentCommentId, Member writer, String content) {
-        Post post = postRepository.findById(postNo)
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+        // 대댓글 작성
+        @Transactional
+        public Comment createReply(Long postNo, Long parentCommentId, Member writer, String content) {
+            // 게시글과 부모 댓글 조회
+            Post post = postRepository.findById(postNo)
+                    .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
 
-        Comment parentComment = commentRepository.findById(parentCommentId)
-                .orElseThrow(() -> new IllegalArgumentException("부모 댓글이 존재하지 않습니다."));
+            Comment parentComment = commentRepository.findById(parentCommentId)
+                    .orElseThrow(() -> new IllegalArgumentException("부모 댓글이 존재하지 않습니다."));
 
-        Comment reply = Comment.builder()
-                .post(post)
-                .writerId(writer)
-                .content(content)
-                .parentComment(parentComment)
-                .build();
+            // 대댓글 생성
+            Comment reply = Comment.builder()
+                    .post(post)
+                    .writer(writer)  // 작성자 설정
+                    .content(content)
+                    .parentComment(parentComment)
+                    .build();
 
-        parentComment.addChildComment(reply);
-        return commentRepository.save(reply);
-    }
+            // 부모 댓글에 자식 댓글 추가
+            parentComment.addChildComment(reply);
+
+            // 대댓글 저장
+            return commentRepository.save(reply);
+        }
+//    public Comment createReply(Long postNo, Long parentCommentId, Member writer, String content) {
+//        Post post = postRepository.findById(postNo)
+//                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+//
+//        Comment parentComment = commentRepository.findById(parentCommentId)
+//                .orElseThrow(() -> new IllegalArgumentException("부모 댓글이 존재하지 않습니다."));
+//
+//        Comment reply = Comment.builder()
+//                .post(post)
+//                .writer(writer)
+//                .content(content)
+//                .parentComment(parentComment)
+//                .build();
+//
+//        parentComment.addChildComment(reply);
+//        return commentRepository.save(reply);
+//    }
 
     // 특정 게시글의 댓글 및 대댓글 조회
     @Transactional(readOnly = true)

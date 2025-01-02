@@ -34,7 +34,7 @@ public class PostController {
 
     // 게시글 상세(단건) 조회
     @GetMapping("/posts/{postNo}")
-    public ResponseEntity<PostResponseDto> getBoard(@PathVariable Long postNo) {
+        public ResponseEntity<PostResponseDto> getBoard(@PathVariable Long postNo) {
         PostResponseDto post = postService.getBoard(postNo);
         return ResponseEntity.ok(post);
     }

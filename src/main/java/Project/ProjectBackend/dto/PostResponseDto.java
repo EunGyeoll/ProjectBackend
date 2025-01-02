@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -17,7 +18,8 @@ public class PostResponseDto {
     private String title;
     private String content;
     private LocalDateTime postDate;
-    private List<Comment> comments;
+    private List<CommentResponseDto> comments;
+    private int hitCount=0;
 
     public PostResponseDto(Post post) {
         this.postNo = post.getPostNo();
@@ -25,7 +27,10 @@ public class PostResponseDto {
         this.title = post.getTitle();
         this.content = post.getContent();
         this.postDate = post.getPostDate();
-        this.comments=post.getComments();
+        this.comments=post.getComments().stream()
+                .map(CommentResponseDto::new) // Comment -> CommentResponseDto 변환
+                .collect(Collectors.toList());
+        this.hitCount = post.getHitCount();
     }
 
     public static PostResponseDto from(Post post) {
@@ -35,6 +40,7 @@ public class PostResponseDto {
         postResponseDto.title = post.getTitle();
         postResponseDto.content = post.getContent();
         postResponseDto.postDate = post.getPostDate();
+        postResponseDto.hitCount = post.getHitCount();
         return postResponseDto;
     }
 }

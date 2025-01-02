@@ -1,5 +1,6 @@
 package Project.ProjectBackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,10 +22,11 @@ public class Comment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "writer_id", nullable = false)
-    private Member writerId; // 댓글 작성자
+    private Member writer; // 댓글 작성자
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
+    @JsonIgnore
     private Post post; // 댓글이 속한 게시글
 
     @Column(nullable = false, columnDefinition = "TEXT")
@@ -36,15 +38,16 @@ public class Comment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_comment_id")
+    @JsonIgnore
     private Comment parentComment; // 부모 댓글 (대댓글 구현하기 위해 필요)
 
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> childComments = new ArrayList<>(); // 대댓글 리스트
 
     @Builder
-    public Comment(Post post, Member writerId, String content, Comment parentComment) {
+    public Comment(Post post, Member writer, String content, Comment parentComment) {
         this.post = post;
-        this.writerId = writerId;
+        this.writer = writer;
         this.content = content;
         this.parentComment = parentComment;
     }

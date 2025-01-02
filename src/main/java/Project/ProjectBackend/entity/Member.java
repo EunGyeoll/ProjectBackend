@@ -52,6 +52,7 @@ public class Member {
 
     // 찜한 상품
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<FavoriteItem> favoriteItems = new ArrayList<>(); // 사용자의 관심 상품 목록
 
 

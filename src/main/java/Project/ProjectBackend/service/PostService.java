@@ -20,15 +20,6 @@ public class PostService {
     private final MemberRepository memberRepository;
 
     // 게시글 등록
-//    public void createBoard(BoardRequestDto requestDto) {
-//        Board board = Board.builder()
-//                .writer(requestDto.getWriter())
-//                .title(requestDto.getTitle())
-//                .content(requestDto.getContent())
-//                .build();
-//        boardRepository.save(board);
-//    }
-
     public void createBoard(PostRequestDto requestDto) {
         // 작성자(Member) 조회
         Member writer = memberRepository.findById(requestDto.getWriter())
@@ -56,6 +47,12 @@ public class PostService {
     public PostResponseDto getBoard(Long boardNo) {
         Post post = postRepository.findById(boardNo)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+
+        // 조회수 증가
+        post.increaseHitCount();
+
+        postRepository.save(post);
+
         return new PostResponseDto(post); // 엔티티를 DTO로 변환하여 반환
     }
 

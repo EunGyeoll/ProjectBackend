@@ -1,5 +1,6 @@
 package Project.ProjectBackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,9 +20,10 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long postNo; // 게시글 번호
 
-    @ManyToOne(fetch = FetchType.LAZY) // 작성자와 다대일 관계
+    @ManyToOne(fetch = FetchType.EAGER) // 작성자와 다대일 관계
     @JoinColumn(name = "writer_id")
-    private Member writer; //   작성자 (Member 엔티티와 연관)
+    @JsonIgnore
+    private Member writer; //   작성자 (Member 엔티티와     연관)
 
     @Column(length = 30, nullable = false)
     private String title; // 제목
@@ -34,7 +36,14 @@ public class Post {
     private LocalDateTime postDate;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
+
+    @Column(nullable = false)
+    private int hitCount = 0; // 조회수
+
+    @Column(nullable = false)
+    private int likeCount = 0; // 좋아요 수
 
 
     @Builder
@@ -45,4 +54,21 @@ public class Post {
         this.postDate = postDate;
     }
 
+
+    // 조회수 증가
+    public void increaseHitCount() {
+        this.hitCount++;
+    }
+
+    // 좋아요 증가
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    // 좋아요 감소
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
 }

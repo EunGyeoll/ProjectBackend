@@ -52,14 +52,39 @@ public class Item {
     private LocalDateTime itemDate;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Favorite> favorites = new ArrayList<>();
+    private List<FavoriteItem> favoriteItems = new ArrayList<>();
     // orphanRemoval = true: Item과 관계가 끊어진 Favorites도 삭제됨
 
+    @Column(nullable = false)
+    private int hitCount=0;
+
+    @Column(nullable = false)
+    private int favoriteCount=0;
+
+    // 조회수 증가 메소드
+    public void increaseHitCount() {
+        this.hitCount++;
+    }
+
+    // 찜 수 증가 메소드
+    public void increaseFavoriteCount() {
+        this.favoriteCount++;
+    }
+
+    // 찜 수 감소 메소드
+    public void decreaseFavoriteCount() {
+        if(this.favoriteCount>0){
+            this.favoriteCount--;
+        }
+    }
+
+
+    // 재고 증가 메소드
     public void addStock(int quantity) {
         this.stockQuantity += quantity;
     }
 
-
+    // 재고 감소 매소드
     public void removeStock(int quantity) {
         int restStock = this.stockQuantity - quantity;
         if (restStock < 0) {

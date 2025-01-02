@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Builder
-public class Favorite {
+public class FavoriteItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long favoriteId;
@@ -31,4 +31,9 @@ public class Favorite {
     @Column(updatable = false)
     private LocalDateTime createdAt; // 관심 상품 등록 시간
 
+
+    public FavoriteItem(Member member, Item item){
+        this.member = member;
+        this.item = item;
+    }
 }

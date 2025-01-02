@@ -43,6 +43,7 @@ public class Member {
     private List<Order> orders = new ArrayList<>();
 
     @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL, orphanRemoval = true) // 양방향 관계 설정
+    @JsonIgnore
     private List<Post> posts = new ArrayList<>(); // 작성한 게시글 목록
 
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -51,7 +52,7 @@ public class Member {
 
     // 찜한 상품
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Favorite> favorites = new ArrayList<>(); // 사용자의 관심 상품 목록
+    private List<FavoriteItem> favoriteItems = new ArrayList<>(); // 사용자의 관심 상품 목록
 
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)

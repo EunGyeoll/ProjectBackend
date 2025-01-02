@@ -1,7 +1,7 @@
         package Project.ProjectBackend.service;
 
         import Project.ProjectBackend.dto.ItemResponseDto;
-        import Project.ProjectBackend.entity.Favorite;
+        import Project.ProjectBackend.entity.FavoriteItem;
         import Project.ProjectBackend.entity.Item;
         import Project.ProjectBackend.entity.Member;
         import Project.ProjectBackend.repository.FavoriteRepository;
@@ -15,7 +15,7 @@
 
         @Service
         @RequiredArgsConstructor
-        public class FavoriteService {
+        public class FavoriteItemService {
 
             private final FavoriteRepository favoriteRepository;
             private final ItemRepository itemRepository;
@@ -32,11 +32,13 @@
                     throw new IllegalStateException("이미 관심 상품으로 등록되었습니다.");
                 }
 
-                Favorite favorite = Favorite.builder()
-                        .member(member)
-                        .item(item)
-                        .build();
-                favoriteRepository.save(favorite);
+                // favorite 저장
+                FavoriteItem favoriteItem = new FavoriteItem(member, item);
+                favoriteRepository.save(favoriteItem);
+
+                // Item의 favoriteCount 증가
+                item.increaseFavoriteCount();
+                itemRepository.save(item);
             }
 
             // 찜한 상품에서 삭제
@@ -46,9 +48,14 @@
                 Item item = itemRepository.findById(itemId)
                         .orElseThrow(() -> new IllegalArgumentException("Item not found"));
 
-                Favorite favorite = favoriteRepository.findByMemberAndItem(member, item)
+                // favorite 에서 삭제
+                FavoriteItem favoriteItem = favoriteRepository.findByMemberAndItem(member, item)
                         .orElseThrow(() -> new IllegalArgumentException("등록된 관심 상품이 없습니다."));
-                favoriteRepository.delete(favorite);
+                favoriteRepository.delete(favoriteItem);
+
+                // Item의 favoriteCount 감소
+                item.decreaseFavoriteCount();
+                itemRepository.save(item);
             }
 
             // 특정 사용자가 찜한 상품인지 확인
@@ -66,8 +73,8 @@
                 Member member = memberRepository.findById(memberId)
                         .orElseThrow(() -> new IllegalArgumentException("Member not found"));
 
-                List<Favorite> favorites = favoriteRepository.findByMember(member);
-                return favorites.stream()
+                List<FavoriteItem> favoriteItems = favoriteRepository.findByMember(member);
+                return favoriteItems.stream()
                         .map(fav -> ItemResponseDto.from(fav.getItem()))
                         .collect(Collectors.toList());
             }

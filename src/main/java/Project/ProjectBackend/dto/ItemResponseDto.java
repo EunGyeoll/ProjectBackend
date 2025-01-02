@@ -23,6 +23,7 @@ public class ItemResponseDto {
     public static ItemResponseDto from(Item item) {
         Member seller = item.getSeller();
         Category category = item.getCategory();
+
         return new ItemResponseDto(
                 item.getItemId(),
                 item.getItemName(),

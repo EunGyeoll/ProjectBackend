@@ -76,23 +76,22 @@ public class ItemController {
             @RequestPart("itemData") ItemRequestDto updatedItemDto,
             @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
 
-        // 새로 업로드된 이미지 처리
         List<Image> images = new ArrayList<>();
         if (imageFiles != null && !imageFiles.isEmpty()) {
             for (MultipartFile file : imageFiles) {
                 String filePath = fileService.saveFile(file); // 파일 저장 후 경로 반환
                 Image image = new Image();
                 image.setOriginFileName(file.getOriginalFilename()); // 원본 파일 이름 설정
-                image.setNewFileName(filePath.substring(filePath.lastIndexOf("/") + 1)); // 서버 저장 파일 이름
+                image.setNewFileName(file.getOriginalFilename()); // 원본 파일 이름 그대로 설정
                 image.setImagePath(filePath); // 파일 경로
                 image.setFileSize(file.getSize()); // 파일 크기
                 images.add(image);
             }
+            updatedItemDto.setImagePaths(images.stream().map(Image::getImagePath).collect(Collectors.toList()));
         } else {
             // 새 이미지가 없는 경우 기존 이미지 유지
             List<Image> existingImages = itemService.getExistingImages(itemId);
 
-            // 기존 이미지 경로 및 원본 이름 설정
             updatedItemDto.setImagePaths(existingImages.stream()
                     .map(Image::getImagePath)
                     .collect(Collectors.toList()));
@@ -104,9 +103,9 @@ public class ItemController {
         // 서비스 계층 호출
         Item updatedItem = itemService.updateItem(itemId, updatedItemDto);
 
-        // 응답 DTO 변환 및 반환
         return ResponseEntity.ok(ItemResponseDto.from(updatedItem));
     }
+
 
 
 

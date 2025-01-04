@@ -44,7 +44,7 @@ public class Item {
     @Column(length = 1000)
     private String description; // 상품 설명
 
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
     private List<Image> images = new ArrayList<>(); // 여러 이미지를 관리
 
     @Column(name = "REPRESENTATIVE_IMAGE_PATH")

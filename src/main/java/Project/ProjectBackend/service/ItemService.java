@@ -89,21 +89,24 @@ public class ItemService {
         Item existingItem = itemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
 
-        // 업데이트된 이미지 설정
-        List<Image> updatedImages = updatedItemDto.getImagePaths().stream()
-                .map(path -> Image.builder()
-                        .imagePath(path)
-                        .item(existingItem) // 연관관계 설정
-                        .build())
-                .collect(Collectors.toList());
-        existingItem.setImages(updatedImages);
+        // 이미지 업데이트 처리
+        if (updatedItemDto.getImagePaths() != null && !updatedItemDto.getImagePaths().isEmpty()) {
+            List<Image> updatedImages = updatedItemDto.getImagePaths().stream()
+                    .map(path -> Image.builder()
+                            .imagePath(path)
+                            .item(existingItem) // 연관 관계 설정
+                            .build())
+                    .collect(Collectors.toList());
+            existingItem.setImages(updatedImages);
 
-        // 대표 이미지 설정
-        if (!updatedImages.isEmpty()) {
+            // 대표 이미지 설정
             existingItem.setRepresentativeImagePath(updatedImages.get(0).getImagePath());
+        } else {
+            // 이미지가 없는 경우 기존 이미지를 유지
+            existingItem.setImages(existingItem.getImages());
         }
 
-        // 다른 속성 업데이트
+        // 나머지 속성 업데이트
         existingItem.setItemName(updatedItemDto.getItemName());
         existingItem.setPrice(updatedItemDto.getPrice());
         existingItem.setDescription(updatedItemDto.getDescription());
@@ -111,6 +114,9 @@ public class ItemService {
 
         return itemRepository.save(existingItem);
     }
+
+
+
 
     public List<Image> getExistingImages(Long itemId) {
         Item item = itemRepository.findById(itemId)
@@ -125,10 +131,7 @@ public class ItemService {
         itemRepository.delete(item);
     }
 
-    public void setRepresentativeImage(Item item) {
-        if (!item.getImages().isEmpty()) {
-            item.setRepresentativeImagePath(item.getImages().get(0).getImagePath());
-        }
+
     }
 
-}
+

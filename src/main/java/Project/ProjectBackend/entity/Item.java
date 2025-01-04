@@ -4,9 +4,11 @@ import Project.ProjectBackend.exception.NotEnoughStockException;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,17 +32,25 @@ public class Item {
 //    @NotEmpty
 //    private String imagePath; // 이미지 파일 경로 또는 URL
 
-    @NotEmpty
+    @NotEmpty(message = "상품명은 필수 항목입니다.")
+    @Column(name = "ITEM_NAME") // 컬럼 이름 매핑
     private String itemName; // 상품명
 
-    @NotNull
+    @NotNull(message = "가격은 필수 항목입니다.")
+    @Positive(message = "가격은 양수여야 합니다.")
     private Integer price; // 가격
 
-    @NotEmpty
+    @NotEmpty(message = "상품 설명은 필수 항목입니다.")
     @Column(length = 1000)
     private String description; // 상품 설명
 
-    @NotNull
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Image> images = new ArrayList<>(); // 여러 이미지를 관리
+
+    @Column(name = "REPRESENTATIVE_IMAGE_PATH")
+    private String representativeImagePath; // 대표 이미지 경로
+
+    @NotNull(message = "수량은 필수 항목입니다.")
     private Integer stockQuantity; // 재고 수량
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,18 +58,18 @@ public class Item {
     private Category category;
 
     @CreationTimestamp
-    @Column(updatable = false) // 수정 시 값 변경되지 않도록 설정
+    @Column(name = "ITEM_DATE", updatable = false) // 수정 시 날짜 변경되지 않도록
     private LocalDateTime itemDate;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FavoriteItem> favoriteItems = new ArrayList<>();
     // orphanRemoval = true: Item과 관계가 끊어진 Favorites도 삭제됨
 
-    @Column(nullable = false)
-    private int hitCount=0;
+    @Column(name = "HIT_COUNT", nullable = false)
+    private int hitCount = 0;
 
-    @Column(nullable = false)
-    private int favoriteCount=0;
+    @Column(name = "FAVORITE_COUNT", nullable = false)
+    private int favoriteCount = 0;
 
     // 조회수 증가 메소드
     public void increaseHitCount() {
@@ -73,7 +83,7 @@ public class Item {
 
     // 찜 수 감소 메소드
     public void decreaseFavoriteCount() {
-        if(this.favoriteCount>0){
+        if (this.favoriteCount > 0) {
             this.favoriteCount--;
         }
     }

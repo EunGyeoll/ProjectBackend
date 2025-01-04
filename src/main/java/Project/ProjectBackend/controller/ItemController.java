@@ -1,13 +1,18 @@
 package Project.ProjectBackend.controller;
 
+
+import Project.ProjectBackend.entity.Image;
 import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.dto.ItemRequestDto;
 import Project.ProjectBackend.dto.ItemResponseDto;
+import Project.ProjectBackend.service.FileService;
 import Project.ProjectBackend.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,8 +21,9 @@ import java.util.stream.Collectors;
 public class ItemController {
 
     private final ItemService itemService;
+    private final FileService fileService;
 
-    // 모든 아이템 조회
+    // 1. 모든 아이템 조회
     @GetMapping("/items/list")
     public ResponseEntity<List<ItemResponseDto>> getAllItems() {
         List<Item> items = itemService.getAllItems();
@@ -27,33 +33,79 @@ public class ItemController {
         return ResponseEntity.ok(responseDtos);
     }
 
-
-    // 특정 판매자가 등록한 아이템 조회
+    // 2. 특정 판매자가 등록한 아이템 조회
     @GetMapping("/items/{sellerId}")
-    public ResponseEntity<List<Item>> getItemsBySeller(@PathVariable String sellerId) {
+    public ResponseEntity<List<ItemResponseDto>> getItemsBySeller(@PathVariable String sellerId) {
         List<Item> items = itemService.getItemsBySeller(sellerId);
-        return ResponseEntity.ok(items);
+        List<ItemResponseDto> responseDtos = items.stream()
+                .map(ItemResponseDto::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responseDtos);
     }
 
     // 3. 아이템 등록
     @PostMapping("/items/new")
-    public ResponseEntity<ItemResponseDto> createItem(@RequestBody ItemRequestDto itemRequestDto) {
+    public ResponseEntity<ItemResponseDto> createItem(
+            @RequestPart(value = "itemData") ItemRequestDto itemRequestDto,
+            @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
+
+        List<Image> images = new ArrayList<>();
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            for (MultipartFile file : imageFiles) {
+                String filePath = fileService.saveFile(file); // 파일 저장 후 경로 반환
+                Image image = new Image();
+                image.setOriginFileName(file.getOriginalFilename()); // 원본 파일 이름 설정
+                image.setNewFileName(filePath.substring(filePath.lastIndexOf("/") + 1)); // 서버 저장 파일 이름
+                image.setImagePath(filePath); // 파일 경로
+                image.setFileSize(file.getSize()); // 파일 크기
+                images.add(image);
+            }
+        }
+
+        itemRequestDto.setImagePaths(images.stream().map(Image::getImagePath).collect(Collectors.toList()));
+
         Item createdItem = itemService.createItem(itemRequestDto);
-        ItemResponseDto responseDto = ItemResponseDto.from(createdItem);
-        return ResponseEntity.ok(responseDto);
+        return ResponseEntity.ok(ItemResponseDto.from(createdItem));
     }
-//    @PostMapping("/items/new")
-//    public ResponseEntity<Item> createItem(@RequestBody ItemRequestDto itemRequestDto) {
-//        Item createdItem = itemService.createItem(itemRequestDto);
-//        return ResponseEntity.ok(createdItem);
-//    }
+
 
     // 4. 아이템 수정
     @PutMapping("/items/{itemId}")
-    public ResponseEntity<ItemResponseDto> updateItem(@PathVariable Long itemId, @RequestBody ItemRequestDto updatedItemDto) {
+    public ResponseEntity<ItemResponseDto> updateItem(
+            @PathVariable Long itemId,
+            @RequestPart("itemData") ItemRequestDto updatedItemDto,
+            @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
+
+        // 새로 업로드된 이미지 처리
+        List<Image> images = new ArrayList<>();
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            for (MultipartFile file : imageFiles) {
+                String filePath = fileService.saveFile(file); // 파일 저장 후 경로 반환
+                Image image = new Image();
+                image.setOriginFileName(file.getOriginalFilename()); // 원본 파일 이름 설정
+                image.setNewFileName(filePath.substring(filePath.lastIndexOf("/") + 1)); // 서버 저장 파일 이름
+                image.setImagePath(filePath); // 파일 경로
+                image.setFileSize(file.getSize()); // 파일 크기
+                images.add(image);
+            }
+        } else {
+            // 새 이미지가 없는 경우 기존 이미지 유지
+            List<Image> existingImages = itemService.getExistingImages(itemId);
+
+            // 기존 이미지 경로 및 원본 이름 설정
+            updatedItemDto.setImagePaths(existingImages.stream()
+                    .map(Image::getImagePath)
+                    .collect(Collectors.toList()));
+            updatedItemDto.setOriginFileNames(existingImages.stream()
+                    .map(Image::getOriginFileName)
+                    .collect(Collectors.toList()));
+        }
+
+        // 서비스 계층 호출
         Item updatedItem = itemService.updateItem(itemId, updatedItemDto);
-        ItemResponseDto responseDto = ItemResponseDto.from(updatedItem);
-        return ResponseEntity.ok(responseDto);
+
+        // 응답 DTO 변환 및 반환
+        return ResponseEntity.ok(ItemResponseDto.from(updatedItem));
     }
 
 
@@ -64,5 +116,4 @@ public class ItemController {
         itemService.deleteItem(itemId);
         return ResponseEntity.ok("삭제되었습니다!");
     }
-
 }

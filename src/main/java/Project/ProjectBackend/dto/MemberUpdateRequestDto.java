@@ -4,6 +4,8 @@ import Project.ProjectBackend.entity.Address;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @NoArgsConstructor
 public class MemberUpdateRequestDto {
@@ -12,6 +14,7 @@ public class MemberUpdateRequestDto {
     private String name;
     private String email;
     private int age;
+    private LocalDate birthDate;
     private Address address; // 추가: Address를 포함하도록 수정
 
 }

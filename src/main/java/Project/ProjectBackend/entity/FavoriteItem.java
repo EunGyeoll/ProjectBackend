@@ -24,7 +24,7 @@ public class FavoriteItem {
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_id", nullable = false) // 관심 상품
+    @JoinColumn(name = "item_id", nullable = false) // Item 테이블의 item_id 와 매핑
     private Item item;
 
     @CreationTimestamp

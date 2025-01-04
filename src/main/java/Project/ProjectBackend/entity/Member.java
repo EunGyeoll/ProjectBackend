@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,15 +27,21 @@ public class Member {
     @NotEmpty
     private String email;
 
+//    @NotNull
+//    @Column(name = "birth_date")
+//    private String birthDate;
+
     @NotNull
     @Column(name = "birth_date")
-    private String birthDate;
+    private LocalDate birthDate;
+
     @NotEmpty
     private String role;
     @NotEmpty
     @Column(name = "phone_num")
     private String phoneNum;
     // 숫자 필드엔 @NotEmpty 대신 @NotNull 또는 @Positive, @Min, @Max 등의 애노테이션을 사용
+
     @Embedded
     private Address address;
 
@@ -73,7 +80,7 @@ public class Member {
 
 
     @Builder
-    public Member(String memberId, String password, String name, String email, String birthDate, String role,  Address address, String phoneNum) {
+    public Member(String memberId, String password, String name, String email, LocalDate birthDate, String role,  Address address, String phoneNum) {
         this.memberId = memberId;
         this.password = password;
         this.name = name;

@@ -33,11 +33,22 @@ public class Image {
     @JoinColumn(name = "item_id")
     private Item item; // 해당 이미지를 참조하는 Item
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id")
+    private Post post; // 해당 이미지를 참조하는 Post
+
 
     public void setItem(Item item) {
         this.item = item;
         if (!item.getImages().contains(this)) {
             item.getImages().add(this);
+        }
+    }
+
+    public void setPost(Post post) {
+        this.post = post;
+        if (post != null && !post.getImages().contains(this)) {
+            post.getImages().add(this);
         }
     }
 

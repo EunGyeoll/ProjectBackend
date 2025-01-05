@@ -45,7 +45,7 @@ public class ItemService {
                 .price(itemRequestDto.getPrice())
                 .description(itemRequestDto.getDescription())
                 .stockQuantity(itemRequestDto.getStockQuantity())
-                .build();
+                .build(); // 날짜는 @CreationTimeStamp 가 붙어있는 필드는 Hibernate를 통해 자동으로 값이 db에 들어감.
 
         // 이미지 저장
         List<Image> images = itemRequestDto.getImagePaths().stream()

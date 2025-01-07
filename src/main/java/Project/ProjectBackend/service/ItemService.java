@@ -33,14 +33,15 @@ public class ItemService {
     }
 
     // 아이템 등록
-    public Item createItem(ItemRequestDto itemRequestDto) {
+    public Item createItem(ItemRequestDto itemRequestDto, Member currentUser) {
         // 작성자(Member) 조회
         Member seller = memberRepository.findById(itemRequestDto.getSellerId())
                 .orElseThrow(() -> new IllegalArgumentException("판매자가 존재하지 않습니다."));
 
         // Item 엔티티 생성
         Item item = Item.builder()
-                .seller(seller)
+//                .seller(seller)
+                .seller(currentUser)
                 .itemName(itemRequestDto.getItemName())
                 .price(itemRequestDto.getPrice())
                 .description(itemRequestDto.getDescription())
@@ -85,9 +86,14 @@ public class ItemService {
 
 
     // 아이템 수정
-    public Item updateItem(Long itemId, ItemRequestDto updatedItemDto) {
+    public Item updateItem(Long itemId, ItemRequestDto updatedItemDto, Member currentUser) {
         Item existingItem = itemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
+
+        // 현재 사용자가 아이템의 소유자인지 확인
+        if (!existingItem.getSeller().equals(currentUser)) {
+            throw new SecurityException("해당 아이템을 수정할 권한이 없습니다.");
+        }
 
         // 이미지 업데이트 처리
         if (updatedItemDto.getImagePaths() != null && !updatedItemDto.getImagePaths().isEmpty()) {

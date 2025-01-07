@@ -5,10 +5,13 @@ import Project.ProjectBackend.entity.Image;
 import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.dto.ItemRequestDto;
 import Project.ProjectBackend.dto.ItemResponseDto;
+import Project.ProjectBackend.entity.Member;
+import Project.ProjectBackend.service.AuthService;
 import Project.ProjectBackend.service.FileService;
 import Project.ProjectBackend.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,6 +25,7 @@ public class ItemController {
 
     private final ItemService itemService;
     private final FileService fileService;
+    private final AuthService authService;
 
     // 1. 모든 아이템 조회
     @GetMapping("/items/list")
@@ -44,10 +48,13 @@ public class ItemController {
     }
 
     // 3. 아이템 등록
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @PostMapping("/items/new")
     public ResponseEntity<ItemResponseDto> createItem(
             @RequestPart(value = "itemData") ItemRequestDto itemRequestDto,
             @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
+
+        Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
 
         List<Image> images = new ArrayList<>();
         if (imageFiles != null && !imageFiles.isEmpty()) {
@@ -64,17 +71,20 @@ public class ItemController {
 
         itemRequestDto.setImagePaths(images.stream().map(Image::getImagePath).collect(Collectors.toList()));
 
-        Item createdItem = itemService.createItem(itemRequestDto);
+        Item createdItem = itemService.createItem(itemRequestDto, currentUser); // 아이템을 생성한 유저 정보도 담아서 저장함.
         return ResponseEntity.ok(ItemResponseDto.from(createdItem));
     }
 
 
     // 4. 아이템 수정
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @PutMapping("/items/{itemId}")
     public ResponseEntity<ItemResponseDto> updateItem(
             @PathVariable Long itemId,
             @RequestPart("itemData") ItemRequestDto updatedItemDto,
             @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
+
+        Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
 
         List<Image> images = new ArrayList<>();
         if (imageFiles != null && !imageFiles.isEmpty()) {
@@ -101,7 +111,7 @@ public class ItemController {
         }
 
         // 서비스 계층 호출
-        Item updatedItem = itemService.updateItem(itemId, updatedItemDto);
+        Item updatedItem = itemService.updateItem(itemId, updatedItemDto, currentUser);
 
         return ResponseEntity.ok(ItemResponseDto.from(updatedItem));
     }

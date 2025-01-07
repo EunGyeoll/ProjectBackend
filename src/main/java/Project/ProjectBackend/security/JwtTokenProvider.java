@@ -5,6 +5,7 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import Project.ProjectBackend.entity.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -42,39 +43,52 @@ public class JwtTokenProvider {
     }
 
 
-    //AccessToken 생성
-    public String createAccessToken(String userId, String authority) {
-        String token = null;
+    // AccessToken 생성
+    public String createAccessToken(String userId, String role) {
         try {
-            JwtBuilder builder = Jwts.builder();
-            //header 설정
-            //자동으로 설정
+            // JWT Builder 생성
+            JwtBuilder builder = Jwts.builder()
+                    .setSubject(userId)  // 사용자 ID 설정
+                    .claim("role", role) // 역할 설정
+                    .setExpiration(new Date(System.currentTimeMillis() + accessTokenDuration)) // 만료 시간 설정
+                    .signWith(secretKey);  // 서명 설정
 
-            //payload 설정
-            builder.subject(userId);
-            builder.claim("authority", authority);
-            builder.expiration(new Date(new Date().getTime() + accessTokenDuration));
-
-            //signature 설정
-            builder.signWith(secretKey);
-            token = builder.compact();
-        } catch(Exception e) {
-            log.info(e.toString());
+            // JWT 토큰 생성 및 반환
+            return builder.compact();
+        } catch (Exception e) {
+            log.error("Failed to create access token: {}", e.getMessage());
+            throw new JwtTokenCreationException("Error creating JWT token", e);
         }
-        return token;
+    }
+//    public String createAccessToken(String userId, Role role) {
+//        JwtBuilder builder = Jwts.builder()
+//                .setSubject(userId)
+//                .claim("role", role.name()) // Enum의 name() 사용
+//                .setExpiration(new Date(System.currentTimeMillis() + accessTokenDuration))
+//                .signWith(secretKey);
+//        return builder.compact();
+//    }
+
+    public class JwtTokenCreationException extends RuntimeException {
+        public JwtTokenCreationException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 
     public Jws<Claims> validateToken(String token) {
         Jws<Claims> jws = null;
         try {
-            //JWT 파서 빌더 생성
-            JwtParserBuilder builder = Jwts.parser();
-            //JWT 파서 빌더에 비밀키 설정
-            builder.verifyWith(secretKey);
-            //JWT 파서 생성
+            // JWT 파서 빌더 생성
+            JwtParserBuilder builder = Jwts.parserBuilder();
+
+            // 비밀 키 설정
+            builder.setSigningKey(secretKey);
+
+            // JWT 파서 생성
             JwtParser parser = builder.build();
-            //AccessToken으로부터 payload 얻기
-            jws = parser.parseSignedClaims(token);
+
+            // AccessToken으로부터 payload 얻기
+            jws = parser.parseClaimsJws(token);
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("잘못된 JWT 서명입니다.");
         } catch (ExpiredJwtException e) {
@@ -87,20 +101,20 @@ public class JwtTokenProvider {
         return jws;
     }
 
+
     public String getUserId(Jws<Claims> jws) {
-        //Payload 얻기
-        Claims claims = jws.getPayload();
-        //사용자 아이디 얻기
-        String userId = claims.getSubject();
-        return userId;
+        // Payload 얻기
+        Claims claims = jws.getBody();  // getPayload() 대신 getBody() 사용
+        // 사용자 아이디 얻기
+        return claims.getSubject();  // subject는 기본적으로 사용자 ID로 설정됨
     }
 
     public String getAuthority(Jws<Claims> jws) {
-        //Payload 얻기
-        Claims claims = jws.getPayload();
-        //사용자 권한 얻기
-        String autority = claims.get("authority").toString();
-        return autority;
+        // Payload 얻기
+        Claims claims = jws.getBody();  // getPayload() 대신 getBody() 사용
+        // 사용자 권한 얻기
+        String authority = (String) claims.get("role");  // "role"로 변경된 경우 확인
+        return authority;
     }
 
 }

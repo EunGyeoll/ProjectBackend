@@ -45,7 +45,8 @@ public class MemberController {
         }
 
         // 권한 정보 설정
-        String authority = "ROLE_USER"; // 실제 권한 정보 필요 시 Member 엔티티에서 가져오도록 수정
+//        String authority = "ROLE_USER"; // 실제 권한 정보 필요 시 Member 엔티티에서 가져오도록 수정
+        String authority = member.getRole().name(); // ROLE_USER 또는 ROLE_ADMIN 가져오기
         String token = jwtTokenProvider.createAccessToken(member.getMemberId(), authority);
 
         return ResponseEntity.ok(new AuthResponse(token));

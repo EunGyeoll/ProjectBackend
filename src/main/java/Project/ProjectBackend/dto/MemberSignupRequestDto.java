@@ -13,7 +13,6 @@ public class MemberSignupRequestDto {
     private String password;
     private String name;
     private String email;
-    private String role;
     private String phoneNum;
     private LocalDate birthDate;
     private Address address; // 추가: Address를 포함하도록 수정

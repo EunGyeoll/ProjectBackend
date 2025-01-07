@@ -3,12 +3,15 @@ package Project.ProjectBackend.controller;
 import Project.ProjectBackend.dto.PostRequestDto;
 import Project.ProjectBackend.dto.PostResponseDto;
 import Project.ProjectBackend.entity.Image;
+import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.entity.Post;
+import Project.ProjectBackend.service.AuthService;
 import Project.ProjectBackend.service.FileService;
 import Project.ProjectBackend.service.PostService;
 import Project.ProjectBackend.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,14 +24,16 @@ import java.util.stream.Collectors;
 public class PostController {
 
     private final PostService postService;
-    private final MemberService memberService;
     private final FileService fileService;
+    private final AuthService authService;
 
-    // 게시글 등록
+    // 1. 게시글 등록
     @PostMapping("/posts/new")
     public ResponseEntity<PostResponseDto> createItem(
             @RequestPart(value = "postData") PostRequestDto postRequestDto,
             @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
+
+        Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
 
         List<Image> images = new ArrayList<>();
         if (imageFiles != null && !imageFiles.isEmpty()) {
@@ -53,7 +58,7 @@ public class PostController {
 //        return ResponseEntity.ok("게시글 등록 성공!");
 //    }
 
-    // 게시글 수정
+    // 2. 게시글 수정
     @PutMapping("/posts/{postNo}")
     public ResponseEntity<PostResponseDto> updatePost(
             @PathVariable Long postNo,
@@ -92,21 +97,21 @@ public class PostController {
     }
 
 
-    // 게시글 목록 조회
+    // 3. 게시글 목록 조회
     @GetMapping("/posts/list")
     public ResponseEntity<List<PostResponseDto>> getAllPosts() {
         List<PostResponseDto> boards = postService.getAllPosts();
         return ResponseEntity.ok(boards);
     }
 
-    // 게시글 상세(단건) 조회
+    // 4. 게시글 상세(단건) 조회
     @GetMapping("/posts/{postNo}")
         public ResponseEntity<PostResponseDto> getPost(@PathVariable Long postNo) {
         PostResponseDto post = postService.getPost(postNo);
         return ResponseEntity.ok(post);
     }
 
-    // 게시글 삭제
+    // 5. 게시글 삭제
     @DeleteMapping("/posts/{postNo}")
     public ResponseEntity<?> deletePost(@PathVariable Long postNo) {
         postService.deletePost(postNo);

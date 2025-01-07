@@ -1,5 +1,6 @@
 package Project.ProjectBackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
@@ -24,19 +25,22 @@ public class Member {
     private String password;
     @NotEmpty
     private String name;
+
+    @NotNull
+    @Enumerated(EnumType.STRING) // Enum 값이 숫자로 저장되는 것을 막기 위해
+    private Role role;
+
+    @Column(name = "enabled", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean enabled = true; // 권한 있는지
+
     @NotEmpty
     private String email;
 
-//    @NotNull
-//    @Column(name = "birth_date")
-//    private String birthDate;
-
     @NotNull
     @Column(name = "birth_date")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
-    @NotEmpty
-    private String role;
     @NotEmpty
     @Column(name = "phone_num")
     private String phoneNum;
@@ -80,14 +84,16 @@ public class Member {
 
 
     @Builder
-    public Member(String memberId, String password, String name, String email, LocalDate birthDate, String role,  Address address, String phoneNum) {
+    public Member(String memberId, String password, String name, String email, LocalDate birthDate, Role role, Address address, String phoneNum, boolean enabled) {
         this.memberId = memberId;
         this.password = password;
         this.name = name;
         this.email = email;
-        this.birthDate = birthDate; // age 추가
+        this.birthDate = birthDate;
         this.role = role;
-        this.phoneNum=phoneNum;
+        this.phoneNum = phoneNum;
         this.address = address;
+        this.enabled = enabled; // 필드 추가
     }
+
 }

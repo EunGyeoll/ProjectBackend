@@ -1,45 +1,100 @@
 package Project.ProjectBackend.security;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 
 @Component
-
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     private final JwtTokenProvider jwtTokenProvider;
 
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String token = getTokenFromHeader(request); // 요청에서 JWT 토큰 추출
+        String token = getTokenFromHeader(request);
         if (token != null) {
             Jws<Claims> claimsJws = jwtTokenProvider.validateToken(token);
-            if (claimsJws != null) { // 유효한 토큰인지 확인
-                String userId = jwtTokenProvider.getUserId(claimsJws);
-                JwtAuthenticationToken authentication = new JwtAuthenticationToken(userId, null);
+            if (claimsJws != null) {
+                Claims claims = claimsJws.getBody();
+                String userId = claims.getSubject();
+                String role = claims.get("role", String.class); // role 추출
+
+                // 디버깅 로그 추가
+                log.debug("JWT 토큰에서 추출한 userId: {}", userId);
+                log.debug("JWT 토큰에서 추출한 role: {}", role);
+
+                List<SimpleGrantedAuthority> authorities = role == null ?
+                        Collections.emptyList() :
+                        List.of(new SimpleGrantedAuthority(role));
+
+                // 권한 로그 추가
+                log.debug("부여된 권한: {}", authorities);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                log.debug("SecurityContextHolder에 Authentication 설정 완료: {}",
+                        SecurityContextHolder.getContext().getAuthentication());
             }
         }
         filterChain.doFilter(request, response);
     }
 
+//    @Override
+//    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+//            throws ServletException, IOException {
+//        String token = getTokenFromHeader(request);
+//        if (token != null) {
+//            Jws<Claims> claimsJws = jwtTokenProvider.validateToken(token);
+//            if (claimsJws != null) {
+//                Claims claims = claimsJws.getBody();
+//                String userId = claims.getSubject();
+//                String role = claims.get("role", String.class); // "roles" -> "role"
+//
+//                List<SimpleGrantedAuthority> authorities = role == null ?
+//                        Collections.emptyList() :
+//                        List.of(new SimpleGrantedAuthority(role));
+//
+//                UsernamePasswordAuthenticationToken authentication =
+//                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
+//                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//
+//                SecurityContextHolder.getContext().setAuthentication(authentication);
+//                // JwtAuthenticationFilter에서 로그 추가
+//                log.debug("Authentication set in SecurityContextHolder: {}", SecurityContextHolder.getContext().getAuthentication());
+//                log.debug("Current authentication: {}", SecurityContextHolder.getContext().getAuthentication());
+//
+//            }
+//        }
+//        filterChain.doFilter(request, response);
+//    }
 
     private String getTokenFromHeader(HttpServletRequest request) {
         String header = request.getHeader("Authorization");

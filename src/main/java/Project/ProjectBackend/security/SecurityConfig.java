@@ -1,4 +1,4 @@
-package Project.ProjectBackend.config;
+package Project.ProjectBackend.security;
 
 import Project.ProjectBackend.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -33,14 +34,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(csrf -> csrf.disable()) // CSRF 비활성화
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 사용하므로 세션 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // 모든 요청 허용
+                        .requestMatchers("/members/**").permitAll() // 인증 없이 접근 가능한 경로 설정
+                        .requestMatchers("/items/**").hasAuthority("ROLE_USER") // ROLE_USER 권한 필요
+                        .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                 )
-                .csrf(csrf -> csrf.disable()) // CSRF 비활성화 (개발 단계에서만)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
                 .formLogin(formLogin -> formLogin.disable()); // 기본 로그인 폼 비활성화
 
         return http.build();
     }
+
 }
 
 

@@ -20,9 +20,12 @@
     security:
        key: for.ek.project.securitykeyaassdd
 
-  logging.level:
-    org.hibernate.SQL: debug
-    org.springframework.web: debug
+  logging:
+    level:
+      org.hibernate.SQL: debug
+      org.springframework.web: debug
+      org.springframework: DEBUG
+      Project.ProjectBackend.security: DEBUG
 
   file:
     upload-dir: C:/Users/roman/Documents/CodingWorkspace/ProjectImageFolder/

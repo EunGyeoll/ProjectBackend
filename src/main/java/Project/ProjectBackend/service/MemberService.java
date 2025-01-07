@@ -4,6 +4,7 @@ import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.dto.MemberSignupRequestDto;
 import Project.ProjectBackend.dto.MemberUpdateRequestDto;
 import Project.ProjectBackend.repository.MemberRepository;
+import Project.ProjectBackend.entity.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,9 +37,9 @@ public class MemberService {
                 .password(encodedPassword)
                 .address(requestDto.getAddress())
                 .birthDate(requestDto.getBirthDate())
-                .role(requestDto.getRole())
+                .role(Role.ROLE_USER)
                 .phoneNum(requestDto.getPhoneNum())
-                .role("ROLE_USER")
+                .enabled(true) // 기본값으로 true 설정
                 .build();
 
         // 회원 저장

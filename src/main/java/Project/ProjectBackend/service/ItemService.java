@@ -1,9 +1,11 @@
 package Project.ProjectBackend.service;
 
+import Project.ProjectBackend.entity.Category;
 import Project.ProjectBackend.entity.Image;
 import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.dto.ItemRequestDto;
+import Project.ProjectBackend.repository.CategoryRepository;
 import Project.ProjectBackend.repository.ItemRepository;
 import Project.ProjectBackend.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 public class ItemService {
     private final ItemRepository itemRepository;
     private final MemberRepository memberRepository;
+    private final CategoryRepository categoryRepository;
 
     // 모든 아이템 조회
     public List<Item> getAllItems() {
@@ -38,6 +41,9 @@ public class ItemService {
         Member seller = memberRepository.findById(itemRequestDto.getSellerId())
                 .orElseThrow(() -> new IllegalArgumentException("판매자가 존재하지 않습니다."));
 
+        Category category = categoryRepository.findById(itemRequestDto.getCategoryId())
+                .orElseThrow(()-> new IllegalArgumentException("유효하지 않은 카테고리입니다."));
+
         // Item 엔티티 생성
         Item item = Item.builder()
 //                .seller(seller)
@@ -46,6 +52,7 @@ public class ItemService {
                 .price(itemRequestDto.getPrice())
                 .description(itemRequestDto.getDescription())
                 .stockQuantity(itemRequestDto.getStockQuantity())
+                .category(category) // Category 설정
                 .build(); // 날짜는 @CreationTimeStamp 가 붙어있는 필드는 Hibernate를 통해 자동으로 값이 db에 들어감.
 
         // 이미지 저장

@@ -48,32 +48,32 @@ public class ItemController {
     }
 
     // 3. 아이템 등록
-    @PreAuthorize("hasAuthority('ROLE_USER')")
-    @PostMapping("/items/new")
-    public ResponseEntity<ItemResponseDto> createItem(
-            @RequestPart(value = "itemData") ItemRequestDto itemRequestDto,
-            @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
+        @PreAuthorize("hasAuthority('ROLE_USER')")
+        @PostMapping("/items/new")
+        public ResponseEntity<ItemResponseDto> createItem(
+                @RequestPart(value = "itemData") ItemRequestDto itemRequestDto,
+                @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
 
-        Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
+            Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
 
-        List<Image> images = new ArrayList<>();
-        if (imageFiles != null && !imageFiles.isEmpty()) {
-            for (MultipartFile file : imageFiles) {
-                String filePath = fileService.saveFile(file); // 파일 저장 후 경로 반환
-                Image image = new Image();
-                image.setOriginFileName(file.getOriginalFilename()); // 원본 파일 이름 설정
-                image.setNewFileName(filePath.substring(filePath.lastIndexOf("/") + 1)); // 서버 저장 파일 이름
-                image.setImagePath(filePath); // 파일 경로
-                image.setFileSize(file.getSize()); // 파일 크기
-                images.add(image);
+            List<Image> images = new ArrayList<>();
+            if (imageFiles != null && !imageFiles.isEmpty()) {
+                for (MultipartFile file : imageFiles) {
+                    String filePath = fileService.saveFile(file); // 파일 저장 후 경로 반환
+                    Image image = new Image();
+                    image.setOriginFileName(file.getOriginalFilename()); // 원본 파일 이름 설정
+                    image.setNewFileName(filePath.substring(filePath.lastIndexOf("/") + 1)); // 서버 저장 파일 이름
+                    image.setImagePath(filePath); // 파일 경로
+                    image.setFileSize(file.getSize()); // 파일 크기
+                    images.add(image);
+                }
             }
+
+            itemRequestDto.setImagePaths(images.stream().map(Image::getImagePath).collect(Collectors.toList()));
+
+            Item createdItem = itemService.createItem(itemRequestDto, currentUser); // 아이템을 생성한 유저 정보도 담아서 저장함.
+            return ResponseEntity.ok(ItemResponseDto.from(createdItem));
         }
-
-        itemRequestDto.setImagePaths(images.stream().map(Image::getImagePath).collect(Collectors.toList()));
-
-        Item createdItem = itemService.createItem(itemRequestDto, currentUser); // 아이템을 생성한 유저 정보도 담아서 저장함.
-        return ResponseEntity.ok(ItemResponseDto.from(createdItem));
-    }
 
 
     // 4. 아이템 수정

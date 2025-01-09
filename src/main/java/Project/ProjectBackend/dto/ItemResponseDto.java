@@ -20,10 +20,11 @@ public class ItemResponseDto {
     private String description;
     private Integer stockQuantity;
     private String sellerName;
-    private String sellerEmail; // 판매자 이메일
-    private String categoryName; // 카테고리명
-    private String representativeImagePath; // 대표 이미지 경로
-    private List<String> imagePaths; // 이미지 경로 리스트
+    private String sellerEmail;
+    private Long categoryId;
+    private String categoryName;
+    private String representativeImagePath;
+    private List<String> imagePaths;
 
     // Item 엔티티를 기반으로 Dto 객체를 생성하는 메서드
     public static ItemResponseDto from(Item item) {
@@ -46,6 +47,7 @@ public class ItemResponseDto {
                 item.getStockQuantity(),
                 seller != null ? seller.getName() : null,
                 seller != null ? seller.getEmail() : null,
+                category != null ? category.getCategoryId() : null,
                 category != null ? category.getCategoryName() : null,
                 representativeImagePath,
                 imagePaths

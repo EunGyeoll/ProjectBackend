@@ -40,9 +40,6 @@ public class Image {
 
     public void setItem(Item item) {
         this.item = item;
-        if (!item.getImages().contains(this)) {
-            item.getImages().add(this);
-        }
     }
 
     public void setPost(Post post) {

@@ -10,6 +10,8 @@ import Project.ProjectBackend.repository.ItemRepository;
 import Project.ProjectBackend.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.util.List;
@@ -22,6 +24,7 @@ public class ItemService {
     private final ItemRepository itemRepository;
     private final MemberRepository memberRepository;
     private final CategoryRepository categoryRepository;
+    private final ImageService imageService;
 
     // 모든 아이템 조회
     public List<Item> getAllItems() {
@@ -92,43 +95,46 @@ public class ItemService {
     }
 
 
-    // 아이템 수정
-    public Item updateItem(Long itemId, ItemRequestDto updatedItemDto, Member currentUser) {
+
+
+    @Transactional
+    public Item updateItem(Long itemId, ItemRequestDto itemRequestDto, List<MultipartFile> imageFiles, Member currentUser) {
+        // 1. 아이템 조회
         Item existingItem = itemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
 
-        // 현재 사용자가 아이템의 소유자인지 확인
+        // 2. 소유자 확인
         if (!existingItem.getSeller().equals(currentUser)) {
-            throw new SecurityException("해당 아이템을 수정할 권한이 없습니다.");
+            throw new IllegalArgumentException("해당 아이템을 수정할 권한이 없습니다.");
         }
 
-        // 이미지 업데이트 처리
-        if (updatedItemDto.getImagePaths() != null && !updatedItemDto.getImagePaths().isEmpty()) {
-            List<Image> updatedImages = updatedItemDto.getImagePaths().stream()
-                    .map(path -> Image.builder()
-                            .imagePath(path)
-                            .item(existingItem) // 연관 관계 설정
-                            .build())
-                    .collect(Collectors.toList());
+        // 3. 이미지 업데이트 처리
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            // 기존 이미지 삭제
+            imageService.deleteImages(existingItem.getImages());
+
+            // 새로운 이미지 저장
+            List<Image> updatedImages = imageService.saveImagesForItem(imageFiles, existingItem);
+
+            // 아이템에 새로운 이미지 설정
             existingItem.setImages(updatedImages);
 
             // 대표 이미지 설정
-            existingItem.setRepresentativeImagePath(updatedImages.get(0).getImagePath());
-        } else {
-            // 이미지가 없는 경우 기존 이미지를 유지
-            existingItem.setImages(existingItem.getImages());
+            if (!updatedImages.isEmpty()) {
+                existingItem.setRepresentativeImagePath(updatedImages.get(0).getImagePath());
+            }
         }
+        // 새 이미지가 없는 경우 기존 이미지를 유지하므로 별도의 처리 불필요
 
-        // 나머지 속성 업데이트
-        existingItem.setItemName(updatedItemDto.getItemName());
-        existingItem.setPrice(updatedItemDto.getPrice());
-        existingItem.setDescription(updatedItemDto.getDescription());
-        existingItem.setStockQuantity(updatedItemDto.getStockQuantity());
+        // 4. 나머지 속성 업데이트
+        existingItem.setItemName(itemRequestDto.getItemName());
+        existingItem.setPrice(itemRequestDto.getPrice());
+        existingItem.setDescription(itemRequestDto.getDescription());
+        existingItem.setStockQuantity(itemRequestDto.getStockQuantity());
 
+        // 5. 아이템 저장
         return itemRepository.save(existingItem);
     }
-
-
 
 
     public List<Image> getExistingImages(Long itemId) {
@@ -136,6 +142,8 @@ public class ItemService {
                 .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
         return item.getImages();
     }
+
+
 
     // 아이템 삭제
     public void deleteItem(Long itemId) {

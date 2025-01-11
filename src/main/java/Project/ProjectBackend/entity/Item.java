@@ -45,6 +45,7 @@ public class Item {
     private String description; // 상품 설명
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
+    @Builder.Default // Lombok의 @Builder.Default 어노테이션 추가
     private List<Image> images = new ArrayList<>(); // 여러 이미지를 관리
 
     @Column(name = "REPRESENTATIVE_IMAGE_PATH")
@@ -101,6 +102,21 @@ public class Item {
             throw new NotEnoughStockException("need more stock");
         }
         this.stockQuantity = restStock;
+    }
+
+
+    public void setImages(List<Image> images) {
+        if (this.images == null) {
+            this.images = new ArrayList<>();
+        }
+        // 기존 이미지 제거
+        this.images.clear();
+        if (images != null) {
+            for (Image image : images) {
+                image.setItem(this); // 양방향 관계 설정
+                this.images.add(image);
+            }
+        }
     }
 
 

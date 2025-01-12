@@ -6,6 +6,7 @@
     import Project.ProjectBackend.exception.ImageSaveException;
     import Project.ProjectBackend.repository.ImageRepository;
     import lombok.RequiredArgsConstructor;
+    import org.apache.commons.io.FilenameUtils;
     import org.slf4j.Logger;
     import org.slf4j.LoggerFactory;
     import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,8 @@
 
     import java.io.File;
     import java.io.IOException;
+    import java.nio.file.Paths;
+    import java.util.ArrayList;
     import java.util.List;
     import java.util.stream.Collectors;
 
@@ -32,20 +35,42 @@
          * 이미지 저장 로직
          */
 
-        // POST에서의 이미지 저장
+        // POST 관련된 이미지를 저장하는 메소드
         public List<Image> saveImagesForPost(List<MultipartFile> imageFiles, Post post) {
-            return imageFiles.stream().map(file -> {
-                String originalFileName = file.getOriginalFilename();
-                String uniqueFileName = generateUniqueFileName(originalFileName);
-                String filePath = uploadDir + File.separator + uniqueFileName;
+            return saveImagesInternal(imageFiles, post, null);
+        }
 
-//                try {
-//                    // 파일 저장
-//                    File dest = new File(filePath);
-//                    file.transferTo(dest);
-//                } catch (IOException e) {
-//                    throw new ImageSaveException("이미지 저장에 실패했습니다: " + originalFileName, e);
-//                }
+
+
+        // ITEM 관련된 이미지를 저장하는 메소드
+        public List<Image> saveImagesForItem(List<MultipartFile> imageFiles, Item item) {
+            return saveImagesInternal(imageFiles, null, item);
+        }
+
+
+        // 공통적인 이미지 저장 로직
+        private List<Image> saveImagesInternal(List<MultipartFile> imageFiles, Post post, Item item) {
+            List<Image> savedImages = new ArrayList<>();
+            int existingImageCount = item.getImages().size();
+
+            for (int i = 0; i < imageFiles.size(); i++) {
+                MultipartFile file = imageFiles.get(i);
+                validateFile(file);
+
+                String originalFileName = file.getOriginalFilename();
+                if (originalFileName == null) {
+                    throw new ImageSaveException("파일명이 없습니다.");
+                }
+
+                String baseName = FilenameUtils.getBaseName(originalFileName);
+                String extension = FilenameUtils.getExtension(originalFileName);
+
+                // 파일명에 _1, _2 접미사 추가
+                String uniqueFileName = baseName + "_" + (existingImageCount + i + 1) + "." + extension;
+
+                // 경로 구분자 수정: 슬래시('/') 사용
+                String filePath = Paths.get(uploadDir, uniqueFileName).toString().replace("\\", "/");
+
                 try {
                     // 파일 저장 디렉토리 생성 (존재하지 않을 경우)
                     File dir = new File(uploadDir);
@@ -56,8 +81,8 @@
                     // 파일 저장
                     File dest = new File(filePath);
                     file.transferTo(dest);
+                    logger.info("Saved image file: {}", filePath);
                 } catch (IOException e) {
-                    logger.error("Failed to save image: {}", originalFileName, e);
                     throw new ImageSaveException("이미지 저장에 실패했습니다: " + originalFileName, e);
                 }
 
@@ -68,77 +93,37 @@
                         .newFileName(uniqueFileName)
                         .fileSize(file.getSize())
                         .post(post)
-                        .build();
-
-                return imageRepository.save(image);
-            }).collect(Collectors.toList());
-        }
-
-
-        // ITEM에서의 이미지 저장
-        public List<Image> saveImagesForItem(List<MultipartFile> imageFiles, Item item) {
-            return imageFiles.stream().map(file -> {
-                String originalFileName = file.getOriginalFilename();
-                String uniqueFileName = generateUniqueFileName(originalFileName);
-                String filePath = uploadDir + File.separator + uniqueFileName;
-
-//                try {
-//                    // 파일 저장
-//                    File dest = new File(filePath);
-//                    file.transferTo(dest);
-//                } catch (IOException e) {
-//                    throw new ImageSaveException("이미지 저장에 실패했습니다: " + originalFileName, e);
-//                }
-
-                try {
-                    // 파일 저장 디렉토리 생성 (존재하지 않을 경우)
-                    File dir = new File(uploadDir);
-                    if (!dir.exists()) {
-                        dir.mkdirs();
-                    }
-
-                    // 파일 저장
-                    File dest = new File(filePath);
-                    file.transferTo(dest);
-                } catch (IOException e) {
-                    logger.error("Failed to save image: {}", originalFileName, e);
-                    throw new ImageSaveException("이미지 저장에 실패했습니다: " + originalFileName, e);
-                }
-
-                // Image 엔티티 생성
-                Image image = Image.builder()
-                        .imagePath(filePath)
-                        .originFileName(originalFileName)
-                        .newFileName(uniqueFileName)
-                        .fileSize(file.getSize())
                         .item(item)
                         .build();
 
-                return imageRepository.save(image);
-            }).collect(Collectors.toList());
+                savedImages.add(imageRepository.save(image));
+            }
+
+            return savedImages;
         }
 
 
 
-
-        /**
-         * 기존 이미지 삭제 로직 (필요 시)
-         */
         public void deleteImages(List<Image> images) {
             for (Image image : images) {
                 File file = new File(image.getImagePath());
                 if (file.exists()) {
-                    file.delete();
+                    boolean deleted = file.delete();
+                    if (!deleted) {
+                        throw new ImageSaveException("이미지를 삭제하는데 실패했습니다: " + image.getImagePath());
+                    }
                 }
                 imageRepository.delete(image);
             }
         }
 
-        /**
-         * 유니크한 파일명 생성
-         */
-        private String generateUniqueFileName(String originalFileName) {
-            String timestamp = String.valueOf(System.currentTimeMillis());
-            return timestamp + "_" + originalFileName;
+
+        // 파일이 이미지인지 검증
+        private void validateFile(MultipartFile file) {
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new ImageSaveException("허용되지 않는 파일 형식입니다: " + file.getOriginalFilename());
+            }
         }
+
     }

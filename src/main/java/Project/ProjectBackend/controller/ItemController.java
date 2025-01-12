@@ -51,36 +51,21 @@ public class ItemController {
     }
 
     // 3. 아이템 등록
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @PostMapping("/items/new")
     public ResponseEntity<ItemResponseDto> createItem(
-            @RequestPart(value = "itemData") ItemRequestDto itemRequestDto,
+            @RequestPart(value = "itemData") @Valid ItemRequestDto itemRequestDto,
             @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
 
         Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
 
-        List<Image> images = new ArrayList<>();
-        if (imageFiles != null && !imageFiles.isEmpty()) {
-            for (MultipartFile file : imageFiles) {
-                String filePath = fileService.saveFile(file); // 파일 저장 후 경로 반환
-                Image image = new Image();
-                image.setOriginFileName(file.getOriginalFilename()); // 원본 파일 이름 설정
-                image.setNewFileName(filePath.substring(filePath.lastIndexOf("/") + 1)); // 서버 저장 파일 이름
-                image.setImagePath(filePath); // 파일 경로
-                image.setFileSize(file.getSize()); // 파일 크기
-                images.add(image);
-            }
-        }
-
-        itemRequestDto.setImagePaths(images.stream().map(Image::getImagePath).collect(Collectors.toList()));
-
-        Item createdItem = itemService.createItem(itemRequestDto, currentUser); // 아이템을 생성한 유저 정보도 담아서 저장함.
+        Item createdItem = itemService.createItem(itemRequestDto, currentUser, imageFiles); // 이미지 파일 전달
         return ResponseEntity.ok(ItemResponseDto.from(createdItem));
     }
 
 
     // 4. 아이템 수정
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @PutMapping("/items/{itemId}")
     public ResponseEntity<ItemResponseDto> updateItem(
             @PathVariable Long itemId,
@@ -96,49 +81,10 @@ public class ItemController {
         return ResponseEntity.ok(ItemResponseDto.from(updatedItem));
     }
 
-//    @PreAuthorize("hasAuthority('ROLE_USER')")
-//    @PutMapping("/items/{itemId}")
-//    public ResponseEntity<ItemResponseDto> updateItem(
-//            @PathVariable Long itemId,
-//            @RequestPart("itemData") ItemRequestDto updatedItemDto,
-//            @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
-//
-//        Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
-//
-//        List<Image> images = new ArrayList<>();
-//        if (imageFiles != null && !imageFiles.isEmpty()) {
-//            for (MultipartFile file : imageFiles) {
-//                String filePath = fileService.saveFile(file); // 파일 저장 후 경로 반환
-//                Image image = new Image();
-//                image.setOriginFileName(file.getOriginalFilename()); // 원본 파일 이름 설정
-//                image.setNewFileName(file.getOriginalFilename()); // 원본 파일 이름 그대로 설정
-//                image.setImagePath(filePath); // 파일 경로
-//                image.setFileSize(file.getSize()); // 파일 크기
-//                images.add(image);
-//            }
-//            updatedItemDto.setImagePaths(images.stream().map(Image::getImagePath).collect(Collectors.toList()));
-//        } else {
-//            // 새 이미지가 없는 경우 기존 이미지 유지
-//            List<Image> existingImages = itemService.getExistingImages(itemId);
-//
-//            updatedItemDto.setImagePaths(existingImages.stream()
-//                    .map(Image::getImagePath)
-//                    .collect(Collectors.toList()));
-//            updatedItemDto.setOriginFileNames(existingImages.stream()
-//                    .map(Image::getOriginFileName)
-//                    .collect(Collectors.toList()));
-//        }
-//
-//        // 서비스 계층 호출
-//        Item updatedItem = itemService.updateItem(itemId, updatedItemDto, currentUser);
-//
-//        return ResponseEntity.ok(ItemResponseDto.from(updatedItem));
-//    }
-
-
 
 
     // 5. 아이템 삭제
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/items/{itemId}")
     public ResponseEntity<String> deleteItem(@PathVariable Long itemId) {
         itemService.deleteItem(itemId);

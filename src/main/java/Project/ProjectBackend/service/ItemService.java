@@ -9,6 +9,8 @@ import Project.ProjectBackend.repository.CategoryRepository;
 import Project.ProjectBackend.repository.ItemRepository;
 import Project.ProjectBackend.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +27,7 @@ public class ItemService {
     private final MemberRepository memberRepository;
     private final CategoryRepository categoryRepository;
     private final ImageService imageService;
+    private static final Logger logger = LoggerFactory.getLogger(ItemService.class);
 
     // 모든 아이템 조회
     public List<Item> getAllItems() {
@@ -39,44 +42,50 @@ public class ItemService {
     }
 
     // 아이템 등록
-    public Item createItem(ItemRequestDto itemRequestDto, Member currentUser) {
+    @Transactional
+    public Item createItem(ItemRequestDto itemRequestDto, Member currentUser, List<MultipartFile> imageFiles) {
+        logger.info("Creating item: {}", itemRequestDto.getItemName());
         // 작성자(Member) 조회
         Member seller = memberRepository.findById(itemRequestDto.getSellerId())
                 .orElseThrow(() -> new IllegalArgumentException("판매자가 존재하지 않습니다."));
 
         Category category = categoryRepository.findById(itemRequestDto.getCategoryId())
-                .orElseThrow(()-> new IllegalArgumentException("유효하지 않은 카테고리입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 카테고리입니다."));
 
         // Item 엔티티 생성
         Item item = Item.builder()
-//                .seller(seller)
-                .seller(currentUser)
+                .seller(currentUser) // 현재 사용자로 설정
                 .itemName(itemRequestDto.getItemName())
                 .price(itemRequestDto.getPrice())
                 .description(itemRequestDto.getDescription())
                 .stockQuantity(itemRequestDto.getStockQuantity())
-                .category(category) // Category 설정
-                .build(); // 날짜는 @CreationTimeStamp 가 붙어있는 필드는 Hibernate를 통해 자동으로 값이 db에 들어감.
+                .category(category)
+                .build();
+
+        // 아이템 먼저 저장하여 itemId 확보
+        Item savedItem = itemRepository.save(item);
+        logger.info("Item created with ID: {}", savedItem.getItemId());
 
         // 이미지 저장
-        List<Image> images = itemRequestDto.getImagePaths().stream()
-                .map(path -> Image.builder()
-                        .imagePath(path)
-                        .originFileName(extractFileNameFromPath(path)) // 파일 경로에서 원본 파일 이름 추출
-                        .newFileName(generateUniqueFileName(path)) // 저장된 파일 이름 생성
-                        .fileSize(getFileSize(path)) // 파일 크기 정보
-                        .item(item) // 연관관계 설정
-                        .build())
-                .collect(Collectors.toList());
-        item.setImages(images);
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            logger.info("Saving {} images for item: {}", imageFiles.size(), item.getItemId());
+            List<Image> images = imageService.saveImagesForItem(imageFiles, item);
+            item.setImages(images);
 
-        // 대표 이미지 설정
-        if (!images.isEmpty()) {
-            item.setRepresentativeImagePath(images.get(0).getImagePath());
+            // 대표 이미지 설정
+            if (!images.isEmpty()) {
+                item.setRepresentativeImagePath(images.get(0).getImagePath());
+            }
+
+            // 이미지 설정 후 다시 저장
+            savedItem = itemRepository.save(savedItem);
+            logger.info("Item created with ID: {}", savedItem.getItemId());
         }
 
-        return itemRepository.save(item);
+        return savedItem;
+
     }
+
 
     private String extractFileNameFromPath(String path) {
         // 예: "uploads/original/file.jpg" -> "file.jpg"

@@ -1,5 +1,6 @@
 package Project.ProjectBackend.service;
 
+import Project.ProjectBackend.dto.ItemRequestDto;
 import Project.ProjectBackend.dto.PostRequestDto;
 import Project.ProjectBackend.dto.PostResponseDto;
 import Project.ProjectBackend.entity.Image;
@@ -9,7 +10,10 @@ import Project.ProjectBackend.entity.Post;
 import Project.ProjectBackend.repository.MemberRepository;
 import Project.ProjectBackend.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -23,40 +27,41 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
-    private final FileService fileService;
+    private final ImageService imageService;
+
+    private static final Logger logger = LoggerFactory.getLogger(PostService.class);
 
     // 게시글 등록
-    public Post createPost(PostRequestDto postRequestDto) {
-        Member writer = memberRepository.findById(postRequestDto.getWriterId())
-                .orElseThrow(() -> new IllegalArgumentException("작성자가 존재하지 않습니다."));
-
+    @Transactional
+    public Post createPost(PostRequestDto postRequestDto, Member currentUser, List<MultipartFile> imageFiles) {
         // Post 엔티티 생성
         Post post = Post.builder()
-                .writer(writer)
+                .writer(currentUser)
                 .title(postRequestDto.getTitle())
                 .content(postRequestDto.getContent())
                 .postDate(postRequestDto.getBoardDate())
                 .build();
 
-        // 이미지 설정
-        List<Image> images = postRequestDto.getImagePaths().stream()
-                .map(path -> Image.builder()
-                        .imagePath(path)
-                        .originFileName(extractFileNameFromPath(path))
-                        .newFileName(generateUniqueFileName(path))
-                        .fileSize(getFileSize(path))
-                        .post(post)
-                        .build())
-                .collect(Collectors.toList());
-        post.setImages(images);
+        // post 먼저 저장하여 postno 확보
+        Post savedPost = postRepository.save(post);
+        logger.info("Item created with ID: {}", savedPost.getPostNo());
 
-        // 대표 이미지 설정
-        if (!images.isEmpty()) {
-            post.setRepresentativeImagePath(images.get(0).getImagePath());
+        // 이미지 저장
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            List<Image> images = imageService.saveImagesForPost(imageFiles, post);
+            post.setImages(images);
+
+            // 대표 이미지 설정
+            if (!images.isEmpty()) {
+                post.setRepresentativeImagePath(images.get(0).getImagePath());
+            }
+
+            // 이미지 설정 후 다시 저장
+            savedPost= postRepository.save(post);
         }
-
-        return postRepository.save(post);
+        return savedPost;
     }
+
 
     private String extractFileNameFromPath(String path) {
         return path.substring(path.lastIndexOf("/") + 1);
@@ -71,41 +76,44 @@ public class PostService {
         return file.exists() ? file.length() : 0L;
     }
 
+
     // 게시글 수정
-    public PostResponseDto updatePost(Long postNo, PostRequestDto postRequestDto) {
-        Post existingPost = postRepository.findById(postNo)
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+    @Transactional
+    public Post updatePost(Long postId, PostRequestDto postRequestDto, List<MultipartFile> imageFiles, Member currentUser) {
+        Post existingpost = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
-        // 이미지 업데이트 처리
-        if (postRequestDto.getImagePaths() != null && !postRequestDto.getImagePaths().isEmpty()) {
-            List<Image> updatedImages = postRequestDto.getImagePaths().stream()
-                    .map(path -> Image.builder()
-                            .imagePath(path)
-                            .originFileName(extractFileNameFromPath(path))
-                            .newFileName(generateUniqueFileName(path))
-                            .fileSize(getFileSize(path))
-                            .post(existingPost) // 연관관계 설정
-                            .build())
-                    .collect(Collectors.toList());
-            existingPost.setImages(updatedImages);
-
-            // 대표 이미지 설정
-            existingPost.setRepresentativeImagePath(updatedImages.get(0).getImagePath());
+        // 2. 소유자 확인
+        if (!existingpost.getWriter().equals(currentUser)) {
+            throw new IllegalArgumentException("해당 게시글을 수정할 권한이 없습니다.");
         }
 
-        // 나머지 속성 업데이트
-        existingPost.setTitle(postRequestDto.getTitle());
-        existingPost.setContent(postRequestDto.getContent());
+        // 3. 이미지 업데이트 처리
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            // 기존 이미지 삭제
+            imageService.deleteImages(existingpost.getImages());
 
-        postRepository.save(existingPost);
-        return PostResponseDto.from(existingPost);
+            // 새로운 이미지 저장
+            List<Image> updatedImages = imageService.saveImagesForPost(imageFiles, existingpost);
+
+            // post에 새로운 이미지 설정
+            existingpost.setImages(updatedImages);
+
+            // 대표 이미지 설정
+            if (!updatedImages.isEmpty()) {
+                existingpost.setRepresentativeImagePath(updatedImages.get(0).getImagePath());
+            }
+        }
+        // 새 이미지가 없는 경우 기존 이미지를 유지하므로 별도의 처리 불필요
+
+        // 4. 나머지 속성 업데이트
+        existingpost.setTitle(postRequestDto.getTitle());
+        existingpost.setContent(postRequestDto.getContent());
+
+        // 5. 게시글 저장
+        return postRepository.save(existingpost);
     }
 
-    public List<Image> getExistingImages(Long postNo) {
-        Post post = postRepository.findById(postNo)
-                .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
-        return post.getImages();
-    }
 
     // 모든 게시글 조회
     public List<PostResponseDto> getAllPosts() {

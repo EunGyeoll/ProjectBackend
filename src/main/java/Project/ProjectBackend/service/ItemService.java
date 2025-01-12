@@ -146,13 +146,6 @@ public class ItemService {
     }
 
 
-    public List<Image> getExistingImages(Long itemId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
-        return item.getImages();
-    }
-
-
 
     // 아이템 삭제
     public void deleteItem(Long itemId) {

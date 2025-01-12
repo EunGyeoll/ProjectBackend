@@ -51,7 +51,7 @@
         // 공통적인 이미지 저장 로직
         private List<Image> saveImagesInternal(List<MultipartFile> imageFiles, Post post, Item item) {
             List<Image> savedImages = new ArrayList<>();
-            int existingImageCount = item.getImages().size();
+            int existingImageCount = (item != null) ? item.getImages().size() : (post != null ? post.getImages().size() : 0);
 
             for (int i = 0; i < imageFiles.size(); i++) {
                 MultipartFile file = imageFiles.get(i);
@@ -64,12 +64,18 @@
 
                 String baseName = FilenameUtils.getBaseName(originalFileName);
                 String extension = FilenameUtils.getExtension(originalFileName);
+                String uniqueFileName = baseName + "." + extension; // 기본 파일명
 
-                // 파일명에 _1, _2 접미사 추가
-                String uniqueFileName = baseName + "_" + (existingImageCount + i + 1) + "." + extension;
-
-                // 경로 구분자 수정: 슬래시('/') 사용
+                // 파일 경로
                 String filePath = Paths.get(uploadDir, uniqueFileName).toString().replace("\\", "/");
+
+                // 중복된 파일명 처리
+                int duplicateCount = 1;
+                while (new File(filePath).exists()) {
+                    uniqueFileName = baseName + "_" + duplicateCount + "." + extension;
+                    filePath = Paths.get(uploadDir, uniqueFileName).toString().replace("\\", "/");
+                    duplicateCount++;
+                }
 
                 try {
                     // 파일 저장 디렉토리 생성 (존재하지 않을 경우)

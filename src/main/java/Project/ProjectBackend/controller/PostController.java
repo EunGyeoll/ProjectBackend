@@ -1,14 +1,14 @@
 package Project.ProjectBackend.controller;
 
+import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.dto.PostRequestDto;
 import Project.ProjectBackend.dto.PostResponseDto;
 import Project.ProjectBackend.entity.Image;
+import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.entity.Post;
-import Project.ProjectBackend.service.AuthService;
-import Project.ProjectBackend.service.FileService;
-import Project.ProjectBackend.service.PostService;
-import Project.ProjectBackend.service.MemberService;
+import Project.ProjectBackend.service.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,74 +26,38 @@ public class PostController {
     private final PostService postService;
     private final FileService fileService;
     private final AuthService authService;
+    private final ImageService imageService;
+
 
     // 1. 게시글 등록
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @PostMapping("/posts/new")
-    public ResponseEntity<PostResponseDto> createItem(
-            @RequestPart(value = "postData") PostRequestDto postRequestDto,
+    public ResponseEntity<PostResponseDto> createPost(
+            @RequestPart(value = "postData") @Valid PostRequestDto postRequestDto,
             @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
 
         Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
 
-        List<Image> images = new ArrayList<>();
-        if (imageFiles != null && !imageFiles.isEmpty()) {
-            for (MultipartFile file : imageFiles) {
-                String filePath = fileService.saveFile(file); // 파일 저장 후 경로 반환
-                Image image = new Image();
-                image.setOriginFileName(file.getOriginalFilename()); // 원본 파일 이름 설정
-                image.setNewFileName(filePath.substring(filePath.lastIndexOf("/") + 1)); // 서버 저장 파일 이름
-                image.setImagePath(filePath); // 파일 경로
-                image.setFileSize(file.getSize()); // 파일 크기
-                images.add(image);
-            }
-        }
-
-        postRequestDto.setImagePaths(images.stream().map(Image::getImagePath).collect(Collectors.toList()));
-
-        Post createdPost = postService.createPost(postRequestDto);
+        // Post 생성 및 저장
+        Post createdPost = postService.createPost(postRequestDto, currentUser, imageFiles);
         return ResponseEntity.ok(PostResponseDto.from(createdPost));
     }
-//    public ResponseEntity<?> createBoard(@RequestBody @Valid PostRequestDto requestDto) {
-//        postService.createBoard(requestDto);
-//        return ResponseEntity.ok("게시글 등록 성공!");
-//    }
+
+
 
     // 2. 게시글 수정
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @PutMapping("/posts/{postNo}")
     public ResponseEntity<PostResponseDto> updatePost(
             @PathVariable Long postNo,
-            @RequestPart(value = "postData") PostRequestDto postRequestDto,
+            @RequestPart("postData") @Valid PostRequestDto postRequestDto,
             @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
 
-        List<Image> images;
-        if (imageFiles != null && !imageFiles.isEmpty()) {
-            images = saveImages(imageFiles);
-            postRequestDto.setImagePaths(images.stream().map(Image::getImagePath).collect(Collectors.toList()));
-        } else {
-            // 새 이미지가 없는 경우 기존 이미지 유지
-            List<Image> existingImages = postService.getExistingImages(postNo);
-            postRequestDto.setImagePaths(existingImages.stream().map(Image::getImagePath).collect(Collectors.toList()));
-        }
+        Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
 
-        PostResponseDto updatedPost = postService.updatePost(postNo, postRequestDto);
-        return ResponseEntity.ok(updatedPost); // 수정된 부분
-    }
+        PostResponseDto updatedPost = PostResponseDto.from(postService.updatePost(postNo, postRequestDto, imageFiles, currentUser));
 
-    // 이미지 저장 처리 메서드
-    private List<Image> saveImages(List<MultipartFile> imageFiles) {
-        List<Image> images = new ArrayList<>();
-        if (imageFiles != null && !imageFiles.isEmpty()) {
-            for (MultipartFile file : imageFiles) {
-                String filePath = fileService.saveFile(file); // 파일 저장 후 경로 반환
-                Image image = new Image();
-                image.setOriginFileName(file.getOriginalFilename()); // 원본 파일 이름 설정
-                image.setNewFileName(filePath.substring(filePath.lastIndexOf("/") + 1)); // 서버 저장 파일 이름
-                image.setImagePath(filePath); // 파일 경로
-                image.setFileSize(file.getSize()); // 파일 크기
-                images.add(image);
-            }
-        }
-        return images;
+        return ResponseEntity.ok(updatedPost);
     }
 
 
@@ -112,6 +76,7 @@ public class PostController {
     }
 
     // 5. 게시글 삭제
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/posts/{postNo}")
     public ResponseEntity<?> deletePost(@PathVariable Long postNo) {
         postService.deletePost(postNo);

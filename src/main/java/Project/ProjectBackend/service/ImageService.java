@@ -51,7 +51,6 @@
         // 공통적인 이미지 저장 로직
         private List<Image> saveImagesInternal(List<MultipartFile> imageFiles, Post post, Item item) {
             List<Image> savedImages = new ArrayList<>();
-            int existingImageCount = (item != null) ? item.getImages().size() : (post != null ? post.getImages().size() : 0);
 
             for (int i = 0; i < imageFiles.size(); i++) {
                 MultipartFile file = imageFiles.get(i);

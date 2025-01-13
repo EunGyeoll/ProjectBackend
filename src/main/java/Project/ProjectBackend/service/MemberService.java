@@ -99,4 +99,36 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
+
+    /**
+     * 비밀번호 확인 메서드
+     */
+    public boolean checkPassword(String memberId, String rawPassword) {
+        Member member = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        return passwordEncoder.matches(rawPassword, member.getPassword());
+    }
+
+    // 회원 탈퇴
+    @Transactional
+    public void deleteMember(String memberId) {
+        Member member = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // enabled 필드를 false로 설정
+        member.setEnabled(false);
+        memberRepository.save(member);
+
+        // 아예 member 정보 지우려면 아래 주석 해제
+        // memberRepository.delete(member);
+    }
+
+    // 회원 권한 복구
+    public void restoreRole(String memberId, String role) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+        member.setRole(Role.valueOf(role)); // 권한 설정 (Enum 활용 시)
+        memberRepository.save(member); // 변경 사항 저장
+    }
+
 }

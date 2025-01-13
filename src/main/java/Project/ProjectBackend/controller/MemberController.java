@@ -5,12 +5,17 @@ import Project.ProjectBackend.dto.MemberSignupRequestDto;
 import Project.ProjectBackend.dto.MemberUpdateRequestDto;
 import Project.ProjectBackend.security.JwtTokenProvider;
 import Project.ProjectBackend.service.MemberService;
+import jakarta.validation.constraints.NotEmpty;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,8 +50,7 @@ public class MemberController {
         }
 
         // 권한 정보 설정
-//        String authority = "ROLE_USER"; // 실제 권한 정보 필요 시 Member 엔티티에서 가져오도록 수정
-        String authority = member.getRole().name(); // ROLE_USER 또는 ROLE_ADMIN 가져오기
+        String authority = member.getRole().name(); // ROLE_USER 여야 함.
         String token = jwtTokenProvider.createAccessToken(member.getMemberId(), authority);
 
         return ResponseEntity.ok(new AuthResponse(token));
@@ -127,8 +131,47 @@ public class MemberController {
         private String id;
     }
 
-    // 회원 탈퇴
 
+    // 회원 탈퇴  (헤더에  JWT 토큰 싣고 password를 재확인하여 탈퇴)
+    @DeleteMapping("/members/delete")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> deleteMember(Authentication authentication, @RequestBody @Valid DeleteMemberRequest deleteRequest) {
+        String currentMemberId = authentication.getName(); // 인증된 사용자 ID 가져오기
+
+        // 비밀번호 확인
+        boolean isPasswordValid = memberService.checkPassword(currentMemberId, deleteRequest.getPassword());
+        if (!isPasswordValid) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("회원을 찾을 수 없습니다.");
+        }
+
+        // 회원 탈퇴 실행
+        memberService.deleteMember(currentMemberId);
+
+        return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
+    }
+
+    @Data
+    static class DeleteMemberRequest {
+        @NotEmpty
+        private String password;
+    }
+
+
+    @PutMapping("/members/restore-role/{id}")
+//    @PreAuthorize("hasRole('ADMIN')") // 관리자 권한만 허용
+    public ResponseEntity<?> restoreRole(@PathVariable("id") String memberId) {
+        // 회원 찾기
+        Member member = memberService.findOne(memberId);
+        if (member == null) {
+            return ResponseEntity.status(404).body("회원을 찾을 수 없습니다.");
+        }
+
+        // 권한 복구 (기본값으로 ROLE_USER 복구)
+        memberService.restoreRole(memberId, "ROLE_USER");
+
+        return ResponseEntity.ok("회원 권한이 복구되었습니다.");
+    }
 
 
 

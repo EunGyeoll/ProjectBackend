@@ -44,7 +44,7 @@ public class Post {
     private LocalDateTime postDate;
 
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
 

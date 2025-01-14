@@ -12,6 +12,11 @@ import Project.ProjectBackend.service.ImageService;
 import Project.ProjectBackend.service.ItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -30,25 +35,61 @@ public class ItemController {
     private final AuthService authService;
     private final ImageService imageService;
 
+
     // 1. 모든 아이템 조회
-    @GetMapping("/items/list")
-    public ResponseEntity<List<ItemResponseDto>> getAllItems() {
-        List<Item> items = itemService.getAllItems();
-        List<ItemResponseDto> responseDtos = items.stream()
-                .map(ItemResponseDto::from)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(responseDtos);
+    @GetMapping("items/list")
+    public ResponseEntity<Slice<ItemResponseDto>> getAllItems(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "itemDate,desc") String[] sort) {
+
+        // 정렬
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]); // "desc" → Sort.Direction.DESC
+        Sort sortOrder = Sort.by(direction, sort[0]); // itemDate 필드를 기준으로 내림차순 정렬
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        Slice<Item> itemsSlice = itemService.getAllItems(pageable);
+        Slice<ItemResponseDto> responseDtosSlice = itemsSlice.map(ItemResponseDto::from);
+
+        return ResponseEntity.ok(responseDtosSlice);
     }
 
+//    @GetMapping("/items/list")
+//    public ResponseEntity<List<ItemResponseDto>> getAllItems() {
+//        List<Item> items = itemService.getAllItems();
+//        List<ItemResponseDto> responseDtos = items.stream()
+//                .map(ItemResponseDto::from)
+//                .collect(Collectors.toList());
+//        return ResponseEntity.ok(responseDtos);
+//    }
+
     // 2. 특정 판매자가 등록한 아이템 조회
-    @GetMapping("/items/{sellerId}")
-    public ResponseEntity<List<ItemResponseDto>> getItemsBySeller(@PathVariable String sellerId) {
-        List<Item> items = itemService.getItemsBySeller(sellerId);
-        List<ItemResponseDto> responseDtos = items.stream()
-                .map(ItemResponseDto::from)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(responseDtos);
+    @GetMapping("/items/seller/{memberId}")
+    public ResponseEntity<Slice<ItemResponseDto>> getItemsBySeller(
+            @PathVariable String memberId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "itemDate,desc") String[] sort) {
+
+        // 정렬 처리
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Sort sortOrder = Sort.by(direction, sort[0]);
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        Slice<Item> itemsSlice = itemService.getItemsBySeller(memberId, pageable);
+        Slice<ItemResponseDto> responseDtosSlice = itemsSlice.map(ItemResponseDto::from);
+
+        return ResponseEntity.ok(responseDtosSlice);
     }
+
+//    @GetMapping("/items/{sellerId}")
+//    public ResponseEntity<List<ItemResponseDto>> getItemsBySeller(@PathVariable String sellerId) {
+//        List<Item> items = itemService.getItemsBySeller(sellerId);
+//        List<ItemResponseDto> responseDtos = items.stream()
+//                .map(ItemResponseDto::from)
+//                .collect(Collectors.toList());
+//        return ResponseEntity.ok(responseDtos);
+//    }
 
     // 3. 아이템 등록
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")

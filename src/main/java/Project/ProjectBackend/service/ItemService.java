@@ -11,6 +11,8 @@ import Project.ProjectBackend.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,16 +32,30 @@ public class ItemService {
     private static final Logger logger = LoggerFactory.getLogger(ItemService.class);
 
     // 모든 아이템 조회
-    public List<Item> getAllItems() {
-        return itemRepository.findAll();
+    public Slice<Item> getAllItems(Pageable pageable) {
+        return itemRepository.findAll(pageable);
     }
 
+//    public List<Item> getAllItems() {
+//        return itemRepository.findAll();
+//    }
+
+
     // 특정 판매자가 등록한 아이템 조회
-    public List<Item> getItemsBySeller(String sellerId) {
-        Member seller = memberRepository.findByMemberId(sellerId)
-                .orElseThrow(()-> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
-        return itemRepository.findBySeller(seller);
+    public Slice<Item> getItemsBySeller(String memberId, Pageable pageable) {
+        // 판매자가 존재하는지 확인
+        Member seller = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
+
+        // 판매자의 아이템을 페이징하여 조회
+        return itemRepository.findBySeller_MemberIdOrderByItemDateDesc(memberId, pageable);
     }
+//    public List<Item> getItemsBySeller(String sellerId) {
+//        Member seller = memberRepository.findByMemberId(sellerId)
+//                .orElseThrow(()-> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
+//        return itemRepository.findBySeller(seller);
+//    }
+
 
     // 아이템 등록
     @Transactional

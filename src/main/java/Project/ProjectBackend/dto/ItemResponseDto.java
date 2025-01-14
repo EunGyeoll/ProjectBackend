@@ -7,6 +7,7 @@ import Project.ProjectBackend.entity.Member;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +22,7 @@ public class ItemResponseDto {
     private Integer stockQuantity;
     private String sellerName;
     private String sellerEmail;
+    private LocalDateTime itemDate;
     private Long categoryId;
     private String categoryName;
     private String representativeImagePath;
@@ -47,6 +49,7 @@ public class ItemResponseDto {
                 item.getStockQuantity(),
                 seller != null ? seller.getName() : null,
                 seller != null ? seller.getEmail() : null,
+                item.getItemDate(),
                 category != null ? category.getCategoryId() : null,
                 category != null ? category.getCategoryName() : null,
                 representativeImagePath,

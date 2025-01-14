@@ -51,7 +51,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 사용으로 세션 비활성화
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/members/**").permitAll() // 인증 없이 접근 가능한 경로 설정
+
                         .requestMatchers(HttpMethod.GET, "/items/list").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/items/seller/**").permitAll() // 특정 엔드포인트 접근 허용
                         .requestMatchers(HttpMethod.POST, "/items/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")

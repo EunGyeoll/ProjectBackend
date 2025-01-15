@@ -118,33 +118,40 @@ public class ItemService {
     }
 
 
+
+    // 3. 아이템 단건(상세) 조회
+    public Item getItemById(Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
+    }
+
+
     // 3. 모든 아이템 조회 (페이징 및 정렬 적용)
     public Slice<Item> getAllItems(Pageable pageable) {
         return itemRepository.findAll(pageable);
     }
 
 
-    // 4. 특정 판매자가 등록한 아이템 조회
-    public Slice<Item> getItemsBySeller(String memberId, Pageable pageable) {
-        // 판매자가 존재하는지 확인
-        Member seller = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
-        // 판매자의 아이템을 페이징하여 조회
-        return itemRepository.findBySeller_MemberIdOrderByItemDateDesc(memberId, pageable);
-    }
-
-
-    // 5. 키워드 검색 조회
+    // 4. 키워드 검색 조회
     public Slice<Item> searchItemsByKeyword(String keyword, Pageable pageable) {
-        logger.info("Searching items with keyword: {}", keyword);
 
-        // 키워드 기반으로 아이템 검색
-        Slice<Item> items = itemRepository.findByItemNameContainingIgnoreCaseOrderByItemDateDesc(
+        Slice<Item> items = itemRepository.findByItemNameContainingIgnoreCase(
                 keyword, pageable);
 
         return items;
     }
 
+
+
+    // 5. 특정 판매자가 등록한 아이템 조회
+    public Slice<Item> getItemsBySeller(String memberId, Pageable pageable) {
+        boolean sellerExists = memberRepository.existsById(memberId);
+        if (!sellerExists) {
+            throw new IllegalArgumentException("판매자를 찾을 수 없습니다.");
+        }
+
+        return itemRepository.findBySeller_MemberId(memberId, pageable);
+    }
 
     // 6. 아이템 삭제
     public void deleteItem(Long itemId) {

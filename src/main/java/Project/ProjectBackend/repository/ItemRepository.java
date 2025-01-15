@@ -13,9 +13,9 @@ import java.util.List;
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
     // 특정 사용자로 조회
-    Slice<Item> findBySeller_MemberIdOrderByItemDateDesc(String memberId, Pageable pageable);
+    Slice<Item> findBySeller_MemberId(String memberId, Pageable pageable);
 
     // 검색어로 조회
-    Slice<Item> findByItemNameContainingIgnoreCaseOrderByItemDateDesc(String itemName, Pageable pageable);
+    Slice<Item> findByItemNameContainingIgnoreCase(String itemName, Pageable pageable);
 
 }

@@ -63,12 +63,23 @@ public class ItemController {
     }
 
 
-    // 3. 모든 아이템 조회
+
+
+    // 3. 아이템 상세(단건) 조회
+    @GetMapping("/items/{itemId}")
+    public ResponseEntity<ItemResponseDto> getItem(@PathVariable Long itemId) {
+        Item item = itemService.getItemById(itemId);
+        ItemResponseDto responseDto = ItemResponseDto.from(item);
+        return ResponseEntity.ok(responseDto);
+    }
+
+
+    // 4. 모든 아이템 목록 조회
     @GetMapping("/items/list")
     public ResponseEntity<Slice<ItemResponseDto>> getAllItems(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "latest") String sortOption) { // sortOption 추가
+            @RequestParam(defaultValue = "latest") String sortOption) {
 
         Sort sortOrder;
 
@@ -91,19 +102,19 @@ public class ItemController {
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
         Slice<Item> itemsSlice = itemService.getAllItems(pageable);
-        Slice<ItemResponseDto> responseDtosSlice = itemsSlice.map(ItemResponseDto::from);
+        Slice<ItemResponseDto> responseDtosSlice = itemsSlice.map(ItemResponseDto::fromForList);
 
         return ResponseEntity.ok(responseDtosSlice);
     }
 
 
-    // 4. 특정 판매자가 등록한 아이템 조회
+    // 5. 특정 판매자가 등록한 아이템 조회
     @GetMapping("/items/seller/{memberId}")
     public ResponseEntity<Slice<ItemResponseDto>> getItemsBySeller(
             @PathVariable String memberId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "latest") String sortOption) { // sortOption 추가
+            @RequestParam(defaultValue = "latest") String sortOption) {
 
         Sort sortOrder;
 
@@ -126,14 +137,14 @@ public class ItemController {
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
         Slice<Item> itemsSlice = itemService.getItemsBySeller(memberId, pageable);
-        Slice<ItemResponseDto> responseDtosSlice = itemsSlice.map(ItemResponseDto::from);
+        Slice<ItemResponseDto> responseDtosSlice = itemsSlice.map(ItemResponseDto::fromForList);
 
         return ResponseEntity.ok(responseDtosSlice);
     }
 
 
 
-    // 5. 키워드 검색으로 조회
+    // 6. 키워드 검색으로 조회
     @GetMapping("/items/search")
     public ResponseEntity<Slice<ItemResponseDto>> searchItems(
             @RequestParam String keyword,
@@ -164,7 +175,7 @@ public class ItemController {
         Slice<Item> itemSlice = itemService.searchItemsByKeyword(keyword,pageable);
 
         // 엔티티를 Dto로 변환
-        Slice<ItemResponseDto> responseDtoSlice = itemSlice.map(ItemResponseDto::from);
+        Slice<ItemResponseDto> responseDtoSlice = itemSlice.map(ItemResponseDto::fromForList);
 
         return ResponseEntity.ok(responseDtoSlice);
 
@@ -172,7 +183,7 @@ public class ItemController {
 
 
 
-    // 6. 아이템 삭제
+    // 7. 아이템 삭제
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/items/{itemId}")
     public ResponseEntity<String> deleteItem(@PathVariable Long itemId) {

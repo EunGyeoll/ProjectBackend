@@ -141,8 +141,11 @@ public class PostService {
     // 5. 특정 판매자가 등록한 게시글 조회
     public Slice<Post> getPostsByWriter(String memberId, Pageable pageable) {
         // 작성자 존재하는지 확인
-        Member writer = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+        boolean writerExists = memberRepository.existsById(memberId);
+        if (!writerExists) {
+            throw new IllegalArgumentException("작성자를 찾을 수 없습니다.");
+        }
+
         // 게시글 페이징하여 조회
         return postRepository.findByWriter_MemberId(memberId, pageable);
     }

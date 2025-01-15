@@ -56,5 +56,34 @@ public class ItemResponseDto {
                 imagePaths
         );
     }
+
+
+    // 목록 조회용 메소드 (대표 이미지만 포함)
+    public static ItemResponseDto fromForList(Item item) {
+        Member seller = item.getSeller();
+        Category category = item.getCategory();
+
+        // 대표 이미지 경로 설정
+        String representativeImagePath = item.getImages().isEmpty()
+                ? null
+                : item.getImages().get(0).getImagePath();
+
+
+        return new ItemResponseDto(
+                item.getItemId(),
+                item.getItemName(),
+                item.getPrice(),
+                item.getDescription(),
+                item.getStockQuantity(),
+                seller != null ? seller.getName() : null,
+                seller != null ? seller.getEmail() : null,
+                item.getItemDate(),
+                category != null ? category.getCategoryId() : null,
+                category != null ? category.getCategoryName() : null,
+                representativeImagePath,
+                null // 목록 조회 시 이미지 리스트는 null로 설정
+        );
+    }
 }
+
 

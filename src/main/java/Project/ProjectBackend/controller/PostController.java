@@ -10,6 +10,10 @@ import Project.ProjectBackend.entity.Post;
 import Project.ProjectBackend.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -61,21 +65,78 @@ public class PostController {
     }
 
 
-    // 3. 게시글 목록 조회
-    @GetMapping("/posts/list")
-    public ResponseEntity<List<PostResponseDto>> getAllPosts() {
-        List<PostResponseDto> boards = postService.getAllPosts();
-        return ResponseEntity.ok(boards);
-    }
-
-    // 4. 게시글 상세(단건) 조회
+    // 3. 게시글 상세(단건) 조회
     @GetMapping("/posts/{postNo}")
-        public ResponseEntity<PostResponseDto> getPost(@PathVariable Long postNo) {
+    public ResponseEntity<PostResponseDto> getPost(@PathVariable Long postNo) {
         PostResponseDto post = postService.getPost(postNo);
         return ResponseEntity.ok(post);
     }
 
-    // 5. 게시글 삭제
+    // 4. 게시글 목록 조회
+    @GetMapping("/posts/list")
+    public ResponseEntity<Slice<PostResponseDto>> getAllPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "latest") String sortOption) { // sortOption 추가
+
+            Sort sortOrder;
+
+            switch (sortOption.toLowerCase()) {
+                case "mostHitCount":
+                    sortOrder = Sort.by(Sort.Direction.DESC, "hitCount");
+                    break;
+                case "mostlikeCount":
+                    sortOrder = Sort.by(Sort.Direction.DESC, "likeCount");
+                    break;
+                case "latest": // 최신순이 디폴트
+                default:
+                    sortOrder = Sort.by(Sort.Direction.DESC, "postDate");
+                    break;
+            }
+
+            Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+            Slice<Post> postsSlice = postService.getAllPosts(pageable);
+            Slice<PostResponseDto> responseDtosSlice = postsSlice.map(PostResponseDto::fromForList);
+
+            return ResponseEntity.ok(responseDtosSlice);
+    }
+
+
+    // 5. 게시글 특정 멤버별 조회
+    @GetMapping("/posts/writer/{memberId}")
+    public ResponseEntity<Slice<PostResponseDto>> getPostsBySeller(
+            @PathVariable String memberId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "latest") String sortOption) { // sortOption 추가
+
+        Sort sortOrder;
+
+        switch (sortOption.toLowerCase()) {
+            case "mostHitCount":
+                sortOrder = Sort.by(Sort.Direction.DESC, "hitCount");
+                break;
+            case "mostlikeCount":
+                sortOrder = Sort.by(Sort.Direction.DESC, "likeCount");
+                break;
+            case "latest": // 최신순이 디폴트
+            default:
+                sortOrder = Sort.by(Sort.Direction.DESC, "postDate");
+                break;
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        Slice<Post> postsSlice = postService.getPostsByWriter(memberId, pageable);
+        Slice<PostResponseDto> responseDtosSlice = postsSlice.map(PostResponseDto::fromForList);
+
+        return ResponseEntity.ok(responseDtosSlice);
+
+    }
+
+
+    // 6. 게시글 삭제
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/posts/{postNo}")
     public ResponseEntity<?> deletePost(@PathVariable Long postNo) {

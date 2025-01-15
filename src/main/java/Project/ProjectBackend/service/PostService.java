@@ -12,6 +12,8 @@ import Project.ProjectBackend.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +33,7 @@ public class PostService {
 
     private static final Logger logger = LoggerFactory.getLogger(PostService.class);
 
-    // 게시글 등록
+    // 1. 게시글 등록
     @Transactional
     public Post createPost(PostRequestDto postRequestDto, Member currentUser, List<MultipartFile> imageFiles) {
         // Post 엔티티 생성
@@ -77,7 +79,7 @@ public class PostService {
     }
 
 
-    // 게시글 수정
+    // 2. 게시글 수정
     @Transactional
     public Post updatePost(Long postId, PostRequestDto postRequestDto, List<MultipartFile> imageFiles, Member currentUser) {
         Post existingpost = postRepository.findById(postId)
@@ -115,14 +117,7 @@ public class PostService {
     }
 
 
-    // 모든 게시글 조회
-    public List<PostResponseDto> getAllPosts() {
-        return postRepository.findAll().stream()
-                .map(PostResponseDto::from) // 엔티티 -> DTO 변환
-                .collect(Collectors.toList());
-    }
-
-    // 게시글 상세 조회
+    // 3. 게시글 상세(단건) 조회
     public PostResponseDto getPost(Long postNo) {
         Post post = postRepository.findById(postNo)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
@@ -134,7 +129,27 @@ public class PostService {
         return PostResponseDto.from(post); // DTO 반환
     }
 
-    // 게시글 삭제
+
+
+    // 4. 게시글 목록 조회
+    public Slice<Post> getAllPosts(Pageable pageable) {
+        return postRepository.findAll(pageable);
+    }
+
+
+
+    // 5. 특정 판매자가 등록한 게시글 조회
+    public Slice<Post> getPostsByWriter(String memberId, Pageable pageable) {
+        // 작성자 존재하는지 확인
+        Member writer = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+        // 게시글 페이징하여 조회
+        return postRepository.findByWriter_MemberId(memberId, pageable);
+    }
+
+
+    // 6. 게시글 삭제
+    @Transactional
     public void deletePost(Long postNo) {
         if (!postRepository.existsById(postNo)) {
             throw new IllegalArgumentException("게시글이 존재하지 않습니다.");

@@ -55,11 +55,15 @@
                             .requestMatchers(HttpMethod.GET, "/items/list").permitAll()
                             .requestMatchers(HttpMethod.GET,"/items/seller/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/items/search").permitAll()
+
                             .requestMatchers(HttpMethod.POST, "/items/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.PUT, "/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.DELETE, "/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
+                            .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/posts/list").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/posts/writer/**").permitAll()
+
                             .requestMatchers(HttpMethod.POST, "/posts/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.PUT, "/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.DELETE, "/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")

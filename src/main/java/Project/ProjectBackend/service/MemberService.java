@@ -20,7 +20,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // 회원가입 (아이디를 반환하도록 되어있음. 회원가입이 완료되었습니다!라는 문구만 반환할거면 반환타입 Long 이 아닌 다른거로 하기.)
+    // 회원가입
     @Transactional
     public String signup(MemberSignupRequestDto requestDto) {
         // 이메일 중복 체크

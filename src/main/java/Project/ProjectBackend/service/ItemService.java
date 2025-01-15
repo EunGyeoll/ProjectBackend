@@ -31,33 +31,8 @@ public class ItemService {
     private final ImageService imageService;
     private static final Logger logger = LoggerFactory.getLogger(ItemService.class);
 
-    // 모든 아이템 조회
-    public Slice<Item> getAllItems(Pageable pageable) {
-        return itemRepository.findAll(pageable);
-    }
 
-//    public List<Item> getAllItems() {
-//        return itemRepository.findAll();
-//    }
-
-
-    // 특정 판매자가 등록한 아이템 조회
-    public Slice<Item> getItemsBySeller(String memberId, Pageable pageable) {
-        // 판매자가 존재하는지 확인
-        Member seller = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
-
-        // 판매자의 아이템을 페이징하여 조회
-        return itemRepository.findBySeller_MemberIdOrderByItemDateDesc(memberId, pageable);
-    }
-//    public List<Item> getItemsBySeller(String sellerId) {
-//        Member seller = memberRepository.findByMemberId(sellerId)
-//                .orElseThrow(()-> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
-//        return itemRepository.findBySeller(seller);
-//    }
-
-
-    // 아이템 등록
+    // 1. 아이템 등록
     @Transactional
     public Item createItem(ItemRequestDto itemRequestDto, Member currentUser, List<MultipartFile> imageFiles) {
         logger.info("Creating item: {}", itemRequestDto.getItemName());
@@ -99,29 +74,10 @@ public class ItemService {
         }
 
         return savedItem;
-
     }
 
 
-    private String extractFileNameFromPath(String path) {
-        // 예: "uploads/original/file.jpg" -> "file.jpg"
-        return path.substring(path.lastIndexOf("/") + 1);
-    }
-
-    private String generateUniqueFileName(String path) {
-        // 예: UUID를 기반으로 고유 파일 이름 생성
-        return UUID.randomUUID() + "_" + extractFileNameFromPath(path);
-    }
-
-    private long getFileSize(String path) {
-        // 파일 경로를 사용해 실제 파일 크기를 가져오는 로직 구현 필요
-        File file = new File(path);
-        return file.exists() ? file.length() : 0L;
-    }
-
-
-
-
+    // 2. 아이템 수정
     @Transactional
     public Item updateItem(Long itemId, ItemRequestDto itemRequestDto, List<MultipartFile> imageFiles, Member currentUser) {
         // 1. 아이템 조회
@@ -162,13 +118,59 @@ public class ItemService {
     }
 
 
+    // 3. 모든 아이템 조회 (페이징 및 정렬 적용)
+    public Slice<Item> getAllItems(Pageable pageable) {
+        return itemRepository.findAll(pageable);
+    }
 
-    // 아이템 삭제
+
+    // 4. 특정 판매자가 등록한 아이템 조회
+    public Slice<Item> getItemsBySeller(String memberId, Pageable pageable) {
+        // 판매자가 존재하는지 확인
+        Member seller = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
+        // 판매자의 아이템을 페이징하여 조회
+        return itemRepository.findBySeller_MemberIdOrderByItemDateDesc(memberId, pageable);
+    }
+
+
+    // 5. 키워드 검색 조회
+    public Slice<Item> searchItemsByKeyword(String keyword, Pageable pageable) {
+        logger.info("Searching items with keyword: {}", keyword);
+
+        // 키워드 기반으로 아이템 검색
+        Slice<Item> items = itemRepository.findByItemNameContainingIgnoreCaseOrderByItemDateDesc(
+                keyword, pageable);
+
+        return items;
+    }
+
+
+    // 6. 아이템 삭제
     public void deleteItem(Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
         itemRepository.delete(item);
     }
+
+
+
+//    private String extractFileNameFromPath(String path) {
+//        // 예: "uploads/original/file.jpg" -> "file.jpg"
+//        return path.substring(path.lastIndexOf("/") + 1);
+//    }
+//
+//    private String generateUniqueFileName(String path) {
+//        // 예: UUID를 기반으로 고유 파일 이름 생성
+//        return UUID.randomUUID() + "_" + extractFileNameFromPath(path);
+//    }
+//
+//    private long getFileSize(String path) {
+//        File file = new File(path);
+//        return file.exists() ? file.length() : 0L;
+//    }
+
+
 
 
     }

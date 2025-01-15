@@ -80,7 +80,7 @@ public class MemberController {
     // 회원정보 수정
     @PutMapping("/members/update/{id}")
     public ResponseEntity<?> updateMember(
-        // 수정하고 나서도 원래의 비밀번호 들어가야 한다.
+            // 수정하고 나서도 원래의 비밀번호 들어가야 한다.
             @PathVariable("id") String id,
             @RequestBody @Valid MemberUpdateRequestDto updateRequestDto) {
 

@@ -3,6 +3,7 @@ package Project.ProjectBackend.controller;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.dto.MemberSignupRequestDto;
 import Project.ProjectBackend.dto.MemberUpdateRequestDto;
+import Project.ProjectBackend.repository.MemberRepository;
 import Project.ProjectBackend.security.JwtTokenProvider;
 import Project.ProjectBackend.service.MemberService;
 import jakarta.validation.constraints.NotEmpty;
@@ -27,6 +28,7 @@ public class MemberController {
 
     private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider; // @RequiredArgsConstructor를 사용했기 때문에 자동으로 final 필드에 대한 생성자가 생성됨
+    private final MemberRepository memberRepository;
 
 //    public MemberController(JwtTokenProvider jwtTokenProvider) {
 //        this.jwtTokenProvider = jwtTokenProvider;
@@ -61,7 +63,6 @@ public class MemberController {
     static class LoginRequest {
         private String memberId;
         private String password;
-        // Getter/Setter
     }
 
     @Data

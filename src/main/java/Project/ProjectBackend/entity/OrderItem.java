@@ -21,7 +21,10 @@ public class OrderItem {
     @JoinColumn(name = "order_id")
     private Order order;
 
+    @Column
     private int orderPrice;
+
+    @Column
     private int count;
 
     //==생성 메서드==//
@@ -31,11 +34,11 @@ public class OrderItem {
         orderItem.setOrderPrice(orderPrice);
         orderItem.setCount(count);
 
-        item.removeStock(count);
+        item.removeStock(count); // 주문 수량만큼 재고 감소
         return orderItem;
     }
 
-    // 취소
+    // 취소하면 재고 다시 증가
     public void cancel() {
         getItem().addStock(count);
     }

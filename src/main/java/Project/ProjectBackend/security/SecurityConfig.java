@@ -69,6 +69,14 @@
                             .requestMatchers(HttpMethod.PUT, "/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.DELETE, "/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
+                            .requestMatchers(HttpMethod.POST, "/orders/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/orders/{orderId}/delivery").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/orders/{orderId}/cancel").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/orders/{orderId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/orders/member/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+
+
+
                             .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                     )
                     .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가

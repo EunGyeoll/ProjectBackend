@@ -13,12 +13,24 @@ public class Delivery {
     private Long deliveryId;
 
     @JsonIgnore
-    @OneToOne(mappedBy="delivery")
+    @OneToOne(mappedBy = "delivery", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Order order;
 
     @Embedded
     private Address address;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "delivery_status")
     private DeliveryStatus status;
+
+    // 배송 상태 변경
+    public void changeStatus(DeliveryStatus newStatus) {
+        this.status = newStatus;
+    }
+
+    // 배송지 변경
+    public void updateAddress(Address newAddress) {
+        this.address = newAddress;
+    }
+
 }

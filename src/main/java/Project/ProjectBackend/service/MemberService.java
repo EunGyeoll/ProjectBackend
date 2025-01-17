@@ -127,7 +127,7 @@ public class MemberService {
     public void restoreRole(String memberId, String role) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
-        member.setRole(Role.valueOf(role)); // 권한 설정 (Enum 활용 시)
+        member.setEnabled(true);
         memberRepository.save(member); // 변경 사항 저장
     }
 

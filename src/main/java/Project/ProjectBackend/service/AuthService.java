@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -17,6 +18,7 @@ public class AuthService {
         this.memberRepository = memberRepository;
     }
 
+    @Transactional
     public Member getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         log.debug("Authentication: {}", authentication);

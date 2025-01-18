@@ -10,6 +10,7 @@ import Project.ProjectBackend.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -28,10 +29,10 @@ public class OrderService {
 
     // 1. 주문 생성
     @Transactional
-    public Order createOrder(OrderCreateRequestDto requestDto) {
+    public Order createOrder(OrderCreateRequestDto requestDto, Member currentUser) {
         // 회원 조회
-        Member member = memberRepository.findById(requestDto.getMemberId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
+        Member member = memberRepository.findById(currentUser.getMemberId())
+                .orElseThrow(() -> new IllegalArgumentException("인증된 사용자를 찾을 수 없습니다."));
 
         // 상품 조회
         Item item = itemRepository.findById(requestDto.getItemId())
@@ -82,23 +83,19 @@ public class OrderService {
 
     // 2. 주문 수정 (배송지 변경)
     @Transactional
-    public Order updateDeliveryAddress(Long orderId, DeliveryUpdateRequestDto deliveryUpdateRequestDto) {
-        // 현재 인증된 사용자 정보 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication.getName(); // 회원 ID 가져옴
-
+    public Order updateDeliveryAddress(Long orderId, DeliveryUpdateRequestDto deliveryUpdateRequestDto, Member currentUser) {
         // 주문 조회
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다."));
 
         // 주문 소유자 확인
-        if (!order.getMember().getMemberId().equals(currentUsername)) {
+        if (!order.getMember().getMemberId().equals(currentUser.getMemberId())) {
             throw new IllegalArgumentException("해당 주문을 수정할 권한이 없습니다.");
         }
 
         // 주문 상태 확인
         Delivery delivery = order.getDelivery();
-        if ( delivery.getStatus() != DeliveryStatus.ORDER_PLACED && delivery.getStatus() != DeliveryStatus.ORDER_CONFIRMED ) {
+        if (delivery.getStatus() != DeliveryStatus.ORDER_PLACED && delivery.getStatus() != DeliveryStatus.ORDER_CONFIRMED) {
             throw new IllegalArgumentException("배송지 변경은 주문 접수 완료, 주문 확인 완료 상태에서만 가능합니다.");
         }
 
@@ -116,16 +113,47 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-     // 주문 조회
-    @Transactional(readOnly = true)
-    public Order getOrder(Long orderId) {
-        return orderRepository.findById(orderId)
+
+    // 3. 주문 취소
+    @Transactional
+    public void cancelOrder(Long orderId, Member currentUser) {
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다."));
+
+        // 주문 소유자 확인
+        if (!order.getMember().getMemberId().equals(currentUser.getMemberId())) {
+            throw new IllegalArgumentException("해당 주문을 하신 사용자가 아닙니다.");
+        }
+
+        order.cancel();
     }
 
-    // 특정 회원의 모든 주문 조회
+
+     // 4. 주문 조회
+     @Transactional(readOnly = true)
+     public Order getOrder(Long orderId, Member currentUser) {
+         Order order = orderRepository.findById(orderId)
+                 .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다."));
+
+         // 주문 소유자 확인 또는 관리자 권한 확인
+         if (!order.getMember().getMemberId().equals(currentUser.getMemberId())
+                 && !currentUser.getRole().equals(Role.ROLE_ADMIN)) {
+             throw new AccessDeniedException("해당 주문을 조회할 권한이 없습니다.");
+         }
+
+         return order;
+     }
+
+
+
+    // 5. 특정 회원의 모든 주문 조회
     @Transactional(readOnly = true)
-    public Slice<Order> getOrdersByMember(String memberId, Pageable pageable) {
+    public Slice<Order> getOrdersByMember(String memberId, Pageable pageable, Member currentUser) {
+
+        if (!currentUser.getRole().equals(Role.ROLE_ADMIN) && !currentUser.getMemberId().equals(memberId)) {
+            throw new AccessDeniedException("해당 회원의 주문을 조회할 권한이 없습니다.");
+        }
+
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
 
@@ -133,12 +161,5 @@ public class OrderService {
     }
 
 
-    // 주문 취소
-    @Transactional
-    public void cancelOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다."));
-        order.cancel();
-    }
 
 }

@@ -3,7 +3,9 @@ package Project.ProjectBackend.controller;
 import Project.ProjectBackend.dto.DeliveryUpdateRequestDto;
 import Project.ProjectBackend.dto.OrderCreateRequestDto;
 import Project.ProjectBackend.dto.OrderDto;
+import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.entity.Order;
+import Project.ProjectBackend.service.AuthService;
 import Project.ProjectBackend.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,14 +20,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
+    private final AuthService authService;
 
     // 1. 주문 생성
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
@@ -33,8 +34,10 @@ public class OrderController {
     public ResponseEntity<OrderDto> createOrder(@RequestBody OrderCreateRequestDto requestDto) {
         log.info("New order request received: {}", requestDto);
 
+        Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
+
         try {
-            Order createdOrder = orderService.createOrder(requestDto);
+            Order createdOrder = orderService.createOrder(requestDto, currentUser);
             log.info("주문이 성공적으로 생성되었습니다.");
             return new ResponseEntity<>(new OrderDto(createdOrder), HttpStatus.CREATED);
         } catch (Exception e) {
@@ -50,17 +53,22 @@ public class OrderController {
             @PathVariable Long orderId,
             @RequestBody @Valid DeliveryUpdateRequestDto deliveryUpdateRequestDto) {
 
-        Order updatedOrder = orderService.updateDeliveryAddress(orderId, deliveryUpdateRequestDto);
+        Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
+
+        Order updatedOrder = orderService.updateDeliveryAddress(orderId, deliveryUpdateRequestDto, currentUser);
         return ResponseEntity.ok(new OrderDto(updatedOrder));
     }
 
 
 
-    // 2. 주문 취소
+    // 3. 주문 취소
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @PostMapping("/orders/{orderId}/cancel")
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
-        orderService.cancelOrder(orderId);
+
+        Member currentUser = authService.getCurrentUser();
+
+        orderService.cancelOrder(orderId, currentUser);
         return ResponseEntity.ok().build();
     }
 
@@ -69,7 +77,10 @@ public class OrderController {
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @GetMapping("/orders/{orderId}")
     public ResponseEntity<OrderDto> getOrder(@PathVariable Long orderId) {
-        Order order = orderService.getOrder(orderId);
+
+        Member currentUser = authService.getCurrentUser();
+
+        Order order = orderService.getOrder(orderId, currentUser);
         return ResponseEntity.ok(new OrderDto(order));
     }
 
@@ -83,11 +94,13 @@ public class OrderController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "latest") String sortOption) {
 
+        Member currentUser = authService.getCurrentUser();
+
         // 정렬 방식 설정 (최신순)
         Sort sort = sortOption.equalsIgnoreCase("latest") ? Sort.by(Sort.Direction.DESC, "orderDate") : Sort.unsorted();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Slice<Order> ordersSlice = orderService.getOrdersByMember(memberId, pageable);
+        Slice<Order> ordersSlice = orderService.getOrdersByMember(memberId, pageable, currentUser);
         Slice<OrderDto> orderDtosSlice = ordersSlice.map(OrderDto::new);
 
         return ResponseEntity.ok(orderDtosSlice);

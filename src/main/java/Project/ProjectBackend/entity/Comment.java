@@ -3,6 +3,7 @@ package Project.ProjectBackend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter
+@Data
 @NoArgsConstructor
 public class Comment {
 
@@ -44,6 +45,11 @@ public class Comment {
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> childComments = new ArrayList<>(); // 대댓글 리스트
 
+
+    @Column(nullable = false)
+    private boolean isDeleted = false;
+
+
     @Builder
     public Comment(Post post, Member writer, String content, Comment parentComment) {
         this.post = post;
@@ -61,4 +67,9 @@ public class Comment {
         this.parentComment = parentComment;  // 부모 댓글 설정
     }
 
+
+    // 삭제된 댓글으로 표시
+    public void markAsdeleted() {
+        this.isDeleted = true;
+    }
 }

@@ -2,6 +2,7 @@ package Project.ProjectBackend.dto;
 
 import Project.ProjectBackend.entity.Comment;
 import Project.ProjectBackend.entity.Post;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -11,11 +12,9 @@ import java.util.List;
 @Data
 @RequiredArgsConstructor
 public class CommentRequestDto {
-//    private Post post;
-    private String writerId; // 댓글 작성자
+
+    @NotBlank(message = "댓글 내용은 비워둘 수 없습니다.")
     private String content;
-//    private LocalDateTime commentDate;
-//    private Comment parentComment;
-//    private List<Comment> childComments;
+    private Long parentCommentId;
 
 }

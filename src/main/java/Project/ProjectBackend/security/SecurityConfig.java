@@ -52,6 +52,7 @@
                     .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/members/**").permitAll() // 인증 없이 접근 가능한 경로 설정
 
+                            // 아이템
                             .requestMatchers(HttpMethod.GET, "/items/list").permitAll()
                             .requestMatchers(HttpMethod.GET,"/items/seller/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/items/search").permitAll()
@@ -61,6 +62,7 @@
                             .requestMatchers(HttpMethod.PUT, "/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.DELETE, "/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
+                            // 게시글
                             .requestMatchers(HttpMethod.GET, "/posts/list").permitAll()
                             .requestMatchers(HttpMethod.GET, "/posts/writer/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
@@ -69,6 +71,16 @@
                             .requestMatchers(HttpMethod.PUT, "/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.DELETE, "/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
+
+                            // 댓글
+                            .requestMatchers(HttpMethod.POST, "/comments/{postNo}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/comments/{commentId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/comments/{commentId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/comments/{postNo}").permitAll()
+
+
+
+                            // 주문
                             .requestMatchers(HttpMethod.POST, "/orders/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.PUT, "/orders/{orderId}/delivery").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.POST, "/orders/{orderId}/cancel").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")

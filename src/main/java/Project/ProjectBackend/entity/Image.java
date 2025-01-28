@@ -1,5 +1,6 @@
 package Project.ProjectBackend.entity;
 
+import Project.ProjectBackend.dto.ReviewResponseDto;
 import Project.ProjectBackend.entity.Item;
 import jakarta.persistence.*;
 import lombok.*;
@@ -36,6 +37,10 @@ public class Image {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private Post post; // 해당 이미지를 참조하는 Post
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "review_id")
+    private Review review; // 해당 이미지를 참조하는 Review
 
 
     public void setItem(Item item) {

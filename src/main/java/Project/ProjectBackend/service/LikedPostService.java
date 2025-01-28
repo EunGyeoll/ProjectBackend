@@ -1,6 +1,5 @@
 package Project.ProjectBackend.service;
 
-import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.dto.PostResponseDto;
 import Project.ProjectBackend.entity.*;
 import Project.ProjectBackend.repository.*;

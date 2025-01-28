@@ -3,6 +3,7 @@
     import Project.ProjectBackend.entity.Image;
     import Project.ProjectBackend.entity.Item;
     import Project.ProjectBackend.entity.Post;
+    import Project.ProjectBackend.entity.Review;
     import Project.ProjectBackend.exception.ImageSaveException;
     import Project.ProjectBackend.repository.ImageRepository;
     import lombok.RequiredArgsConstructor;
@@ -18,7 +19,6 @@
     import java.nio.file.Paths;
     import java.util.ArrayList;
     import java.util.List;
-    import java.util.stream.Collectors;
 
     @Service
     @RequiredArgsConstructor
@@ -37,19 +37,23 @@
 
         // POST 관련된 이미지를 저장하는 메소드
         public List<Image> saveImagesForPost(List<MultipartFile> imageFiles, Post post) {
-            return saveImagesInternal(imageFiles, post, null);
+            return saveImagesInternal(imageFiles, post, null, null);
         }
 
 
-
         // ITEM 관련된 이미지를 저장하는 메소드
-        public List<Image> saveImagesForItem(List<MultipartFile> imageFiles, Item item) {
-            return saveImagesInternal(imageFiles, null, item);
+        public List<Image> saveImagesForItem(List<MultipartFile>  imageFiles, Item item) {
+            return saveImagesInternal(imageFiles, null, item, null);
+        }
+
+        // REVIEW 관련 이미지를 저장하는 메서드 추가
+        public List<Image> saveImagesForReview(List<MultipartFile> imageFiles, Review review) {
+            return saveImagesInternal(imageFiles, null, null, review);
         }
 
 
         // 공통적인 이미지 저장 로직
-        private List<Image> saveImagesInternal(List<MultipartFile> imageFiles, Post post, Item item) {
+        private List<Image> saveImagesInternal(List<MultipartFile> imageFiles, Post post, Item item, Review review) {
             List<Image> savedImages = new ArrayList<>();
 
             for (int i = 0; i < imageFiles.size(); i++) {
@@ -99,6 +103,7 @@
                         .fileSize(file.getSize())
                         .post(post)
                         .item(item)
+                        .review(review)
                         .build();
 
                 savedImages.add(imageRepository.save(image));

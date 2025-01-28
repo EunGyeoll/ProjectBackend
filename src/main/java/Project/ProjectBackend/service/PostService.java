@@ -41,7 +41,7 @@ public class PostService {
                 .writer(currentUser)
                 .title(postRequestDto.getTitle())
                 .content(postRequestDto.getContent())
-                .postDate(postRequestDto.getBoardDate())
+                .postDate(postRequestDto.getPostDate())
                 .build();
 
         // post 먼저 저장하여 postno 확보

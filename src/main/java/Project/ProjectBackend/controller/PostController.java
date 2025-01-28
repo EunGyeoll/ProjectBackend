@@ -1,10 +1,7 @@
 package Project.ProjectBackend.controller;
 
-import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.dto.PostRequestDto;
 import Project.ProjectBackend.dto.PostResponseDto;
-import Project.ProjectBackend.entity.Image;
-import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.entity.Post;
 import Project.ProjectBackend.service.*;
@@ -19,9 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor

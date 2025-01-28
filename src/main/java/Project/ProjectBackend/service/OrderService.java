@@ -150,7 +150,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Slice<Order> getOrdersByMember(String memberId, Pageable pageable, Member currentUser) {
 
-        if (!currentUser.getRole().equals(Role.ROLE_ADMIN) && !currentUser.getMemberId().equals(memberId)) {
+        if (!currentUser.getMemberId().equals(memberId)) {
             throw new AccessDeniedException("해당 회원의 주문을 조회할 권한이 없습니다.");
         }
 

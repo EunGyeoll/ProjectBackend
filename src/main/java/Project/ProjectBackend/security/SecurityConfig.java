@@ -87,7 +87,16 @@
                             .requestMatchers(HttpMethod.GET, "/orders/{orderId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.GET, "/orders/member/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
+                            // 리뷰
+                            .requestMatchers(HttpMethod.GET, "/store/reviews/**").permitAll()
 
+                            // 신고하기
+                            .requestMatchers(HttpMethod.POST, "/reports/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+
+
+                            // 관리자
+                            .requestMatchers(HttpMethod.POST, "/admin/new").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/admin/**").hasAuthority("ROLE_ADMIN")
 
                             .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                     )

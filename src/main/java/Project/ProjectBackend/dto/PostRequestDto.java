@@ -9,10 +9,9 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class PostRequestDto {
-    private String writerId;
     private String title;
     private String content;
-    private LocalDateTime boardDate;
-    private List<String> imagePaths;
-    private List<String> originFileNames;
+    private LocalDateTime postDate;
+//    private List<String> imagePaths;
+//    private List<String> originFileNames;
 }

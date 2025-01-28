@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
+@PreAuthorize("hasAuthority('ROLE_USER')")
 public class CommentController {
 
     private final CommentService commentService;
@@ -29,7 +30,6 @@ public class CommentController {
 
 
     // 1. 댓글 및 대댓글 작성
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @PostMapping("/comments/{postNo}")
     public ResponseEntity<CommentResponseDto> createComment(
                 @PathVariable Long postNo, @RequestBody @Valid  CommentRequestDto commentRequestDto) {
@@ -50,7 +50,6 @@ public class CommentController {
 
 
     // 2. 댓글 수정
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @PutMapping("/comments/{commentId}")
     public ResponseEntity<CommentResponseDto> updateComment(
             @PathVariable Long commentId,
@@ -66,7 +65,6 @@ public class CommentController {
 
 
     // 3. 댓글 삭제
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<String> deleteComment(
             @PathVariable Long commentId) {

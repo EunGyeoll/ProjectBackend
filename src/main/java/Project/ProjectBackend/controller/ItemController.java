@@ -1,27 +1,21 @@
 package Project.ProjectBackend.controller;
 
 
-import Project.ProjectBackend.entity.Image;
 import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.dto.ItemRequestDto;
 import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.service.AuthService;
-import Project.ProjectBackend.service.FileService;
-import Project.ProjectBackend.service.ImageService;
 import Project.ProjectBackend.service.ItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,7 +26,7 @@ public class ItemController {
 
 
     // 1. 아이템 등록
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @PostMapping("/items/new")
     public ResponseEntity<ItemResponseDto> createItem(
             @RequestPart(value = "itemData") @Valid ItemRequestDto itemRequestDto,
@@ -45,8 +39,9 @@ public class ItemController {
     }
 
 
+
     // 2. 아이템 수정
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @PutMapping("/items/{itemId}")
     public ResponseEntity<ItemResponseDto> updateItem(
             @PathVariable Long itemId,
@@ -137,7 +132,7 @@ public class ItemController {
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
         Slice<Item> itemsSlice = itemService.getItemsBySeller(memberId, pageable);
-        Slice<ItemResponseDto> responseDtosSlice = itemsSlice.map(ItemResponseDto::fromForList);
+        Slice<ItemResponseDto> responseDtosSlice = itemsSlice.map(ItemResponseDto::from);
 
         return ResponseEntity.ok(responseDtosSlice);
     }

@@ -15,6 +15,6 @@ public class MemberUpdateRequestDto {
     private String email;
     private int age;
     private LocalDate birthDate;
-    private Address address; // 추가: Address를 포함하도록 수정
+    private Address address;
 
 }

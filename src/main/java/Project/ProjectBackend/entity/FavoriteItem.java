@@ -1,10 +1,7 @@
 package Project.ProjectBackend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -12,7 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
+@Data
 @Builder
 public class FavoriteItem {
     @Id
@@ -27,6 +24,9 @@ public class FavoriteItem {
     @JoinColumn(name = "item_id", nullable = false) // Item 테이블의 item_id 와 매핑
     private Item item;
 
+    private String representativeImagePath;
+
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt; // 관심 상품 등록 시간
@@ -35,5 +35,6 @@ public class FavoriteItem {
     public FavoriteItem(Member member, Item item){
         this.member = member;
         this.item = item;
+        this.representativeImagePath = item.getRepresentativeImagePath();
     }
 }

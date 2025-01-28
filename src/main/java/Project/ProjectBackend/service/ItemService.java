@@ -1,9 +1,6 @@
 package Project.ProjectBackend.service;
 
-import Project.ProjectBackend.entity.Category;
-import Project.ProjectBackend.entity.Image;
-import Project.ProjectBackend.entity.Item;
-import Project.ProjectBackend.entity.Member;
+import Project.ProjectBackend.entity.*;
 import Project.ProjectBackend.dto.ItemRequestDto;
 import Project.ProjectBackend.repository.CategoryRepository;
 import Project.ProjectBackend.repository.ItemRepository;
@@ -34,9 +31,6 @@ public class ItemService {
     @Transactional
     public Item createItem(ItemRequestDto itemRequestDto, Member currentUser, List<MultipartFile> imageFiles) {
         logger.info("Creating item: {}", itemRequestDto.getItemName());
-        // 작성자(Member) 조회
-        Member seller = memberRepository.findById(itemRequestDto.getSellerId())
-                .orElseThrow(() -> new IllegalArgumentException("판매자가 존재하지 않습니다."));
 
         Category category = categoryRepository.findById(itemRequestDto.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 카테고리입니다."));
@@ -119,6 +113,14 @@ public class ItemService {
 
     // 3. 아이템 단건(상세) 조회
     public Item getItemById(Long itemId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("아이템이 존재하지 않습니다."));
+
+        // 조회수 증가
+        item.increaseHitCount();
+        itemRepository.save(item);
+
+
         return itemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
     }

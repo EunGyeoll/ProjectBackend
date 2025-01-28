@@ -5,7 +5,9 @@ import Project.ProjectBackend.entity.Image;
 import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.entity.Member;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.stream.Collectors;
 
 @Data
 @AllArgsConstructor
+@Builder
 public class ItemResponseDto {
 
     private Long itemId; // 상품 ID
@@ -20,11 +23,10 @@ public class ItemResponseDto {
     private Integer price;
     private String description;
     private Integer stockQuantity;
-    private String sellerName;
-    private String sellerEmail;
-    private LocalDateTime itemDate;
+    private String sellerId;
     private Long categoryId;
     private String categoryName;
+    private LocalDateTime itemDate;
     private String representativeImagePath;
     private List<String> imagePaths;
 
@@ -47,11 +49,10 @@ public class ItemResponseDto {
                 item.getPrice(),
                 item.getDescription(),
                 item.getStockQuantity(),
-                seller != null ? seller.getName() : null,
-                seller != null ? seller.getEmail() : null,
-                item.getItemDate(),
+                seller != null ? seller.getMemberId() : null,
                 category != null ? category.getCategoryId() : null,
                 category != null ? category.getCategoryName() : null,
+                item.getItemDate(),
                 representativeImagePath,
                 imagePaths
         );
@@ -60,29 +61,17 @@ public class ItemResponseDto {
 
     // 목록 조회용 메소드 (대표 이미지만 포함)
     public static ItemResponseDto fromForList(Item item) {
-        Member seller = item.getSeller();
-        Category category = item.getCategory();
-
-        // 대표 이미지 경로 설정
-        String representativeImagePath = item.getImages().isEmpty()
-                ? null
-                : item.getImages().get(0).getImagePath();
-
-
-        return new ItemResponseDto(
-                item.getItemId(),
-                item.getItemName(),
-                item.getPrice(),
-                item.getDescription(),
-                item.getStockQuantity(),
-                seller != null ? seller.getName() : null,
-                seller != null ? seller.getEmail() : null,
-                item.getItemDate(),
-                category != null ? category.getCategoryId() : null,
-                category != null ? category.getCategoryName() : null,
-                representativeImagePath,
-                null // 목록 조회 시 이미지 리스트는 null로 설정
-        );
+        return ItemResponseDto.builder()
+                .itemId(item.getItemId())
+                .itemName(item.getItemName())
+                .price(item.getPrice())
+                .description(item.getDescription())
+                .stockQuantity(item.getStockQuantity())
+                .categoryId(item.getCategory() != null ? item.getCategory().getCategoryId() : null)
+                .categoryName(item.getCategory() != null ? item.getCategory().getCategoryName() : null)
+                .representativeImagePath(
+                        item.getImages().isEmpty() ? null : item.getImages().get(0).getImagePath())
+                .build();
     }
 }
 

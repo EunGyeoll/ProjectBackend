@@ -9,14 +9,18 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter @Setter
 @NoArgsConstructor
+@DynamicUpdate
 public class Member {
     @Id
     @Column(name = "member_id")
@@ -25,6 +29,10 @@ public class Member {
     private String password;
     @NotEmpty
     private String name;
+
+    @CreationTimestamp
+    @Column(updatable = false) // 수정 시 값 변경되지 않도록 설정
+    private LocalDateTime registrationDate;
 
     @NotNull
     @Enumerated(EnumType.STRING) // Enum 값이 숫자로 저장되는 것을 막기 위해
@@ -66,9 +74,20 @@ public class Member {
     @JsonIgnore
     private List<FavoriteItem> favoriteItems = new ArrayList<>(); // 사용자의 관심 상품 목록
 
+    // 좋아요한 게시글
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<LikedPost> likedPosts = new ArrayList<>(); // 사용자의 관심 상품 목록
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberCoupon> memberCoupons = new ArrayList<>(); // 중간 엔티티
+
+
+    @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> writtenReviews = new ArrayList<>(); // 작성한 리뷰
+
+    @OneToMany(mappedBy = "storeOwner", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> receivedReviews = new ArrayList<>(); // 받은 리뷰
 
 
     public void addItem(Item item) {
@@ -93,7 +112,7 @@ public class Member {
         this.role = role;
         this.phoneNum = phoneNum;
         this.address = address;
-        this.enabled = enabled; // 필드 추가
+        this.enabled = enabled;
     }
 
 }

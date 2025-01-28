@@ -18,4 +18,5 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     // 검색어로 조회
     Slice<Item> findByItemNameContainingIgnoreCase(String itemName, Pageable pageable);
 
+
 }

@@ -1,13 +1,13 @@
 package Project.ProjectBackend.dto;
 
 import Project.ProjectBackend.entity.Address;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AddressDto {
     private String street;
     private String city;
@@ -20,5 +20,12 @@ public class AddressDto {
         this.zipcode = address.getZipcode();
     }
 
+    public static AddressDto from(Address address) {
+        return AddressDto.builder()
+                .street(address.getStreet())
+                .city(address.getCity())
+                .zipcode(address.getZipcode())
+                .build();
+    }
 
 }

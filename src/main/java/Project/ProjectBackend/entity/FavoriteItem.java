@@ -28,7 +28,6 @@ public class FavoriteItem {
 
 
     @CreationTimestamp
-    @Column(updatable = false)
     private LocalDateTime createdAt; // 관심 상품 등록 시간
 
 

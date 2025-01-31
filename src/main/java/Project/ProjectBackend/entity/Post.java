@@ -21,7 +21,7 @@ public class Post {
     @ManyToOne(fetch = FetchType.EAGER) // 작성자와 다대일 관계
     @JoinColumn(name = "writer_id")
     @JsonIgnore
-    private Member writer; //   작성자 (Member 엔티티와     연관)
+    private Member writer; //   작성자 (Member 엔티티와 연관)
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

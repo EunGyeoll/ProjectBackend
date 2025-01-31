@@ -2,7 +2,7 @@ package Project.ProjectBackend.service;
 
 import Project.ProjectBackend.dto.*;
 import Project.ProjectBackend.entity.Member;
-import Project.ProjectBackend.repository.MemberRepository;
+import Project.ProjectBackend.repository.*;
 import Project.ProjectBackend.entity.Role;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,11 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ItemRepository itemRepository;
+    private final PostRepository postRepository;
+    private final FavoriteRepository favoriteRepository;
+    private final LikedPostRepository likedPostRepository;
+
 
     // 회원가입
     @Transactional
@@ -119,133 +124,70 @@ public class MemberService {
 
 
 
-    // 회원 페이지 (마이페이지) 단건 조회
+    // 마이페이지 조회 (로그인한 사용자의 페이지)
     @Transactional(readOnly = true)
-    public MemberMyPageDto getMyPageData(String targetMemberId, Pageable pageableForItems, Pageable pageableForPosts) {
+    public MemberMyPageDto getMyPageData(
+            String targetMemberId, Pageable pageableForItems, Pageable pageableForPosts, Pageable pageableForFavoriteItems, Pageable pageableForLikedPosts) {
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentMemberId = authentication.getName();
 
+        // 회원 정보 조회
         Member member = memberRepository.findByMemberId(targetMemberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
         boolean isOwnProfile = currentMemberId.equals(targetMemberId);
 
-        // 아이템 목록 변환
-        Slice<ItemResponseDto> itemsSlice = createSlice(
-                member.getItems(),
-                ItemResponseDto::fromForList,
-                pageableForItems
-        );
+        // JPA Repository에서 정렬된 데이터 가져오기 (DTO 변환)
+        Slice<ItemResponseDto> itemsSlice = itemRepository.findBySeller_MemberIdOrderByItemDateDesc(member.getMemberId(), pageableForItems)
+                .map(ItemResponseDto::fromForList);
 
-        // 게시글 목록 변환
-        Slice<PostResponseDto> postsSlice = createSlice(
-                member.getPosts(),
-                PostResponseDto::fromForList,
-                pageableForPosts
-        );
+        Slice<PostResponseDto> postsSlice = postRepository.findByWriter_MemberIdOrderByPostDateDesc(member.getMemberId(), pageableForPosts)
+                .map(PostResponseDto::fromForList);
 
-        // 찜한 상품 목록 변환
-        Slice<FavoriteItemDto> favoriteItemsSlice = createSlice(
-                member.getFavoriteItems(),
-                FavoriteItemDto::from,
-                pageableForItems // Pageable 필요 시 수정
-        );
+        Slice<FavoriteItemDto> favoriteItemsSlice = favoriteRepository.findByMemberOrderByCreatedAtDesc(member, pageableForFavoriteItems)
+                .map(FavoriteItemDto::from);
 
-        // 좋아요한 게시글 목록 변환
-        Slice<LikedPostDto> likedPostsSlice = createSlice(
-                member.getLikedPosts(),
-                LikedPostDto::from,
-                pageableForPosts // Pageable 필요 시 수정
-        );
+        Slice<LikedPostDto> likedPostsSlice = likedPostRepository.findByMemberOrderByCreatedAtDesc(member, pageableForLikedPosts)
+                .map(LikedPostDto::from);
 
         return MemberMyPageDto.from(
                 member,
                 isOwnProfile,
-                itemsSlice.getContent(),
-                itemsSlice.hasNext(),
-                postsSlice.getContent(),
-                postsSlice.hasNext(),
-                favoriteItemsSlice.getContent(),
-                favoriteItemsSlice.hasNext(),
-                likedPostsSlice.getContent(),
-                likedPostsSlice.hasNext()
+                itemsSlice.getContent(), itemsSlice.hasNext(),
+                postsSlice.getContent(), postsSlice.hasNext(),
+                favoriteItemsSlice.getContent(), favoriteItemsSlice.hasNext(),
+                likedPostsSlice.getContent(), likedPostsSlice.hasNext()
         );
     }
 
 
-
+    // 타인의 페이지 조회 (찜한 상품 및 좋아요한 게시글 제외)
     @Transactional(readOnly = true)
     public MemberMyPageDto getMemberPageData(String memberId, Pageable pageableForItems, Pageable pageableForPosts) {
+
         // 회원 정보 조회
         Member member = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        // 아이템 목록 변환
-        Slice<ItemResponseDto> itemsSlice = createSlice(
-                member.getItems(),
-                ItemResponseDto::fromForList,
-                pageableForItems
-        );
+        // JPA Repository에서 정렬된 데이터 가져오기 (DTO 변환)
+        Slice<ItemResponseDto> itemsSlice = itemRepository.findBySeller_MemberIdOrderByItemDateDesc(member.getMemberId(), pageableForItems)
+                .map(ItemResponseDto::fromForList);
 
-        // 게시글 목록 변환
-        Slice<PostResponseDto> postsSlice = createSlice(
-                member.getPosts(),
-                PostResponseDto::fromForList,
-                pageableForPosts
-        );
+        Slice<PostResponseDto> postsSlice = postRepository.findByWriter_MemberIdOrderByPostDateDesc(member.getMemberId(), pageableForPosts)
+                .map(PostResponseDto::fromForList);
 
-        // 찜한 상품 목록 변환 (타인의 페이지에서는 빈 목록과 hasNext=false)
-        Slice<FavoriteItemDto> favoriteItemsSlice = createSlice(
-                new ArrayList<>(), // 타인의 페이지에서는 빈 목록
-                FavoriteItemDto::from,
-                pageableForItems
-        );
-
-        // 좋아요한 게시글 목록 변환 (타인의 페이지에서는 빈 목록과 hasNext=false)
-        Slice<LikedPostDto> likedPostsSlice = createSlice(
-                new ArrayList<>(), // 타인의 페이지에서는 빈 목록
-                LikedPostDto::from,
-                pageableForPosts
-        );
-
-        // 최종 DTO 반환
         return MemberMyPageDto.from(
                 member,
-                false, // 자신의 페이지 여부
-                itemsSlice.getContent(),
-                itemsSlice.hasNext(),
-                postsSlice.getContent(),
-                postsSlice.hasNext(),
-                favoriteItemsSlice.getContent(),
-                favoriteItemsSlice.hasNext(),
-                likedPostsSlice.getContent(),
-                likedPostsSlice.hasNext()
+                false,  // 타인의 페이지
+                itemsSlice.getContent(), itemsSlice.hasNext(),
+                postsSlice.getContent(), postsSlice.hasNext(),
+                new ArrayList<>(), false,  // 찜한 상품 제외
+                new ArrayList<>(), false  // 좋아요한 게시글 제외
         );
     }
 
 
-
-    /**
-     * 엔티티 목록을 Slice로 변환하는 유틸리티 메서드
-     *
-     * @param entities  변환할 엔티티 목록
-     * @param mapper    엔티티를 DTO로 변환하는 함수
-     * @param pageable  페이징 정보를 포함하는 Pageable 객체
-     * @return 변환된 Slice<R> 객체
-     */
-    private <T, R> Slice<R> createSlice(List<T> entities, Function<T, R> mapper, Pageable pageable) {
-        List<R> mappedList = entities.stream()
-                .map(mapper)
-                .collect(Collectors.toList());
-
-        boolean hasNext = mappedList.size() > pageable.getPageSize();
-
-        if (hasNext) {
-            mappedList = mappedList.subList(0, pageable.getPageSize());
-        }
-
-        return new SliceImpl<>(mappedList, pageable, hasNext);
-    }
 
 
 

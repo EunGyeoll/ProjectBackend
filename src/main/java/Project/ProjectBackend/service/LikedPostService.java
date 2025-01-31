@@ -6,6 +6,7 @@ import Project.ProjectBackend.repository.*;
 ;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,11 +19,12 @@ public class LikedPostService {
     private final MemberRepository memberRepository;
 
     // 찜한 상품에 추가
+    @Transactional
     public void addLike(String memberId, Long postNo) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
         Post post = postRepository.findById(postNo)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
         if (likedPostRepository.existsByMemberAndPost(member, post)) {
             throw new IllegalStateException("이미 좋아요를 누르신 게시글입니다.");
@@ -38,11 +40,12 @@ public class LikedPostService {
     }
 
     // 게시글 좋아요 삭제
+    @Transactional
     public void removeLike(String memberId, Long postNo) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
         Post post = postRepository.findById(postNo)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
         // LikedPost 삭제
         LikedPost likedPost = likedPostRepository.findByMemberAndPost(member, post)
@@ -55,19 +58,21 @@ public class LikedPostService {
     }
 
     // 특정 사용자가 특정 게시글에 좋아요를 눌렀는지 확인
+    @Transactional(readOnly = true)
     public boolean isLiked(String memberId, Long postNo) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
         Post post = postRepository.findById(postNo)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
         return likedPostRepository.existsByMemberAndPost(member, post);
     }
 
     // 특정 사용자가 좋아요한 게시글 목록 조회
+    @Transactional(readOnly = true)
     public List<PostResponseDto> getLikedPosts(String memberId) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
         List<LikedPost> likedPosts = likedPostRepository.findByMember(member);
         return likedPosts.stream()

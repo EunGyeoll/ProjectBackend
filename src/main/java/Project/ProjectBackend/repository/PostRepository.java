@@ -9,8 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    // 특정 사용자로 조회
-//    Slice<Post> findByWriter_MemberIdOrderByPostDateDesc(String memberId, Pageable pageable);
     Slice<Post> findByWriter_MemberId(String memberId, Pageable pageable);
+    Slice<Post> findByWriter_MemberIdOrderByPostDateDesc(String memberId, Pageable pageable);
 
 }

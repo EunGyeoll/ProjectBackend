@@ -71,6 +71,7 @@ public class ItemResponseDto {
                 .categoryName(item.getCategory() != null ? item.getCategory().getCategoryName() : null)
                 .representativeImagePath(
                         item.getImages().isEmpty() ? null : item.getImages().get(0).getImagePath())
+                .itemDate(item.getItemDate())
                 .build();
     }
 }

@@ -3,6 +3,8 @@ package Project.ProjectBackend.repository;
 import Project.ProjectBackend.entity.FavoriteItem;
 import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.entity.Member;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,11 +17,8 @@ public interface FavoriteRepository extends JpaRepository<FavoriteItem, Long> {
     boolean existsByMemberAndItem(Member member, Item item);
     Optional<FavoriteItem> findByMemberAndItem(Member member, Item item);
     List<FavoriteItem> findByMember(Member member);
+    Slice<FavoriteItem> findByMemberOrderByCreatedAtDesc(Member member, Pageable pageable);
 
-
-//     boolean existsByMemberIdAndItemId(String memberId, Long itemId);
-//        void deleteByMemberIdAndItemId(String memberId, Long itemId);
-//        List<Favorite> findByMemberId(String memberId);
 
     }
 

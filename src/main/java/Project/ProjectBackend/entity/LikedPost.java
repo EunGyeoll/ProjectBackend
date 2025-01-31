@@ -26,7 +26,6 @@ public class LikedPost {
     private Post post;
 
     @CreationTimestamp
-    @Column(updatable = false)
     private LocalDateTime createdAt; // 좋아요 누른 시간
 
 

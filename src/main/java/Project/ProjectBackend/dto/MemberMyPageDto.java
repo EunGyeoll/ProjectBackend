@@ -29,9 +29,9 @@ public class MemberMyPageDto {
     private List<PostResponseDto> posts;
     private boolean postsHasNext;
     private List<FavoriteItemDto> favoriteItems;
-    private boolean favoriteItemsHasNext; // 추가
+    private boolean favoriteItemsHasNext;
     private List<LikedPostDto> likedPosts;
-    private boolean likedPostsHasNext; // 추가
+    private boolean likedPostsHasNext;
     private boolean isOwnProfile;
 
     public static MemberMyPageDto from(

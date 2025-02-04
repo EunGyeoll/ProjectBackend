@@ -1,5 +1,6 @@
 package Project.ProjectBackend.service;
 
+import Project.ProjectBackend.dto.FavoriteItemDto;
 import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.entity.FavoriteItem;
 import Project.ProjectBackend.entity.Item;
@@ -8,6 +9,8 @@ import Project.ProjectBackend.repository.FavoriteRepository;
 import Project.ProjectBackend.repository.ItemRepository;
 import Project.ProjectBackend.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,13 +80,13 @@ public class FavoriteItemService {
 
     // 특정 사용자가 찜한 상품 목록 조회
     @Transactional(readOnly = true)
-    public List<ItemResponseDto> getFavorites(String memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+    public Slice<FavoriteItemDto> getFavoriteItemsByMember(String memberId, Pageable pageable) {
+        // 🔹 memberId를 가지고 Member 엔티티를 먼저 조회
+        Member member = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        List<FavoriteItem> favoriteItems = favoriteRepository.findByMember(member);
-        return favoriteItems.stream()
-                .map(fav -> ItemResponseDto.from(fav.getItem()))
-                .collect(Collectors.toList());
+        // 🔹 Member 객체를 사용하여 쿼리 실행
+        return favoriteRepository.findByMember(member, pageable)
+                .map(FavoriteItemDto::from);
     }
 }

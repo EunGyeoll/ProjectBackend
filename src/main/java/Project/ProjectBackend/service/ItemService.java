@@ -1,5 +1,6 @@
 package Project.ProjectBackend.service;
 
+import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.entity.*;
 import Project.ProjectBackend.dto.ItemRequestDto;
 import Project.ProjectBackend.repository.CategoryRepository;
@@ -126,13 +127,28 @@ public class ItemService {
     }
 
 
-    // 3. 모든 아이템 조회 (페이징 및 정렬 적용)
+    // 4. 특정 판매자가 등록한 아이템 조회
+    @Transactional(readOnly = true)
+    public Slice<ItemResponseDto> getItemsBySeller(String memberId, Pageable pageable) {
+        boolean sellerExists = memberRepository.existsById(memberId);
+        if (!sellerExists) {
+            throw new IllegalArgumentException("판매자를 찾을 수 없습니다.");
+        }
+
+        Slice<Item> itemsSlice = itemRepository.findBySeller_MemberId(memberId, pageable);
+        return itemsSlice.map(ItemResponseDto::fromForList);
+    }
+
+
+
+    // 5. 모든 아이템 조회 (페이징 및 정렬 적용)
     public Slice<Item> getAllItems(Pageable pageable) {
         return itemRepository.findAll(pageable);
     }
 
 
-    // 4. 키워드 검색 조회
+
+    // 6. 키워드 검색 조회
     public Slice<Item> searchItemsByKeyword(String keyword, Pageable pageable) {
 
         Slice<Item> items = itemRepository.findByItemNameContainingIgnoreCase(
@@ -143,17 +159,7 @@ public class ItemService {
 
 
 
-    // 5. 특정 판매자가 등록한 아이템 조회
-    public Slice<Item> getItemsBySeller(String memberId, Pageable pageable) {
-        boolean sellerExists = memberRepository.existsById(memberId);
-        if (!sellerExists) {
-            throw new IllegalArgumentException("판매자를 찾을 수 없습니다.");
-        }
-
-        return itemRepository.findBySeller_MemberId(memberId, pageable);
-    }
-
-    // 6. 아이템 삭제
+    // 7. 아이템 삭제
     public void deleteItem(Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));

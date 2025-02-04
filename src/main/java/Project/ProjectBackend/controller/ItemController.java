@@ -103,6 +103,7 @@ public class ItemController {
     }
 
 
+
     // 5. 특정 판매자가 등록한 아이템 조회
     @GetMapping("/items/seller/{memberId}")
     public ResponseEntity<Slice<ItemResponseDto>> getItemsBySeller(
@@ -131,11 +132,12 @@ public class ItemController {
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Slice<Item> itemsSlice = itemService.getItemsBySeller(memberId, pageable);
-        Slice<ItemResponseDto> responseDtosSlice = itemsSlice.map(ItemResponseDto::from);
+        // ✅ ItemService에서 이미 DTO 변환된 Slice<ItemResponseDto> 반환
+        Slice<ItemResponseDto> itemsSlice = itemService.getItemsBySeller(memberId, pageable);
 
-        return ResponseEntity.ok(responseDtosSlice);
+        return ResponseEntity.ok(itemsSlice);
     }
+
 
 
 

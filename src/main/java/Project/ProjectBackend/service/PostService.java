@@ -1,6 +1,7 @@
 package Project.ProjectBackend.service;
 
 import Project.ProjectBackend.dto.ItemRequestDto;
+import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.dto.PostRequestDto;
 import Project.ProjectBackend.dto.PostResponseDto;
 import Project.ProjectBackend.entity.Image;
@@ -130,25 +131,26 @@ public class PostService {
     }
 
 
+    // 4. 회원별 게시글 조회
+    public Slice<PostResponseDto> getPostsByWriter(String memberId, Pageable pageable) {
 
-    // 4. 게시글 목록 조회
-    public Slice<Post> getAllPosts(Pageable pageable) {
-        return postRepository.findAll(pageable);
-    }
-
-
-
-    // 5. 특정 판매자가 등록한 게시글 조회
-    public Slice<Post> getPostsByWriter(String memberId, Pageable pageable) {
-        // 작성자 존재하는지 확인
         boolean writerExists = memberRepository.existsById(memberId);
         if (!writerExists) {
             throw new IllegalArgumentException("작성자를 찾을 수 없습니다.");
         }
 
-        // 게시글 페이징하여 조회
-        return postRepository.findByWriter_MemberId(memberId, pageable);
+        Slice<Post> postSlice = postRepository.findByWriter_MemberId(memberId, pageable);
+        return postSlice.map(PostResponseDto::fromForList);
     }
+
+
+
+
+    // 5. 게시글 목록 조회
+    public Slice<Post> getAllPosts(Pageable pageable) {
+        return postRepository.findAll(pageable);
+    }
+
 
 
     // 6. 게시글 삭제

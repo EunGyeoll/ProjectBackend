@@ -1,32 +1,39 @@
-  spring:
-    datasource:
-      url: jdbc:h2:tcp://localhost/~/projectbackend
-      username: sa
-      password:
-      driver-class-name: org.h2.Driver
-    servlet:
-      multipart:
-        enabled: true
-        max-file-size: 10MB
-        max-request-size: 50MB
-    jpa:
-      hibernate:
-        ddl-auto: update # 데이터 유지
-      properties:
-        hibernate.dialect: org.hibernate.dialect.H2Dialect
-        hibernate.show_sql: true
-        hibernate.format_sql: true
-  jwt:
-    security:
-       key: for.ek.project.securitykeyaassdd
+spring:
+  datasource:
+    url: jdbc:h2:tcp://localhost/~/projectbackend
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 20000
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 50MB
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.dialect: org.hibernate.dialect.H2Dialect
+      hibernate.show_sql: true
+      hibernate.format_sql: true
+jwt:
+  security:
+    key: for.ek.project.securitykeyaassdd
 
-  logging:
-    level:
-      org.hibernate.SQL: debug
-      org.springframework.web: debug
-      org.springframework: DEBUG
-      Project.ProjectBackend.security: DEBUG
 
-  file:
-    upload-dir: C:/Users/roman/Documents/CodingWorkspace/ProjectImageFolder/
-    base-url: http://localhost:8080/images/
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.springframework.web: debug
+    org.springframework: DEBUG
+    Project.ProjectBackend.security: DEBUG
+
+file:
+  upload-dir: C:/Users/roman/Documents/CodingWorkspace/ProjectImageFolder/
+  base-url: http://localhost:8080/images/

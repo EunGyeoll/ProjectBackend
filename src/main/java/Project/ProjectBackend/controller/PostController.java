@@ -123,10 +123,9 @@ public class PostController {
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Slice<Post> postsSlice = postService.getPostsByWriter(memberId, pageable);
-        Slice<PostResponseDto> responseDtosSlice = postsSlice.map(PostResponseDto::fromForList);
+        Slice<PostResponseDto> postsSlice = postService.getPostsByWriter(memberId, pageable);
 
-        return ResponseEntity.ok(responseDtosSlice);
+        return ResponseEntity.ok(postsSlice);
 
     }
 

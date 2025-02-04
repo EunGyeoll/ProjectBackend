@@ -1,8 +1,13 @@
 package Project.ProjectBackend.controller;
 
+import Project.ProjectBackend.dto.FavoriteItemDto;
 import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.service.FavoriteItemService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -41,11 +46,38 @@ public class FavoriteItemController {
         return ResponseEntity.ok(isFavorite);
     }
 
+
     // 특정 사용자가 찜한 상품 목록
     @GetMapping("/favorites/list")
-    public ResponseEntity<List<ItemResponseDto>> getFavorites(Authentication authentication) {
+    public ResponseEntity<Slice<FavoriteItemDto>> getFavorites(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "latest") String sortOption) {
+
         String memberId = authentication.getName();
-        List<ItemResponseDto> favorites = favoriteItemService.getFavorites(memberId);
+
+        Sort sortOrder;
+        switch (sortOption.toLowerCase()) {
+            case "popular":
+                sortOrder = Sort.by(Sort.Direction.DESC, "favoriteCount");
+                break;
+            case "lowprice":
+                sortOrder = Sort.by(Sort.Direction.ASC, "price");
+                break;
+            case "highprice":
+                sortOrder = Sort.by(Sort.Direction.DESC, "price");
+                break;
+            case "latest":
+            default:
+                sortOrder = Sort.by(Sort.Direction.DESC, "createdAt"); // 찜한 시간 기준 정렬
+                break;
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        Slice<FavoriteItemDto> favorites = favoriteItemService.getFavoriteItemsByMember(memberId, pageable);
+
         return ResponseEntity.ok(favorites);
     }
 }

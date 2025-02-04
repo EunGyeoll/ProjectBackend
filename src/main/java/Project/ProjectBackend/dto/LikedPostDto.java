@@ -13,7 +13,9 @@ import java.time.LocalDateTime;
 public class LikedPostDto {
     private Long likedId; // 좋아요 ID
     private String memberId; // 좋아요 누른 회원의 ID
-    private Long postId; // 좋아요가 눌린 게시글의 ID
+    private Long postNo; // 좋아요가 눌린 게시글의 ID
+    private String title;
+    private LocalDateTime postDate;
     private String representativeImagePath; // 게시글의 대표 이미지 경로
     private LocalDateTime createdAt; // 좋아요 누른 시간
 
@@ -22,7 +24,9 @@ public class LikedPostDto {
         return LikedPostDto.builder()
                 .likedId(likedPost.getLikedId())
                 .memberId(likedPost.getMember().getMemberId()) // 좋아요 누른 회원 ID
-                .postId(likedPost.getPost().getPostNo()) // 좋아요 눌린 게시글 ID
+                .postNo(likedPost.getPost().getPostNo()) // 좋아요 눌린 게시글 ID
+                .title(likedPost.getPost().getTitle())
+                .postDate(likedPost.getPost().getPostDate())
                 .representativeImagePath(likedPost.getPost().getRepresentativeImagePath()) // 게시글의 대표 이미지 경로
                 .createdAt(likedPost.getCreatedAt()) // 좋아요 누른 시간
                 .build();

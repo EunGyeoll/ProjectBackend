@@ -1,10 +1,14 @@
 package Project.ProjectBackend.service;
 
+import Project.ProjectBackend.dto.LikedPostDto;
 import Project.ProjectBackend.dto.PostResponseDto;
 import Project.ProjectBackend.entity.*;
 import Project.ProjectBackend.repository.*;
 ;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,13 +74,14 @@ public class LikedPostService {
 
     // 특정 사용자가 좋아요한 게시글 목록 조회
     @Transactional(readOnly = true)
-    public List<PostResponseDto> getLikedPosts(String memberId) {
-        Member member = memberRepository.findById(memberId)
+    public Slice<LikedPostDto> getLikedPostsByMember(String memberId, Pageable pageable) {
+        Member member = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        List<LikedPost> likedPosts = likedPostRepository.findByMember(member);
-        return likedPosts.stream()
-                .map(likedPost -> PostResponseDto.from(likedPost.getPost()))
-                .collect(Collectors.toList());
+        return likedPostRepository.findByMember(member, pageable)
+                .map(LikedPostDto::from);
     }
+
+
+
 }

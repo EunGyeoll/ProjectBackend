@@ -1,8 +1,13 @@
 package Project.ProjectBackend.controller;
 
+import Project.ProjectBackend.dto.LikedPostDto;
 import Project.ProjectBackend.dto.PostResponseDto;
 import Project.ProjectBackend.service.LikedPostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -39,11 +44,32 @@ public class LikedPostController {
         return ResponseEntity.ok(isLiked);
     }
 
+
     // 로그인한 사용자의 좋아요한 게시글 목록 조회
     @GetMapping("/likes/list")
-    public ResponseEntity<List<PostResponseDto>> getLikedPosts(Authentication authentication) {
+    public ResponseEntity<Slice<LikedPostDto>> getLikedPosts(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "latest") String sortOption) {
+
         String memberId = authentication.getName();
-        List<PostResponseDto> likes = likedPostService.getLikedPosts(memberId);
-        return ResponseEntity.ok(likes);
+
+        Sort sortOrder;
+        switch (sortOption.toLowerCase()) {
+            case "popular":
+                sortOrder = Sort.by(Sort.Direction.DESC, "likeCount"); // 좋아요 수 기준 정렬
+                break;
+            case "latest":
+            default:
+                sortOrder = Sort.by(Sort.Direction.DESC, "createdAt"); // 좋아요한 날짜 기준 정렬
+                break;
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        Slice<LikedPostDto> likedPosts = likedPostService.getLikedPostsByMember(memberId, pageable);
+
+        return ResponseEntity.ok(likedPosts);
     }
 }

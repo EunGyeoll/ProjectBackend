@@ -16,8 +16,7 @@ public interface FavoriteRepository extends JpaRepository<FavoriteItem, Long> {
 
     boolean existsByMemberAndItem(Member member, Item item);
     Optional<FavoriteItem> findByMemberAndItem(Member member, Item item);
-    List<FavoriteItem> findByMember(Member member);
-    Slice<FavoriteItem> findByMemberOrderByCreatedAtDesc(Member member, Pageable pageable);
+    Slice<FavoriteItem> findByMember(Member member, Pageable pageable);
 
 
     }

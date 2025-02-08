@@ -42,6 +42,9 @@ public class Image {
     @JoinColumn(name = "review_id")
     private Review review; // 해당 이미지를 참조하는 Review
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     public void setItem(Item item) {
         this.item = item;

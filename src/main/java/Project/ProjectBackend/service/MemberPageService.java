@@ -63,18 +63,16 @@ public class MemberPageService {
 
     // 타인의 페이지 조회 (찜한 상품 및 좋아요한 게시글 제외)
     @Transactional(readOnly = true)
-    public MemberMyPageDto getMemberPageData(String memberId, Pageable pageableForItems, Pageable pageableForPosts) {
+    public MemberMyPageDto getMemberPageData(
+            String targetMemberId, Pageable pageableForItems, Pageable pageableForPosts) {
 
         // 회원 정보 조회
-        Member member = memberRepository.findByMemberId(memberId)
+        Member member = memberRepository.findByMemberId(targetMemberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        // JPA Repository에서 정렬된 데이터 가져오기 (DTO 변환)
-        Slice<ItemResponseDto> itemsSlice = itemRepository.findBySeller_MemberIdOrderByItemDateDesc(member.getMemberId(), pageableForItems)
-                .map(ItemResponseDto::fromForList);
-
-        Slice<PostResponseDto> postsSlice = postRepository.findByWriter_MemberIdOrderByPostDateDesc(member.getMemberId(), pageableForPosts)
-                .map(PostResponseDto::fromForList);
+        // Service 계층에서 데이터 가져오기
+        Slice<ItemResponseDto> itemsSlice = itemService.getItemsBySeller(member.getMemberId(), pageableForItems);
+        Slice<PostResponseDto> postsSlice = postService.getPostsByWriter(member.getMemberId(), pageableForPosts);
 
         return MemberMyPageDto.from(
                 member,
@@ -85,6 +83,7 @@ public class MemberPageService {
                 new ArrayList<>(), false  // 좋아요한 게시글 제외
         );
     }
+
 
 
 

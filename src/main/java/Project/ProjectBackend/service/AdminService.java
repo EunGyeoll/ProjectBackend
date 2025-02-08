@@ -30,7 +30,7 @@ public class AdminService {
     private final ReportRepository reportRepository;
     private final CategoryRepository categoryRepository;
     private final CommentRepository commentRepository;
-
+    private final ImageRepository imageRepository;
     private final PasswordEncoder passwordEncoder;
 
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
@@ -39,30 +39,42 @@ public class AdminService {
 
     // 관리자로 회원가입
     @Transactional
-    public String signup(MemberSignupRequestDto requestDto) {
+    public void signup(MemberSignupRequestDto requestDto, MultipartFile profileImage) {
         // 이메일 중복 체크
         validateDuplicateEmail(requestDto.getEmail());
 
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
-        // DTO를 엔티티로 변환
-        Member member = Member.builder()
-                .memberId(requestDto.getMemberId()) // 클라이언트로부터 받은 ID 설정
+        // 먼저 회원(Member) 저장
+        Member admin = Member.builder()
+                .memberId(requestDto.getMemberId())
                 .name(requestDto.getName())
                 .email(requestDto.getEmail())
                 .password(encodedPassword)
                 .address(requestDto.getAddress())
                 .birthDate(requestDto.getBirthDate())
-                .role(Role.ROLE_ADMIN)
+                .role(Role.ROLE_ADMIN)  // ✅ 관리자 역할 설정
                 .phoneNum(requestDto.getPhoneNum())
-                .enabled(true) // 기본값으로 true 설정
+                .enabled(true)
+                .shopIntroduction(requestDto.getShopIntroduction())
                 .build();
 
-        // 회원 저장
-        Member savedMember = memberRepository.save(member);
-        return savedMember.getMemberId();
+        // 먼저 데이터베이스에 저장 (회원이 영속 상태가 되어야 함)
+        Member savedAdmin = memberRepository.save(admin);
+
+        // 프로필 이미지 저장
+        if (profileImage != null && !profileImage.isEmpty()) {
+            Image savedProfileImage = imageService.saveImageForProfile(profileImage, savedAdmin);
+            savedAdmin.setProfileImageUrl(savedProfileImage.getImagePath());
+            savedAdmin.setProfileImage(savedProfileImage);
+        }
+
+        // 다시 저장 (프로필 이미지가 설정된 상태로 저장)
+        memberRepository.save(savedAdmin);
     }
+
+
 
     private void validateDuplicateEmail(String email) {
         memberRepository.findByEmail(email)
@@ -71,6 +83,63 @@ public class AdminService {
                 });
     }
 
+
+    // 회원 정보 수정
+    @Transactional
+    public void updateAdmin(String memberId, MemberUpdateRequestDto updateRequestDto, MultipartFile profileImage) {
+        // 기존 회원 정보 조회
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("관리자 정보를 찾을 수 없습니다."));
+
+        // 전달된 값만 업데이트
+
+        // 이름
+        if (updateRequestDto.getName() != null) {
+            member.setName(updateRequestDto.getName());
+        }
+        // 이메일
+        if (updateRequestDto.getEmail() != null) {
+            member.setEmail(updateRequestDto.getEmail());
+        }
+        // 생일
+        if (updateRequestDto.getBirthDate() != null) {
+            member.setBirthDate(updateRequestDto.getBirthDate());
+        }
+        // 주소
+        if (updateRequestDto.getAddress() != null) {
+            member.setAddress(updateRequestDto.getAddress());
+        }
+        // 상점소개
+        if (updateRequestDto.getShopIntroduction() != null) {
+            member.updateShopIntroduction(updateRequestDto.getShopIntroduction());
+        }
+        // 프로필사진
+        if (profileImage != null && !profileImage.isEmpty()) {
+            // 기존 프로필 이미지가 있는 경우 삭제
+            if (member.getProfileImage() != null) {
+                imageService.deleteImage(member.getProfileImage());
+            }
+            // 새로운 프로필 이미지 저장
+            Image newProfileImage = imageService.saveImageForProfile(profileImage, member);
+
+            // Member 엔티티의 프로필 이미지 정보 업데이트
+            member.updateProfileImage(newProfileImage.getImagePath()); // URL 업데이트
+            member.setProfileImage(newProfileImage); // Image 엔티티 연관 관계 설정
+
+            logger.info("프로필 이미지가 설정되었습니다: " + newProfileImage.getImagePath());
+        }
+        // 비밀번호
+        if (updateRequestDto.getNewPassword() != null) {
+            if (updateRequestDto.getCurrentPassword() == null ||
+                    !passwordEncoder.matches(updateRequestDto.getCurrentPassword(), member.getPassword())) {
+                throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
+            }
+            member.updatePassword(passwordEncoder.encode(updateRequestDto.getNewPassword()));
+        }
+
+        // 업데이트된 데이터를 저장
+        memberRepository.save(member);
+    }
 
 
     // ===== 회원 관리 =====
@@ -139,27 +208,55 @@ public class AdminService {
 
     // 5. 사용자 정보 수정
     @Transactional
-    public void updateMember(String memberId, MemberUpdateRequestDto updateRequestDto) {
+    public void updateMember(String memberId, MemberUpdateRequestDto updateRequestDto, MultipartFile profileImage) {
         // 기존 회원 정보 조회
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 찾을 수 없습니다."));
 
         // 전달된 값만 업데이트
-        if (updateRequestDto.getPassword() != null && !updateRequestDto.getPassword().isEmpty()) {
-            String encodedPassword = passwordEncoder.encode(updateRequestDto.getPassword());
-            member.setPassword(encodedPassword);
-        }
+
+        // 이름
         if (updateRequestDto.getName() != null) {
             member.setName(updateRequestDto.getName());
         }
+        // 이메일
         if (updateRequestDto.getEmail() != null) {
             member.setEmail(updateRequestDto.getEmail());
         }
+        // 생일
         if (updateRequestDto.getBirthDate() != null) {
             member.setBirthDate(updateRequestDto.getBirthDate());
         }
+        // 주소
         if (updateRequestDto.getAddress() != null) {
             member.setAddress(updateRequestDto.getAddress());
+        }
+        // 상점소개
+        if (updateRequestDto.getShopIntroduction() != null) {
+            member.updateShopIntroduction(updateRequestDto.getShopIntroduction());
+        }
+        // 프로필사진
+        if (profileImage != null && !profileImage.isEmpty()) {
+            // 기존 프로필 이미지가 있는 경우 삭제
+            if (member.getProfileImage() != null) {
+                imageService.deleteImage(member.getProfileImage());
+            }
+            // 새로운 프로필 이미지 저장
+            Image newProfileImage = imageService.saveImageForProfile(profileImage, member);
+
+            // Member 엔티티의 프로필 이미지 정보 업데이트
+            member.updateProfileImage(newProfileImage.getImagePath()); // URL 업데이트
+            member.setProfileImage(newProfileImage); // Image 엔티티 연관 관계 설정
+
+            logger.info("프로필 이미지가 설정되었습니다: " + newProfileImage.getImagePath());
+        }
+        // 비밀번호
+        if (updateRequestDto.getNewPassword() != null) {
+            if (updateRequestDto.getCurrentPassword() == null ||
+                    !passwordEncoder.matches(updateRequestDto.getCurrentPassword(), member.getPassword())) {
+                throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
+            }
+            member.updatePassword(passwordEncoder.encode(updateRequestDto.getNewPassword()));
         }
 
         // 업데이트된 데이터를 저장

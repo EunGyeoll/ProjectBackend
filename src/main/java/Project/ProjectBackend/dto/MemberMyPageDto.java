@@ -33,6 +33,8 @@ public class MemberMyPageDto {
     private List<LikedPostDto> likedPosts;
     private boolean likedPostsHasNext;
     private boolean isOwnProfile;
+    private String shopIntroduction;
+    private String profileImageUrl;
 
     public static MemberMyPageDto from(
             Member member,
@@ -64,6 +66,8 @@ public class MemberMyPageDto {
                 .likedPosts(likedPosts)
                 .likedPostsHasNext(likedPostsHasNext)
                 .isOwnProfile(isOwnProfile)
+                .shopIntroduction(member.getShopIntroduction())
+                .profileImageUrl(member.getProfileImageUrl())
                 .build();
     }
 }

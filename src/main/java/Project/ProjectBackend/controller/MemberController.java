@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,10 +35,14 @@ public class MemberController {
 
     // 회원가입
     @PostMapping("/members/new")
-    public ResponseEntity<?> signup(@RequestBody @Valid MemberSignupRequestDto requestDto) {
-        memberService.signup(requestDto); // 회원가입 실행
+    public ResponseEntity<?> signup(
+            @RequestPart(value = "memberData") @Valid MemberSignupRequestDto requestDto,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+
+        memberService.signup(requestDto, profileImage);
         return ResponseEntity.ok("회원가입 성공!");
     }
+
 
 
     // 로그인
@@ -75,21 +80,22 @@ public class MemberController {
 
 
     // 회원정보 수정
-    @PutMapping("/members/update/{memberId}")
+    @PatchMapping("/members/update")
     public ResponseEntity<?> updateMember(
-            // 수정하고 나서도 원래의 비밀번호 들어가야 한다.
-            @PathVariable String memberId,
-            @RequestBody @Valid MemberUpdateRequestDto updateRequestDto) {
+            Authentication authentication,
+            @RequestPart(value = "memberData") @Valid MemberUpdateRequestDto updateRequestDto,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
 
-        // 회원 정보 업데이트
-        memberService.updateMember(memberId, updateRequestDto);
+        String memberId = authentication.getName();
+        memberService.updateMember(memberId, updateRequestDto, profileImage);
 
-        // 업데이트된 회원 정보 반환
         Member updatedMember = memberService.findOne(memberId);
         return ResponseEntity.ok(new UpdateMemberResponse(updatedMember.getMemberId(), updatedMember.getName()));
     }
 
-     // 응답 DTO
+
+
+    // 응답 DTO
         @Data
         static class UpdateMemberResponse {
             private String id;

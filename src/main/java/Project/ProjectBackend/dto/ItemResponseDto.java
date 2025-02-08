@@ -24,6 +24,7 @@ public class ItemResponseDto {
     private String description;
     private Integer stockQuantity;
     private String sellerId;
+    private String profileImageUrl;
     private Long categoryId;
     private String categoryName;
     private LocalDateTime itemDate;
@@ -50,6 +51,7 @@ public class ItemResponseDto {
                 item.getDescription(),
                 item.getStockQuantity(),
                 seller != null ? seller.getMemberId() : null,
+                seller != null ? seller.getProfileImageUrl(): null,
                 category != null ? category.getCategoryId() : null,
                 category != null ? category.getCategoryName() : null,
                 item.getItemDate(),

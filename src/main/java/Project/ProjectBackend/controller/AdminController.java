@@ -48,9 +48,26 @@ public class AdminController {
 
     // 관리자로 회원가입
     @PostMapping("/admin/new")
-    public ResponseEntity<?> signup(@RequestBody @Valid MemberSignupRequestDto requestDto) {
-        adminService.signup(requestDto);
+    public ResponseEntity<?> signup(
+            @RequestPart(value = "memberData") @Valid MemberSignupRequestDto requestDto,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+
+        adminService.signup(requestDto, profileImage);
         return ResponseEntity.ok("관리자로 회원가입 성공!");
+    }
+
+    // 관리자 정보 수정
+    @PatchMapping("/admin/update")
+    public ResponseEntity<?> updateAdmin(
+            Authentication authentication,
+            @RequestPart(value = "memberData") @Valid MemberUpdateRequestDto updateRequestDto,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+
+        String memberId = authentication.getName();
+        adminService.updateAdmin(memberId, updateRequestDto, profileImage);
+
+        Member updatedAdmin = adminService.findOne(memberId);
+        return ResponseEntity.ok(new MemberController.UpdateMemberResponse(updatedAdmin.getMemberId(), updatedAdmin.getName()));
     }
 
     // ===== 회원 관리 =====
@@ -127,8 +144,9 @@ public class AdminController {
     @PutMapping("/admin/members/{id}/update")
     public ResponseEntity<String> updateMember(
             @PathVariable("id") String memberId,
-            @RequestBody @Valid MemberUpdateRequestDto updateRequestDto) {
-        adminService.updateMember(memberId, updateRequestDto);
+            @RequestBody @Valid MemberUpdateRequestDto updateRequestDto,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+        adminService.updateMember(memberId, updateRequestDto, profileImage);
         return ResponseEntity.ok("회원 정보가 업데이트되었습니다.");
     }
 

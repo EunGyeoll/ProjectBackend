@@ -17,8 +17,8 @@ public class PostResponseDto {
     private Long postNo; // 게시글 번호
     private String title;
     private String content;
-    private String writerName;
-    private String writerEmail;
+    private String writerId; // writerName 은 memberId로
+    private String profileImageUrl;
     private LocalDateTime postDate;
     private int hitCount;
     private int likeCount; // 좋아요 수
@@ -45,8 +45,8 @@ public class PostResponseDto {
                 post.getPostNo(),
                 post.getTitle(),
                 post.getContent(),
-                writer != null ? writer.getName() : null, // 작성자 이름
-                writer != null ? writer.getEmail() : null, // 작성자 이메일
+                writer != null ? writer.getMemberId() : null,
+                writer != null ? writer.getProfileImageUrl(): null,
                 post.getPostDate(),
                 post.getHitCount(),
                 post.getLikeCount(),
@@ -70,12 +70,12 @@ public class PostResponseDto {
                 post.getPostNo(),
                 post.getTitle(),
                 null, // 목록 조회에서는 내용을 포함하지 않음
-                writer != null ? writer.getName() : null,
-                writer != null ? writer.getEmail() : null,
+                writer != null ? writer.getMemberId() : null,
+                writer != null ? writer.getProfileImageUrl(): null,
                 post.getPostDate(),
                 post.getHitCount(),
                 post.getLikeCount(),
-                representativeImagePath,
+                post.getImages().isEmpty() ? null : post.getImages().get(0).getImagePath(),
                 null, // 목록 조회에서는 이미지 경로 리스트를 포함하지 않음
                 0 // 목록 조회에서는 댓글 수를 포함하지 않음
         );

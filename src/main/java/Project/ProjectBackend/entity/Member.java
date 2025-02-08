@@ -44,6 +44,16 @@ public class Member {
     @NotEmpty
     private String email;
 
+    @Column(length = 100)  //  최대 100자 제한
+    private String shopIntroduction;
+
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Image profileImage;
+
+    @Column
+    private String profileImageUrl;
+
+
     @NotNull
     @Column(name = "birth_date")
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -100,10 +110,26 @@ public class Member {
         item.setSeller(null); // 연관 관계 해제
     }
 
+    public void updateShopIntroduction(String shopIntroduction) {
+        if (shopIntroduction != null && shopIntroduction.length() > 50) {
+            throw new IllegalArgumentException("상점 소개는 최대 50자까지 입력할 수 있습니다.");
+        }
+        this.shopIntroduction = shopIntroduction;
+    }
+
+    // 프로필 이미지 업데이트
+    public void updateProfileImage(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    // 비밀번호 업데이트 (암호화 적용 필요)
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 
 
     @Builder
-    public Member(String memberId, String password, String name, String email, LocalDate birthDate, Role role, Address address, String phoneNum, boolean enabled) {
+    public Member(String memberId, String password, String name, String email, LocalDate birthDate, Role role, Address address, String phoneNum, boolean enabled, String shopIntroduction, String profileImageUrl      ) {
         this.memberId = memberId;
         this.password = password;
         this.name = name;
@@ -113,6 +139,8 @@ public class Member {
         this.phoneNum = phoneNum;
         this.address = address;
         this.enabled = enabled;
+        this.shopIntroduction = shopIntroduction;
+        this.profileImageUrl = profileImageUrl;
     }
 
 }

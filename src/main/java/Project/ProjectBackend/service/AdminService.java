@@ -32,6 +32,7 @@ public class AdminService {
     private final CommentRepository commentRepository;
     private final ImageRepository imageRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ChatService chatService;
 
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
@@ -819,4 +820,26 @@ public class AdminService {
     }
 
 
+    // ================== 채팅 =================
+
+    // ✅ 전체 채팅 내역 조회 (관리자 전용)
+    public Slice<ChatListDto> getAllChats(int page, int size) {
+        return chatService.getAllChatList(page, size);
+    }
+
+    // ✅ 특정 사용자의 채팅 내역 조회 (관리자 전용)
+    public Slice<ChatListDto> getMemberChatList(String memberId, int page, int size) {
+        return chatService.getMemberChatList(memberId, page, size);
+    }
+
+
+    // ✅ 특정 사용자 간의 채팅 내역 조회 (관리자 전용)
+    public Slice<ChatHistoryDto> getMemberChatHistory(String sender, String receiver, int page, int size) {
+        return chatService.getMessagesBetweenUsers(sender, receiver, page, size);
+    }
+
+    // ✅ 특정 채팅방(roomId) 내 채팅 내역 조회 (관리자 전용)
+    public Slice<ChatHistoryDto> getChatHistoryByRoomId(String roomId, int page, int size) {
+        return chatService.getMessagesByRoomId(roomId, page, size);
+    }
 }

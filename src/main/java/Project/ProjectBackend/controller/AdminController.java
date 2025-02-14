@@ -7,7 +7,10 @@ import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.entity.Post;
 import Project.ProjectBackend.service.AdminService;
 import Project.ProjectBackend.service.AuthService;
+import Project.ProjectBackend.service.ChatService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -27,12 +30,13 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 //@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class AdminController {
 
     private final AdminService adminService;
     private final AuthService authService;
-
+    private final ChatService chatService;
 
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
@@ -504,6 +508,48 @@ public class AdminController {
     }
 
 
+    // ================== 채팅 ==================
+
+    // 모든 채팅 목록 조회
+    @GetMapping("/admin/chat/list")
+    public Slice<ChatListDto> getAllChatList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("관리자 - 모든 채팅 목록 조회");
+        return adminService.getAllChats(page, size);
+    }
+
+    // 특정 사용자의 채팅 목록 조회
+    @GetMapping("/admin/chat/{memberId}")
+    public Slice<ChatListDto> getMemberChatList(
+            @PathVariable String memberId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("관리자 - {}의 채팅 목록 조회", memberId);
+        return adminService.getMemberChatList(memberId, page, size);
+    }
+
+    // 특정 사용자간의 채팅 내역 조회
+    @GetMapping("/admin/chat/history/{sender}/{receiver}")
+    public Slice<ChatHistoryDto> getChatHistory(
+            @PathVariable String sender,
+            @PathVariable String receiver,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("관리자 - {} & {} 간의 채팅 내역 조회", sender, receiver);
+        return adminService.getMemberChatHistory(sender, receiver, page, size);
+    }
+
+    // ✅ 특정 채팅방(roomId) 내 대화 조회
+    @GetMapping("/admin/chat/room/{roomId}")
+    public Slice<ChatHistoryDto> getChatHistoryByRoomId(
+            @PathVariable String roomId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("관리자 - 채팅방 {} 내 대화 조회", roomId);
+        return adminService.getChatHistoryByRoomId(roomId, page, size);
+    }
+
     // ===== Helper Method =====
 
     // 정렬 옵션에 따른 Sort 객체 생성
@@ -553,17 +599,4 @@ public class AdminController {
         // 기본적으로 unsorted 반환
         return Sort.unsorted();
     }
-//    private Sort getSortOrder(String sortOption) {
-//        switch (sortOption.toLowerCase()) {
-//            case "popular":
-//                return Sort.by(Sort.Direction.DESC, "favoriteCount");
-//            case "lowprice":
-//                return Sort.by(Sort.Direction.ASC, "price");
-//            case "highprice":
-//                return Sort.by(Sort.Direction.DESC, "price");
-//            case "latest":
-//            default:
-//                return Sort.by(Sort.Direction.DESC, "c");
-//        }
-//    }
 }

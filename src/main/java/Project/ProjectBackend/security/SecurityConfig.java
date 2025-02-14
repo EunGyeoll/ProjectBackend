@@ -47,10 +47,14 @@
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
             http
                     .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 설정
+                    .csrf(csrf -> csrf.ignoringRequestMatchers("/ws/chat/**", "/pub/**", "/sub/**")) // ✅ WebSocket 관련 CSRF 제외
                     .csrf(csrf -> csrf.disable()) // CSRF 비활성화
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 사용으로 세션 비활성화
                     .authorizeHttpRequests(auth -> auth
+                            .requestMatchers("/", "/index.html").permitAll()  // ✅ 루트 페이지 허용
                             .requestMatchers("/members/**").permitAll() // 인증 없이 접근 가능한 경로 설정
+                            .requestMatchers("/ws/chat/**").permitAll() // WebSocket 엔드포인트 허용
+                            .requestMatchers("/sub/**", "/pub/**").permitAll() // ✅ STOMP 메시지 허용
 
                             // 아이템
                             .requestMatchers(HttpMethod.GET, "/items/list").permitAll()
@@ -98,6 +102,11 @@
                             .requestMatchers(HttpMethod.POST, "/admin/new").permitAll()
                             .requestMatchers(HttpMethod.GET, "/admin/**").hasAuthority("ROLE_ADMIN")
 
+                            // 채팅
+                            .requestMatchers(HttpMethod.GET, "/chat/list/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/chat/history/{sender}/{receiver}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+
+
                             .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                     )
                     .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
@@ -118,8 +127,8 @@
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
             CorsConfiguration configuration = new CorsConfiguration();
-            configuration.setAllowedOrigins(List.of("http://localhost:8010"));
-            configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            configuration.setAllowedOrigins(List.of("http://localhost:8010", "http://localhost:63342"));
+            configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
             configuration.setAllowedHeaders(List.of("*"));
             configuration.setAllowCredentials(true);
             configuration.setExposedHeaders(List.of("Authorization")); // 필요 시 추가 헤더 노출
@@ -129,4 +138,6 @@
 
             return source;
         }
+
+
     }

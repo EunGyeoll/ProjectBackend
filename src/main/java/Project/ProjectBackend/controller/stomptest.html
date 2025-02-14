@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STOMP.js 채팅 테스트</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+<h2>STOMP 1:1 채팅 테스트</h2>
+<button onclick="connect()">STOMP 연결</button>
+<button onclick="sendMessage()">메시지 보내기</button>
+<p id="status"></p>
+<p id="messages"></p>
+
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const socket = new WebSocket("ws://localhost:8080/ws/chat");
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            console.log("✅ STOMP 연결 성공: " + frame);
+            document.getElementById("status").innerText = "STOMP 연결 성공!";
+
+            // 메시지 구독
+            stompClient.subscribe("/sub/chat/fortest", function (message) {
+                console.log("📩 받은 메시지: " + message.body);
+                document.getElementById("messages").innerText += "\n📩 받은 메시지: " + message.body;
+            });
+        });
+    }
+
+    function sendMessage() {
+        if (!stompClient) {
+            alert("STOMP 연결을 먼저 해주세요!");
+            return;
+        }
+
+        const message = {
+            sender: "fortest",
+            receiver: "ad",
+            content: "폭도 몇 cm인가요?"
+        };
+
+        stompClient.send("/pub/chat/message", {}, JSON.stringify(message));
+        console.log("📤 메시지 전송됨: ", message);
+    }
+</script>
+</body>
+</html>

@@ -64,6 +64,7 @@ public class ChatService {
                         message.getTimestamp()
                 ));
     }
+
     // (관리자용) 모든 채팅 목록 조회
     public Slice<ChatListDto> getAllChatList(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);

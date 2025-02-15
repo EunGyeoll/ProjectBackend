@@ -7,6 +7,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +34,7 @@ public class AdminService {
     private final ImageRepository imageRepository;
     private final PasswordEncoder passwordEncoder;
     private final ChatService chatService;
+    private final ChatMessageRepository chatMessageRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
@@ -822,23 +824,31 @@ public class AdminService {
 
     // ================== 채팅 =================
 
-    // ✅ 전체 채팅 내역 조회 (관리자 전용)
-    public Slice<ChatListDto> getAllChats(int page, int size) {
-        return chatService.getAllChatList(page, size);
+    // ✅ 전체 채팅 내역 조회
+    public Slice<ChatListDtoForAdmin> getAllChatList(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return chatMessageRepository.findAllChats(pageable)
+                .map(message -> ChatListDtoForAdmin.builder()
+                        .sender(message.getSender())
+                        .receiver(message.getReceiver())
+                        .lastMessage(message.getContent())
+                        .timestamp(message.getTimestamp())
+                        .build()
+                );
     }
 
-    // ✅ 특정 사용자의 채팅 내역 조회 (관리자 전용)
+    // ✅ 특정 사용자의 채팅 내역 조회
     public Slice<ChatListDto> getMemberChatList(String memberId, int page, int size) {
         return chatService.getMemberChatList(memberId, page, size);
     }
 
 
-    // ✅ 특정 사용자 간의 채팅 내역 조회 (관리자 전용)
-    public Slice<ChatHistoryDto> getMemberChatHistory(String sender, String receiver, int page, int size) {
+    // ✅ 특정 사용자 간의 채팅 내역 조회
+    public Slice<ChatHistoryDto> getMessagesBetweenUsers(String sender, String receiver, int page, int size) {
         return chatService.getMessagesBetweenUsers(sender, receiver, page, size);
     }
 
-    // ✅ 특정 채팅방(roomId) 내 채팅 내역 조회 (관리자 전용)
+    // ✅ 특정 채팅방(roomId) 내 채팅 내역 조회
     public Slice<ChatHistoryDto> getChatHistoryByRoomId(String roomId, int page, int size) {
         return chatService.getMessagesByRoomId(roomId, page, size);
     }

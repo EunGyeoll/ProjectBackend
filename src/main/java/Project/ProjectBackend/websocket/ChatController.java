@@ -89,7 +89,7 @@ public class ChatController {
     }
 
 
-    // ✅ 권한 체크 메서드 (중복 제거)
+    // 권한 체크 메서드
     private boolean isAuthorizedToViewChat(Member currentUser, String sender, String receiver) {
         return currentUser.getMemberId().equals(sender) ||
                 currentUser.getMemberId().equals(receiver) ||

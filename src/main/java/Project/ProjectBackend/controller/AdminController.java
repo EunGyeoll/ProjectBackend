@@ -512,11 +512,11 @@ public class AdminController {
 
     // 모든 채팅 목록 조회
     @GetMapping("/admin/chat/list")
-    public Slice<ChatListDto> getAllChatList(
+    public Slice<ChatListDtoForAdmin> getAllChatList(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         log.info("관리자 - 모든 채팅 목록 조회");
-        return adminService.getAllChats(page, size);
+        return adminService.getAllChatList(page, size);
     }
 
     // 특정 사용자의 채팅 목록 조회
@@ -537,10 +537,10 @@ public class AdminController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         log.info("관리자 - {} & {} 간의 채팅 내역 조회", sender, receiver);
-        return adminService.getMemberChatHistory(sender, receiver, page, size);
+        return adminService.getMessagesBetweenUsers(sender, receiver, page, size);
     }
 
-    // ✅ 특정 채팅방(roomId) 내 대화 조회
+    // 특정 채팅방(roomId) 내 대화 조회
     @GetMapping("/admin/chat/room/{roomId}")
     public Slice<ChatHistoryDto> getChatHistoryByRoomId(
             @PathVariable String roomId,

@@ -51,10 +51,10 @@
                     .csrf(csrf -> csrf.disable()) // CSRF 비활성화
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 사용으로 세션 비활성화
                     .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/", "/index.html").permitAll()  // ✅ 루트 페이지 허용
+                            .requestMatchers("/", "/index.html", "/stomptest.html", "/static/**").permitAll()
                             .requestMatchers("/members/**").permitAll() // 인증 없이 접근 가능한 경로 설정
                             .requestMatchers("/ws/chat/**").permitAll() // WebSocket 엔드포인트 허용
-                            .requestMatchers("/sub/**", "/pub/**").permitAll() // ✅ STOMP 메시지 허용
+                            .requestMatchers("/sub/**", "/pub/**").permitAll() // STOMP 메시지 허용
 
                             // 아이템
                             .requestMatchers(HttpMethod.GET, "/items/list").permitAll()

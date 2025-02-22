@@ -1,3 +1,2 @@
 # ERD
-![projectbackendErdpng](https://github.com/user-attachments/assets/b311c307-eba2-4580-b2ed-e92137805651)
-(DBeaver 으로 생성한 erd임. 테이블명 앞의 PUBLC.은 무시)
+![Image](https://github.com/user-attachments/assets/5f291432-add9-4fbb-9cfa-bbc5b8218a1e) 

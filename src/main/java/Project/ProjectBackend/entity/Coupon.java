@@ -1,5 +1,6 @@
 package Project.ProjectBackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,8 +28,9 @@ public class Coupon {
     private LocalDateTime startDate; // 사용 시작일
     private LocalDateTime endDate; // 사용 종료일
 
-    @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MemberCoupon> memberCoupons = new ArrayList<>(); // 중간 엔티티
+    @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<MemberCoupon> memberCoupons = new ArrayList<>();
 
     }
 

@@ -8,8 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import java.util.UUID;
 
-@Entity
-@Getter
+@Entity @Getter
 @Setter
 public class ChatRoom {
     // 향후에 그룹 채팅 기능을 추가할 가능성이 있으므로 해당 엔티티 생성해 둠

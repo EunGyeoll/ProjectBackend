@@ -26,6 +26,7 @@ public class PostController {
     private final FileService fileService;
     private final AuthService authService;
     private final ImageService imageService;
+    private final SortService sortService;
 
 
     // 1. 게시글 등록
@@ -67,34 +68,20 @@ public class PostController {
         return ResponseEntity.ok(post);
     }
 
-    // 4. 게시글 목록 조회
+    // 4. 모든 게시글 목록 조회
     @GetMapping("/posts/list")
     public ResponseEntity<Slice<PostResponseDto>> getAllPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "latest") String sortOption) { // sortOption 추가
 
-            Sort sortOrder;
+           Sort sortOrder = sortService.createSort(sortOption, "post");
+           Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-            switch (sortOption.toLowerCase()) {
-                case "mostHitCount":
-                    sortOrder = Sort.by(Sort.Direction.DESC, "hitCount");
-                    break;
-                case "mostlikeCount":
-                    sortOrder = Sort.by(Sort.Direction.DESC, "likeCount");
-                    break;
-                case "latest": // 최신순이 디폴트
-                default:
-                    sortOrder = Sort.by(Sort.Direction.DESC, "postDate");
-                    break;
-            }
+           Slice<Post> postSlice = postService.getAllPosts(pageable);
+           Slice<PostResponseDto> postDtoSlice = postSlice.map(PostResponseDto::from);
 
-            Pageable pageable = PageRequest.of(page, size, sortOrder);
-
-            Slice<Post> postsSlice = postService.getAllPosts(pageable);
-            Slice<PostResponseDto> responseDtosSlice = postsSlice.map(PostResponseDto::fromForList);
-
-            return ResponseEntity.ok(responseDtosSlice);
+            return ResponseEntity.ok(postDtoSlice);
     }
 
 
@@ -106,26 +93,13 @@ public class PostController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "latest") String sortOption) { // sortOption 추가
 
-        Sort sortOrder;
-
-        switch (sortOption.toLowerCase()) {
-            case "mostHitCount":
-                sortOrder = Sort.by(Sort.Direction.DESC, "hitCount");
-                break;
-            case "mostlikeCount":
-                sortOrder = Sort.by(Sort.Direction.DESC, "likeCount");
-                break;
-            case "latest": // 최신순이 디폴트
-            default:
-                sortOrder = Sort.by(Sort.Direction.DESC, "postDate");
-                break;
-        }
-
+        Sort sortOrder = sortService.createSort(sortOption, "post");
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Slice<PostResponseDto> postsSlice = postService.getPostsByWriter(memberId, pageable);
+        Slice<Post> postSlice = postService.getAllPosts(pageable);
+        Slice<PostResponseDto> postDtoSlice = postSlice.map(PostResponseDto::from);
 
-        return ResponseEntity.ok(postsSlice);
+        return ResponseEntity.ok(postDtoSlice);
 
     }
 

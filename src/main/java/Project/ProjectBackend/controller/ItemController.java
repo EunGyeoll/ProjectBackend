@@ -1,12 +1,14 @@
 package Project.ProjectBackend.controller;
 
 
+import Project.ProjectBackend.dto.PostResponseDto;
 import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.dto.ItemRequestDto;
 import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.service.AuthService;
 import Project.ProjectBackend.service.ItemService;
+import Project.ProjectBackend.service.SortService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -23,7 +25,7 @@ public class ItemController {
 
     private final ItemService itemService;
     private final AuthService authService;
-
+    private final SortService sortService;
 
     // 1. 아이템 등록
     @PreAuthorize("hasAuthority('ROLE_USER')")
@@ -76,32 +78,15 @@ public class ItemController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "latest") String sortOption) {
 
-        Sort sortOrder;
-
-        switch (sortOption.toLowerCase()) {
-            case "popular":
-                sortOrder = Sort.by(Sort.Direction.DESC, "favoriteCount");
-                break;
-            case "lowprice":
-                sortOrder = Sort.by(Sort.Direction.ASC, "price");
-                break;
-            case "highprice":
-                sortOrder = Sort.by(Sort.Direction.DESC, "price");
-                break;
-            case "latest":
-            default:
-                sortOrder = Sort.by(Sort.Direction.DESC, "itemDate");
-                break;
-        }
-
+        Sort sortOrder = sortService.createSort(sortOption, "item"); // 🔹 SortService 사용
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
         Slice<Item> itemsSlice = itemService.getAllItems(pageable);
-        Slice<ItemResponseDto> responseDtosSlice = itemsSlice.map(ItemResponseDto::fromForList);
+        Slice<ItemResponseDto> itemDtoSlice = itemsSlice.map(ItemResponseDto::fromForList);
 
-        return ResponseEntity.ok(responseDtosSlice);
+
+        return ResponseEntity.ok(itemDtoSlice);
     }
-
 
 
     // 5. 특정 판매자가 등록한 아이템 조회
@@ -112,30 +97,12 @@ public class ItemController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "latest") String sortOption) {
 
-        Sort sortOrder;
-
-        switch (sortOption.toLowerCase()) {
-            case "popular":
-                sortOrder = Sort.by(Sort.Direction.DESC, "favoriteCount");
-                break;
-            case "lowprice":
-                sortOrder = Sort.by(Sort.Direction.ASC, "price");
-                break;
-            case "highprice":
-                sortOrder = Sort.by(Sort.Direction.DESC, "price");
-                break;
-            case "latest":
-            default:
-                sortOrder = Sort.by(Sort.Direction.DESC, "itemDate");
-                break;
-        }
-
+        Sort sortOrder = sortService.createSort(sortOption, "item");
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        // ✅ ItemService에서 이미 DTO 변환된 Slice<ItemResponseDto> 반환
-        Slice<ItemResponseDto> itemsSlice = itemService.getItemsBySeller(memberId, pageable);
+        Slice<ItemResponseDto> itemDtoSlice = itemService.getItemsBySeller(memberId, pageable);
 
-        return ResponseEntity.ok(itemsSlice);
+        return ResponseEntity.ok(itemDtoSlice);
     }
 
 
@@ -149,33 +116,13 @@ public class ItemController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "latest") String sortOption) {
 
-        Sort sortOrder;
+        Sort sortOrder = sortService.createSort(sortOption, "item");
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        switch (sortOption.toLowerCase()) {
-            case "popular": // 인기순. 찜 수가 많은 순으로
-                sortOrder = Sort.by(Sort.Direction.DESC, "favoriteCount");
-                break;
-            case "lowprice": // 가격 낮은 순.
-                sortOrder = Sort.by(Sort.Direction.ASC, "price");
-                break;
-            case "highprice":
-                sortOrder = Sort.by(Sort.Direction.DESC, "price");
-                break;
-            case "latest": // 최신순.
-            default:
-                sortOrder = Sort.by(Sort.Direction.DESC, "itemDate");
-                break;
-        }
+        Slice<Item> itemSlice = itemService.searchItemsByKeyword(keyword, pageable);
+        Slice<ItemResponseDto> itemDtoSlice = itemSlice.map(ItemResponseDto::fromForList);
 
-        Pageable pageable = PageRequest.of(page,size,sortOrder);
-
-        Slice<Item> itemSlice = itemService.searchItemsByKeyword(keyword,pageable);
-
-        // 엔티티를 Dto로 변환
-        Slice<ItemResponseDto> responseDtoSlice = itemSlice.map(ItemResponseDto::fromForList);
-
-        return ResponseEntity.ok(responseDtoSlice);
-
+        return ResponseEntity.ok(itemDtoSlice);
     }
 
 

@@ -21,6 +21,7 @@ public class MemberPageService {
     private final PostService postService;
     private final FavoriteItemService favoriteItemService;
     private final LikedPostService likedPostService;
+    private final AuthService authService;
 
 
     private final MemberRepository memberRepository;
@@ -36,8 +37,7 @@ public class MemberPageService {
     public MemberMyPageDto getMyPageData(
             String targetMemberId, Pageable pageableForItems, Pageable pageableForPosts, Pageable pageableForFavoriteItems, Pageable pageableForLikedPosts) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentMemberId = authentication.getName();
+        String currentMemberId = authService.getCurrentUser().getMemberId();
 
         // 회원 정보 조회
         Member member = memberRepository.findByMemberId(targetMemberId)
@@ -83,10 +83,4 @@ public class MemberPageService {
                 new ArrayList<>(), false  // 좋아요한 게시글 제외
         );
     }
-
-
-
-
-
-
 }

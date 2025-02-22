@@ -146,7 +146,7 @@ public class PostService {
 
 
 
-    // 5. 게시글 목록 조회
+    // 5. 게시글 목록 조회 (메인 화면에 쓰일 것)
     public Slice<Post> getAllPosts(Pageable pageable) {
         return postRepository.findAll(pageable);
     }

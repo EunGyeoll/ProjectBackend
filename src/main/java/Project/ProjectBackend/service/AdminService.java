@@ -735,7 +735,7 @@ public class AdminService {
 
 
     // ====== 댓글 관리 ======
-// 1-1. 댓글 작성
+    // 1-1. 댓글 작성
     @Transactional
     public Comment addComment(Long postId, CommentRequestDto requestDto, Member currentUser) {
         Post post = postRepository.findById(postId)

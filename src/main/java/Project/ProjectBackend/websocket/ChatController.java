@@ -56,7 +56,7 @@ public class ChatController {
                 .build();
 
 
-        // 🔹 채팅 상대방에게 실시간 메시지 전송
+        // receiver에게 메시지 전송
         messagingTemplate.convertAndSend("/sub/chat/private/" + messageDto.getReceiver(), messageDto);
 
         chatService.saveMessage(message);

@@ -192,8 +192,23 @@
         stompClient.connect({}, function (frame) {
             console.log("✅ STOMP 연결 성공: " + frame);
             document.getElementById("status").innerText = "STOMP 연결됨!";
+
+            // subscribe() 실행 확인
+            console.log("메시지 구독 중: /sub/chat/private/" + memberId);
+
+            stompClient.subscribe(`/sub/chat/private/${memberId}`, function (message) {
+                let receivedMessage = JSON.parse(message.body);
+                console.log("📩 받은 메시지:", receivedMessage);
+
+                // 채팅창에 메시지 추가
+                const messageClass = receivedMessage.sender === memberId ? "sent" : "received";
+                document.getElementById("messages").innerHTML += `<p class="message ${messageClass}">${receivedMessage.sender}: ${receivedMessage.content}</p>`;
+
+                scrollToBottom();
+            });
         });
     }
+
 
     function loadChatRooms() {
         if (!jwtToken) {
@@ -271,6 +286,10 @@
         const messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
+
+    stompClient.debug = function (str) {
+        console.log(str);
+    };
 </script>
 </body>
 </html>

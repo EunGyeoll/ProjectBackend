@@ -7,7 +7,10 @@ import Project.ProjectBackend.entity.Message;
 import Project.ProjectBackend.service.AuthService;
 import Project.ProjectBackend.service.ChatService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Slice;
 
@@ -29,24 +33,36 @@ public class ChatController {
 
     // WebSocket을 통한 1:1 메시지 전송
     @MessageMapping("/chat/message")
-    public void privateMessage(ChatMessageDto messageDto) {
-        log.info("수신된 메시지: {}", messageDto);
+    public void privateMessage(ChatMessageDto messageDto,
+                               @Headers Map<String, Object> headers) {
+        // 🔥 WebSocket 세션에서 `memberId` 가져오기
+        Map<String, Object> sessionAttributes = (Map<String, Object>) headers.get("simpSessionAttributes");
+        String memberId = (sessionAttributes != null) ? (String) sessionAttributes.get("memberId") : null;
 
+        if (memberId == null) {
+            log.error("WebSocket 세션에 사용자 ID 없음");
+            throw new SecurityException("인증되지 않은 사용자입니다.");
+        }
+
+        log.info("📩 수신된 메시지 - 보낸 사람: {}", memberId);
+
+        // 메시지 저장 및 전송
         Message message = Message.builder()
-                .roomId(ChatMessageDto.generateRoomId(messageDto.getSender(), messageDto.getReceiver()))
-                .sender(messageDto.getSender())
+                .roomId(ChatMessageDto.generateRoomId(memberId, messageDto.getReceiver()))
+                .sender(memberId)
                 .receiver(messageDto.getReceiver())
                 .content(messageDto.getContent())
                 .timestamp(LocalDateTime.now())
                 .build();
 
+
+        // 🔹 채팅 상대방에게 실시간 메시지 전송
+        messagingTemplate.convertAndSend("/sub/chat/private/" + messageDto.getReceiver(), messageDto);
+
         chatService.saveMessage(message);
-
-        messagingTemplate.convertAndSend(
-                "/sub/chat/private/" + messageDto.getReceiver(), messageDto);
-
-        log.info("메시지 전송 완료: {}", messageDto);
     }
+
+
 
     // 특정 사용자의 채팅 목록 조회
     @GetMapping("/chat/list/{memberId}")

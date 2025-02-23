@@ -44,11 +44,11 @@ public class JwtTokenProvider {
 
 
     // AccessToken 생성
-    public String createAccessToken(String userId, String role) {
+    public String createAccessToken(String memberId, String role) {
         try {
             // JWT Builder 생성
             JwtBuilder builder = Jwts.builder()
-                    .setSubject(userId)  // 사용자 ID 설정
+                    .setSubject(memberId)  // 사용자 ID 설정
                     .claim("role", role) // 역할 설정
                     .setExpiration(new Date(System.currentTimeMillis() + accessTokenDuration)) // 만료 시간 설정
                     .signWith(secretKey);  // 서명 설정
@@ -60,9 +60,9 @@ public class JwtTokenProvider {
             throw new JwtTokenCreationException("Error creating JWT token", e);
         }
     }
-//    public String createAccessToken(String userId, Role role) {
+//    public String createAccessToken(String memberId, Role role) {
 //        JwtBuilder builder = Jwts.builder()
-//                .setSubject(userId)
+//                .setSubject(memberId)
 //                .claim("role", role.name()) // Enum의 name() 사용
 //                .setExpiration(new Date(System.currentTimeMillis() + accessTokenDuration))
 //                .signWith(secretKey);
@@ -102,7 +102,7 @@ public class JwtTokenProvider {
     }
 
 
-    public String getUserId(Jws<Claims> jws) {
+    public String getmemberId(Jws<Claims> jws) {
         // Payload 얻기
         Claims claims = jws.getBody();  // getPayload() 대신 getBody() 사용
         // 사용자 아이디 얻기

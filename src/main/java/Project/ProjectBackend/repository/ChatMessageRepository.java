@@ -27,7 +27,7 @@ public interface ChatMessageRepository extends JpaRepository<Message, Long> {
     @Query("SELECT m FROM Message m " +
             "WHERE (m.sender = :sender AND m.receiver = :receiver) " +
             "   OR (m.sender = :receiver AND m.receiver = :sender) " +
-            "ORDER BY m.timestamp DESC")
+            "ORDER BY m.timestamp ASC")
     Slice<Message> findChatHistory(@Param("sender") String sender,
                                    @Param("receiver") String receiver,
                                    Pageable pageable);

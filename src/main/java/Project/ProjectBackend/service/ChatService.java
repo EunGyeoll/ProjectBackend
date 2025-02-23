@@ -10,7 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +34,7 @@ public class ChatService {
     public Slice<ChatListDto> getMemberChatList(String memberId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        return chatMessageRepository.findLatestMessages(memberId, pageable)
+        Slice<ChatListDto> chatList = chatMessageRepository.findLatestMessages(memberId, pageable)
                 .map(message -> {
                     String chatPartner = message.getSender().equals(memberId)
                             ? message.getReceiver()
@@ -37,6 +43,19 @@ public class ChatService {
                     String profileImageUrl = memberRepository.findProfileImageUrl(chatPartner);
                     return new ChatListDto(chatPartner, message.getContent(), message.getTimestamp(), profileImageUrl);
                 });
+
+        // 🔥 중복 제거 (HashSet 사용)
+        Set<String> uniqueChatPartners = new HashSet<>();
+        List<ChatListDto> uniqueChatList = new ArrayList<>();
+
+        for (ChatListDto chat : chatList) {
+            if (!uniqueChatPartners.contains(chat.getChatPartner())) {
+                uniqueChatPartners.add(chat.getChatPartner());
+                uniqueChatList.add(chat);
+            }
+        }
+
+        return new SliceImpl<>(uniqueChatList, pageable, chatList.hasNext());
     }
 
     // 특정 채팅방(roomId) 내 1:1 채팅 내역 조회

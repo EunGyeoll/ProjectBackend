@@ -3,48 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STOMP.js 채팅 테스트</title>
+    <title>STOMP.js 채팅</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 400px;
+            padding: 20px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        input, button {
+            width: 90%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .messages {
+            height: 250px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            padding: 5px;
+            border-radius: 5px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .sent {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        .received {
+            background-color: #ddd;
+            align-self: flex-start;
+        }
+        .logoutContainer {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+        }
+
+        .logoutText {
+            font-size: 12px;
+            color: gray;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-bottom: 5px;
+        }
+
+        .logoutText:hover {
+            color: black;
+        }
+
+
+    </style>
 </head>
 <body>
-<h2>STOMP 1:1 채팅 테스트</h2>
-<button onclick="connect()">STOMP 연결</button>
-<button onclick="sendMessage()">메시지 보내기</button>
-<p id="status"></p>
-<p id="messages"></p>
+<div class="container">
+    <div class="logoutContainer">
+        <span onclick="logout()" class="logoutText">로그아웃</span>
+    </div>
+    <h2>STOMP 채팅</h2>
+
+
+    <!-- 로그인 -->
+    <input type="text" id="memberId" placeholder="로그인 ID 입력">
+    <input type="password" id="password" placeholder="비밀번호 입력">
+    <button onclick="login()">로그인</button>
+
+    <p id="status">🔑 로그인 필요</p>
+
+    <!-- STOMP 연결 -->
+    <button onclick="connect()">STOMP 연결</button>
+
+    <!-- 채팅방 목록 -->
+    <h3>💬 채팅방</h3>
+    <div id="chatRooms"></div>
+    <button onclick="loadChatRooms()">🔄 새로고침</button>
+
+    <!-- 채팅 UI -->
+    <h3>📨 채팅</h3>
+    <div class="messages" id="messages"></div>
+
+    <!-- 받는 사람 입력 -->
+    <input type="text" id="receiverId" placeholder="받는 사람 입력">
+
+    <!-- 메시지 입력 -->
+    <input type="text" id="messageContent" placeholder="메시지 입력">
+    <button onclick="sendMessage()">보내기</button>
+</div>
 
 <script>
     let stompClient = null;
+    let jwtToken = null;
+    let memberId = null;
+    let currentReceiver = null;
 
-    function connect() {
-        const socket = new WebSocket("ws://localhost:8080/ws/chat");
-        stompClient = Stomp.over(socket);
-        stompClient.connect({}, function (frame) {
-            console.log("✅ STOMP 연결 성공: " + frame);
-            document.getElementById("status").innerText = "STOMP 연결 성공!";
+    function login() {
+        const memberIdInput = document.getElementById("memberId").value;
+        const passwordInput = document.getElementById("password").value;
 
-            // 메시지 구독
-            stompClient.subscribe("/sub/chat/fortest", function (message) {
-                console.log("📩 받은 메시지: " + message.body);
-                document.getElementById("messages").innerText += "\n📩 받은 메시지: " + message.body;
+        fetch("http://localhost:8080/members/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ memberId: memberIdInput, password: passwordInput })
+        })
+            .then(response => response.json())
+            .then(data => {
+                jwtToken = data.token;
+                memberId = memberIdInput;
+
+                if (jwtToken) {
+                    console.log("✅ 로그인 성공! JWT 토큰:", jwtToken);
+                } else {
+                    console.error("⛔ JWT 토큰이 없습니다.");
+                }
+
+                document.getElementById("status").innerText = "🔑 로그인 성공!";
+                loadChatRooms();
+            })
+            .catch(error => {
+                console.error("⛔ 로그인 오류:", error);
+                document.getElementById("status").innerText = "⛔ 로그인 실패!";
             });
-        });
     }
-
-    function sendMessage() {
-        if (!stompClient) {
-            alert("STOMP 연결을 먼저 해주세요!");
+    function logout() {
+        if (!jwtToken) {
+            alert("이미 로그아웃 상태입니다!");
             return;
         }
 
-        const message = {
-            sender: "fortest",
-            receiver: "ad",
-            content: "메시지 테스트2"
-        };
+        fetch("http://localhost:8080/members/logout", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${jwtToken}` }
+        })
+            .then(response => {
+                if (response.ok) {
+                    console.log("✅ 로그아웃 성공!");
+                    jwtToken = null;
+                    userId = null;
+                    document.getElementById("status").innerText = "🔑 로그아웃됨";
+                    alert("로그아웃 완료!");
+                } else {
+                    console.error("로그아웃 실패");
+                }
+            })
+            .catch(error => console.error("오류 발생:", error));
+    }
 
-        stompClient.send("/pub/chat/message", {}, JSON.stringify(message));
-        console.log("📤 메시지 전송됨: ", message);
+    function connect() {
+        if (!jwtToken) {
+            alert("로그인을 먼저 해주세요!");
+            return;
+        }
+
+        const socket = new WebSocket(`ws://localhost:8080/ws/chat?token=${jwtToken}`);
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            console.log("✅ STOMP 연결 성공: " + frame);
+            document.getElementById("status").innerText = "STOMP 연결됨!";
+        });
+    }
+
+    function loadChatRooms() {
+        if (!jwtToken) {
+            alert("로그인을 먼저 해주세요!");
+            return;
+        }
+
+        fetch(`http://localhost:8080/chat/list/${memberId}?page=0&size=10`, {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${jwtToken}` }
+        })
+            .then(response => response.json())
+            .then(chatRooms => {
+                let chatListHtml = "";
+                chatRooms.content.forEach(room => {
+                    chatListHtml += `<button onclick="loadChatHistory('${room.chatPartner}')">${room.chatPartner} 님과 대화</button><br>`;
+                });
+                document.getElementById("chatRooms").innerHTML = chatListHtml;
+            })
+            .catch(error => {
+                console.error("⛔ 채팅방 목록 오류:", error);
+                alert("채팅방 목록을 불러오는 중 문제가 발생했습니다.");
+            });
+    }
+
+    function loadChatHistory(receiverId) {
+        currentReceiver = receiverId;
+        document.getElementById("receiverId").value = receiverId; // 입력창에 자동 설정
+
+        fetch(`http://localhost:8080/chat/history/${memberId}/${receiverId}?page=0&size=20`, {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${jwtToken}` }
+        })
+            .then(response => response.json())
+            .then(messages => {
+                document.getElementById("messages").innerHTML = "";
+                messages.content.forEach(msg => {
+                    const messageClass = msg.sender === memberId ? "sent" : "received";
+                    document.getElementById("messages").innerHTML += `<p class="message ${messageClass}">${msg.sender}: ${msg.content}</p>`;
+                });
+                scrollToBottom();
+            });
+    }
+
+    function sendMessage() {
+        if (!stompClient || !stompClient.connected) {
+            alert("STOMP가 연결되지 않았습니다! 연결 후 시도하세요.");
+            return;
+        }
+
+        let receiverInput = document.getElementById("receiverId").value.trim();
+        if (!receiverInput) {
+            alert("받는 사람을 입력하세요!");
+            return;
+        }
+
+        const messageContent = document.getElementById("messageContent").value.trim();
+        if (!messageContent) {
+            alert("메시지를 입력하세요!");
+            return;
+        }
+
+        stompClient.send("/pub/chat/message", {}, JSON.stringify({
+            sender: memberId,
+            receiver: receiverInput,
+            content: messageContent
+        }));
+
+        document.getElementById("messages").innerHTML += `<p class="message sent">📤 나: ${messageContent}</p>`;
+        document.getElementById("messageContent").value = "";
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        const messagesDiv = document.getElementById("messages");
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 </script>
 </body>

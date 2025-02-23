@@ -6,9 +6,7 @@ import Project.ProjectBackend.repository.MemberRepository;
 import Project.ProjectBackend.security.JwtTokenProvider;
 import Project.ProjectBackend.service.MemberService;
 import jakarta.validation.constraints.NotEmpty;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 
@@ -23,14 +21,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class MemberController {
 
     private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider;
-    private final MemberRepository memberRepository;
+
+
 
     // 회원가입, 로그인, 회원정보 수정, 탈퇴
-
 
     // 회원가입
     @PostMapping("/members/new")
@@ -76,6 +75,13 @@ public class MemberController {
         }
     }
 
+
+    // 로그아웃
+    @PostMapping("/members/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
+        log.info("로그아웃 요청 - 토큰: {}", token);
+        return ResponseEntity.ok("로그아웃 되었습니다.");
+    }
 
 
     // 회원정보 수정

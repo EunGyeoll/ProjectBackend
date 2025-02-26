@@ -3,6 +3,7 @@ package Project.ProjectBackend.service;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.repository.MemberRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -38,5 +39,11 @@ public class AuthService {
 
         log.debug("Authenticated Member: {}", member);
         return member;
+    }
+
+    // 로그인 여부를 확인하는 메서드
+    public boolean isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken);
     }
 }

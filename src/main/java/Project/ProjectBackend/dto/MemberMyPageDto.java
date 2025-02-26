@@ -1,7 +1,5 @@
 package Project.ProjectBackend.dto;
 
-import Project.ProjectBackend.entity.FavoriteItem;
-import Project.ProjectBackend.entity.LikedPost;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.entity.Role;
 import lombok.AllArgsConstructor;
@@ -9,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -24,13 +21,13 @@ public class MemberMyPageDto {
     private LocalDate birthDate;
     private String phoneNum;
     private AddressDto address;
-    private List<ItemResponseDto> items;
+    private List<ItemListDto> items;
     private boolean itemsHasNext;
-    private List<PostResponseDto> posts;
+    private List<PostListDto> posts;
     private boolean postsHasNext;
-    private List<FavoriteItemDto> favoriteItems;
+    private List<FavoriteItemListDto> favoriteItems;
     private boolean favoriteItemsHasNext;
-    private List<LikedPostDto> likedPosts;
+    private List<LikedPostListDto> likedPosts;
     private boolean likedPostsHasNext;
     private boolean isOwnProfile;
     private String shopIntroduction;
@@ -39,13 +36,13 @@ public class MemberMyPageDto {
     public static MemberMyPageDto from(
             Member member,
             boolean isOwnProfile,
-            List<ItemResponseDto> items,
+            List<ItemListDto> items,
             boolean itemsHasNext,
-            List<PostResponseDto> posts,
+            List<PostListDto> posts,
             boolean postsHasNext,
-            List<FavoriteItemDto> favoriteItems,
+            List<FavoriteItemListDto> favoriteItems,
             boolean favoriteItemsHasNext,
-            List<LikedPostDto> likedPosts,
+            List<LikedPostListDto> likedPosts,
             boolean likedPostsHasNext
     ) {
         return MemberMyPageDto.builder()

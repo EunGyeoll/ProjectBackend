@@ -1,9 +1,6 @@
 package Project.ProjectBackend.service;
 
-import Project.ProjectBackend.dto.ItemRequestDto;
-import Project.ProjectBackend.dto.ItemResponseDto;
-import Project.ProjectBackend.dto.PostRequestDto;
-import Project.ProjectBackend.dto.PostResponseDto;
+import Project.ProjectBackend.dto.*;
 import Project.ProjectBackend.entity.Image;
 import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.entity.Member;
@@ -132,18 +129,11 @@ public class PostService {
 
 
     // 4. 회원별 게시글 조회
-    public Slice<PostResponseDto> getPostsByWriter(String memberId, Pageable pageable) {
-
-        boolean writerExists = memberRepository.existsById(memberId);
-        if (!writerExists) {
-            throw new IllegalArgumentException("작성자를 찾을 수 없습니다.");
-        }
-
-        Slice<Post> postSlice = postRepository.findByWriter_MemberId(memberId, pageable);
-        return postSlice.map(PostResponseDto::fromForList);
+    @Transactional(readOnly = true)
+    public Slice<PostListDto> getPostsByWriter(String memberId, Pageable pageable) {
+        Slice<Post> posts = postRepository.findByWriter_MemberId(memberId, pageable);
+        return posts.map(PostListDto::from);
     }
-
-
 
 
     // 5. 게시글 목록 조회 (메인 화면에 쓰일 것)

@@ -1,7 +1,6 @@
 package Project.ProjectBackend.service;
 
-import Project.ProjectBackend.dto.FavoriteItemDto;
-import Project.ProjectBackend.dto.ItemResponseDto;
+import Project.ProjectBackend.dto.FavoriteItemListDto;
 import Project.ProjectBackend.entity.FavoriteItem;
 import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.entity.Member;
@@ -78,13 +77,13 @@ public class FavoriteItemService {
 
     // 특정 사용자가 찜한 상품 목록 조회
     @Transactional(readOnly = true)
-    public Slice<FavoriteItemDto> getFavoriteItemsByMember(String memberId, Pageable pageable) {
+    public Slice<FavoriteItemListDto> getFavoriteItemsByMember(String memberId, Pageable pageable) {
         // 🔹 memberId를 가지고 Member 엔티티를 먼저 조회
         Member member = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
         // 🔹 Member 객체를 사용하여 쿼리 실행
         return favoriteRepository.findByMember(member, pageable)
-                .map(FavoriteItemDto::from);
+                .map(FavoriteItemListDto::from);
     }
 }

@@ -1,5 +1,6 @@
 package Project.ProjectBackend.service;
 
+import Project.ProjectBackend.dto.ItemListDto;
 import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.entity.*;
 import Project.ProjectBackend.dto.ItemRequestDto;
@@ -129,14 +130,9 @@ public class ItemService {
 
     // 4. 특정 판매자가 등록한 아이템 조회
     @Transactional(readOnly = true)
-    public Slice<ItemResponseDto> getItemsBySeller(String memberId, Pageable pageable) {
-        boolean sellerExists = memberRepository.existsById(memberId);
-        if (!sellerExists) {
-            throw new IllegalArgumentException("판매자를 찾을 수 없습니다.");
-        }
-
+    public Slice<ItemListDto> getItemsBySeller(String memberId, Pageable pageable) {
         Slice<Item> itemsSlice = itemRepository.findBySeller_MemberId(memberId, pageable);
-        return itemsSlice.map(ItemResponseDto::fromForList);
+        return itemsSlice.map(ItemListDto::from);
     }
 
 

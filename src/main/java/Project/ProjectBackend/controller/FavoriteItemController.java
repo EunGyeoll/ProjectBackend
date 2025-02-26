@@ -1,7 +1,6 @@
 package Project.ProjectBackend.controller;
 
-import Project.ProjectBackend.dto.FavoriteItemDto;
-import Project.ProjectBackend.dto.ItemResponseDto;
+import Project.ProjectBackend.dto.FavoriteItemListDto;
 import Project.ProjectBackend.service.FavoriteItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -11,8 +10,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -49,7 +46,7 @@ public class FavoriteItemController {
 
     // 특정 사용자가 찜한 상품 목록
     @GetMapping("/favorites/list")
-    public ResponseEntity<Slice<FavoriteItemDto>> getFavorites(
+    public ResponseEntity<Slice<FavoriteItemListDto>> getFavorites(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -76,7 +73,7 @@ public class FavoriteItemController {
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Slice<FavoriteItemDto> favorites = favoriteItemService.getFavoriteItemsByMember(memberId, pageable);
+        Slice<FavoriteItemListDto> favorites = favoriteItemService.getFavoriteItemsByMember(memberId, pageable);
 
         return ResponseEntity.ok(favorites);
     }

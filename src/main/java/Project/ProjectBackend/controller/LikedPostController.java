@@ -1,7 +1,6 @@
 package Project.ProjectBackend.controller;
 
-import Project.ProjectBackend.dto.LikedPostDto;
-import Project.ProjectBackend.dto.PostResponseDto;
+import Project.ProjectBackend.dto.LikedPostListDto;
 import Project.ProjectBackend.service.LikedPostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -47,7 +46,7 @@ public class LikedPostController {
 
     // 로그인한 사용자의 좋아요한 게시글 목록 조회
     @GetMapping("/likes/list")
-    public ResponseEntity<Slice<LikedPostDto>> getLikedPosts(
+    public ResponseEntity<Slice<LikedPostListDto>> getLikedPosts(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -68,7 +67,7 @@ public class LikedPostController {
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Slice<LikedPostDto> likedPosts = likedPostService.getLikedPostsByMember(memberId, pageable);
+        Slice<LikedPostListDto> likedPosts = likedPostService.getLikedPostsByMember(memberId, pageable);
 
         return ResponseEntity.ok(likedPosts);
     }

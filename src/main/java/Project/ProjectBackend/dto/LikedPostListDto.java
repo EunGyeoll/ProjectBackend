@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @Builder
-public class LikedPostDto {
+public class LikedPostListDto {
     private Long likedId; // 좋아요 ID
     private String memberId; // 좋아요 누른 회원의 ID
     private Long postNo; // 좋아요가 눌린 게시글의 ID
@@ -20,8 +20,8 @@ public class LikedPostDto {
     private LocalDateTime createdAt; // 좋아요 누른 시간
 
     // 엔티티를 DTO로 변환하는 정적 메서드
-    public static LikedPostDto from(LikedPost likedPost) {
-        return LikedPostDto.builder()
+    public static LikedPostListDto from(LikedPost likedPost) {
+        return LikedPostListDto.builder()
                 .likedId(likedPost.getLikedId())
                 .memberId(likedPost.getMember().getMemberId()) // 좋아요 누른 회원 ID
                 .postNo(likedPost.getPost().getPostNo()) // 좋아요 눌린 게시글 ID

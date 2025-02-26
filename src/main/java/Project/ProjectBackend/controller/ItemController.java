@@ -1,6 +1,7 @@
 package Project.ProjectBackend.controller;
 
 
+import Project.ProjectBackend.dto.ItemListDto;
 import Project.ProjectBackend.dto.PostResponseDto;
 import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.dto.ItemRequestDto;
@@ -70,8 +71,24 @@ public class ItemController {
         return ResponseEntity.ok(responseDto);
     }
 
+    // 4. 특정 판매자가 등록한 아이템 조회
+    @GetMapping("/items/seller/{memberId}")
+    public ResponseEntity<Slice<ItemListDto>> getItemsBySeller(
+            @PathVariable String memberId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "latest") String sortOption) {
 
-    // 4. 모든 아이템 목록 조회
+        Sort sortOrder = sortService.createSort(sortOption, "item");
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        Slice<ItemListDto> itemDtoSlice = itemService.getItemsBySeller(memberId, pageable);
+
+        return ResponseEntity.ok(itemDtoSlice);
+    }
+
+
+    // 5. 모든 아이템 목록 조회
     @GetMapping("/items/list")
     public ResponseEntity<Slice<ItemResponseDto>> getAllItems(
             @RequestParam(defaultValue = "0") int page,
@@ -89,21 +106,7 @@ public class ItemController {
     }
 
 
-    // 5. 특정 판매자가 등록한 아이템 조회
-    @GetMapping("/items/seller/{memberId}")
-    public ResponseEntity<Slice<ItemResponseDto>> getItemsBySeller(
-            @PathVariable String memberId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "latest") String sortOption) {
 
-        Sort sortOrder = sortService.createSort(sortOption, "item");
-        Pageable pageable = PageRequest.of(page, size, sortOrder);
-
-        Slice<ItemResponseDto> itemDtoSlice = itemService.getItemsBySeller(memberId, pageable);
-
-        return ResponseEntity.ok(itemDtoSlice);
-    }
 
 
 

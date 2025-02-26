@@ -25,10 +25,6 @@ public class MemberPageService {
 
 
     private final MemberRepository memberRepository;
-    private final ItemRepository itemRepository;
-    private final PostRepository postRepository;
-    private final FavoriteRepository favoriteRepository;
-    private final LikedPostRepository likedPostRepository;
 
 
 
@@ -46,10 +42,10 @@ public class MemberPageService {
         boolean isOwnProfile = currentMemberId.equals(targetMemberId);
 
 
-        Slice<ItemResponseDto> itemsSlice = itemService.getItemsBySeller(member.getMemberId(), pageableForItems);
-        Slice<PostResponseDto> postsSlice = postService.getPostsByWriter(member.getMemberId(), pageableForPosts);
-        Slice<FavoriteItemDto> favoriteItemsSlice = favoriteItemService.getFavoriteItemsByMember(member.getMemberId(), pageableForFavoriteItems);
-        Slice<LikedPostDto> likedPostsSlice = likedPostService.getLikedPostsByMember(member.getMemberId(), pageableForLikedPosts);
+        Slice<ItemListDto> itemsSlice = itemService.getItemsBySeller(member.getMemberId(), pageableForItems);
+        Slice<PostListDto> postsSlice = postService.getPostsByWriter(member.getMemberId(), pageableForPosts);
+        Slice<FavoriteItemListDto> favoriteItemsSlice = favoriteItemService.getFavoriteItemsByMember(member.getMemberId(), pageableForFavoriteItems);
+        Slice<LikedPostListDto> likedPostsSlice = likedPostService.getLikedPostsByMember(member.getMemberId(), pageableForLikedPosts);
 
         return MemberMyPageDto.from(
                 member, isOwnProfile,
@@ -71,8 +67,8 @@ public class MemberPageService {
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
         // Service 계층에서 데이터 가져오기
-        Slice<ItemResponseDto> itemsSlice = itemService.getItemsBySeller(member.getMemberId(), pageableForItems);
-        Slice<PostResponseDto> postsSlice = postService.getPostsByWriter(member.getMemberId(), pageableForPosts);
+        Slice<ItemListDto> itemsSlice = itemService.getItemsBySeller(member.getMemberId(), pageableForItems);
+        Slice<PostListDto> postsSlice = postService.getPostsByWriter(member.getMemberId(), pageableForPosts);
 
         return MemberMyPageDto.from(
                 member,

@@ -56,6 +56,9 @@
                             .requestMatchers("/ws/chat/**").permitAll() // WebSocket 엔드포인트 허용
                             .requestMatchers("/sub/**", "/pub/**").permitAll() // STOMP 메시지 허용
 
+                            // 회원 페이지 조회
+                            .requestMatchers(HttpMethod.GET, "/memberpage/{memberId}").permitAll()
+
                             // 아이템
                             .requestMatchers(HttpMethod.GET, "/items/list").permitAll()
                             .requestMatchers(HttpMethod.GET,"/items/seller/**").permitAll()
@@ -101,6 +104,7 @@
                             // 관리자
                             .requestMatchers(HttpMethod.POST, "/admin/new").permitAll()
                             .requestMatchers(HttpMethod.GET, "/admin/**").hasAuthority("ROLE_ADMIN")
+
 
                             // 채팅
                             .requestMatchers(HttpMethod.GET, "/chat/list/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")

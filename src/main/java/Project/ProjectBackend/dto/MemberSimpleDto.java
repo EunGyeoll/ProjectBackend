@@ -26,7 +26,7 @@ public class MemberSimpleDto {
     public static MemberSimpleDto from(Member member) {
         return MemberSimpleDto.builder()
                 .memberId(member.getMemberId())
-                .name(member.getName())
+                .name(member.getMemberName())
                 .email(member.getEmail())
                 .role(member.getRole())
                 .enabled(member.isEnabled())

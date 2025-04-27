@@ -121,13 +121,13 @@ public class ReportService {
                         .orElse(null);
                 return post != null ? post.getTitle() : "Unknown Post";
             case ORDER:
-                Order order = orderRepository.findById(Long.parseLong(reportedEntityId))
+                Orders order = orderRepository.findById(Long.parseLong(reportedEntityId))
                         .orElse(null);
                 return order != null ? "Order #" + order.getOrderId() : "Unknown Order";
             case MEMBER:
                 Member member = memberRepository.findByMemberId(reportedEntityId)
                         .orElse(null);
-                return member != null ? member.getName() : "Unknown Member";
+                return member != null ? member.getMemberName() : "Unknown Member";
             default:
                 return "Unknown";
         }

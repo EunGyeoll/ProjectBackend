@@ -35,6 +35,7 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
     private final ChatService chatService;
     private final ChatMessageRepository chatMessageRepository;
+    private final PostCategoryRepository postCategoryRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
@@ -52,7 +53,7 @@ public class AdminService {
         // 먼저 회원(Member) 저장
         Member admin = Member.builder()
                 .memberId(requestDto.getMemberId())
-                .name(requestDto.getName())
+                .memberName(requestDto.getMemberName())
                 .email(requestDto.getEmail())
                 .password(encodedPassword)
                 .address(requestDto.getAddress())
@@ -60,7 +61,7 @@ public class AdminService {
                 .role(Role.ROLE_ADMIN)  // ✅ 관리자 역할 설정
                 .phoneNum(requestDto.getPhoneNum())
                 .enabled(true)
-                .shopIntroduction(requestDto.getShopIntroduction())
+//                .shopIntroduction(requestDto.getShopIntroduction())
                 .build();
 
         // 먼저 데이터베이스에 저장 (회원이 영속 상태가 되어야 함)
@@ -98,7 +99,7 @@ public class AdminService {
 
         // 이름
         if (updateRequestDto.getName() != null) {
-            member.setName(updateRequestDto.getName());
+            member.setMemberName(updateRequestDto.getName());
         }
         // 이메일
         if (updateRequestDto.getEmail() != null) {
@@ -113,9 +114,9 @@ public class AdminService {
             member.setAddress(updateRequestDto.getAddress());
         }
         // 상점소개
-        if (updateRequestDto.getShopIntroduction() != null) {
-            member.updateShopIntroduction(updateRequestDto.getShopIntroduction());
-        }
+//        if (updateRequestDto.getShopIntroduction() != null) {
+//            member.updateShopIntroduction(updateRequestDto.getShopIntroduction());
+//        }
         // 프로필사진
         if (profileImage != null && !profileImage.isEmpty()) {
             // 기존 프로필 이미지가 있는 경우 삭제
@@ -164,7 +165,7 @@ public class AdminService {
 
         return MemberSimpleDto.builder()
                 .memberId(member.getMemberId())
-                .name(member.getName())
+                .name(member.getMemberName())
                 .email(member.getEmail())
                 .role(member.getRole())
                 .enabled(member.isEnabled())
@@ -205,7 +206,7 @@ public class AdminService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다. ID: " + memberId));
 
-        Slice<Order> ordersSlice = orderRepository.findByMember(member, pageable);
+        Slice<Orders> ordersSlice = orderRepository.findByMember(member, pageable);
         return ordersSlice.map(OrderDto::new);
     }
 
@@ -220,7 +221,7 @@ public class AdminService {
 
         // 이름
         if (updateRequestDto.getName() != null) {
-            member.setName(updateRequestDto.getName());
+            member.setMemberName(updateRequestDto.getName());
         }
         // 이메일
         if (updateRequestDto.getEmail() != null) {
@@ -336,7 +337,7 @@ public class AdminService {
         Member seller = memberRepository.findById(currentUser.getMemberId())
                 .orElseThrow(() -> new IllegalArgumentException("판매자가 존재하지 않습니다."));
 
-        Category category = categoryRepository.findById(itemRequestDto.getCategoryId())
+        ItemCategory category = categoryRepository.findById(itemRequestDto.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 카테고리입니다."));
 
         // Item 엔티티 생성
@@ -436,16 +437,16 @@ public class AdminService {
 
     // 9. 카테고리 목록 조회 (계층적)
     @Transactional(readOnly = true)
-    public List<CategoryDto> getAllCategories() {
-        List<Category> allCategories = categoryRepository.findByParentIsNullOrderByCategoryNameAsc();
+    public List<ItemCategoryDto> getAllCategories() {
+        List<ItemCategory> allCategories = categoryRepository.findByParentIsNullOrderByCategoryNameAsc();
 
         // 상위 카테고리만 필터링
-        List<Category> parentCategories = allCategories.stream()
+        List<ItemCategory> parentCategories = allCategories.stream()
                 .filter(category -> category.getParent() == null)
                 .collect(Collectors.toList());
 
         // 각 상위 카테고리에 대해 재귀적으로 자식 카테고리를 매핑
-        List<CategoryDto> result = parentCategories.stream()
+        List<ItemCategoryDto> result = parentCategories.stream()
                 .map(this::mapCategoryToDto)
                 .collect(Collectors.toList());
 
@@ -454,17 +455,17 @@ public class AdminService {
 
     // 10. 카테고리 추가
     @Transactional
-    public CategoryDto addCategory(CategoryDto categoryDto) {
+    public ItemCategoryDto addItemCategory(ItemCategoryDto categoryDto) {
         // 카테고리 중복 체크
         if (categoryRepository.existsByCategoryName(categoryDto.getName())) {
             throw new IllegalArgumentException("이미 존재하는 카테고리입니다. 이름: " + categoryDto.getName());
         }
 
-        Category category = new Category();
+        ItemCategory category = new ItemCategory();
         category.setCategoryName(categoryDto.getName());
 
         if (categoryDto.getParentId() != null) {
-            Category parentCategory = categoryRepository.findById(categoryDto.getParentId())
+            ItemCategory parentCategory = categoryRepository.findById(categoryDto.getParentId())
                     .orElseThrow(() -> new IllegalArgumentException("상위 카테고리가 존재하지 않습니다. ID: " + categoryDto.getParentId()));
 
             // 순환 참조 방지
@@ -476,7 +477,7 @@ public class AdminService {
             parentCategory.getChildren().add(category);
         }
 
-        Category savedCategory = categoryRepository.save(category);
+        ItemCategory savedCategory = categoryRepository.save(category);
 
         return mapCategoryToDto(savedCategory);
     }
@@ -484,8 +485,8 @@ public class AdminService {
 
     // 11. 카테고리 수정 (이름 및 상위 카테고리 변경 가능)
     @Transactional
-    public CategoryDto updateCategory(Long categoryId, CategoryDto categoryDto) {
-        Category category = categoryRepository.findById(categoryId)
+    public ItemCategoryDto updateItemCategory(Long categoryId, ItemCategoryDto categoryDto) {
+        ItemCategory category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 카테고리가 존재하지 않습니다. ID: " + categoryId));
 
         if (categoryDto.getName() != null && !categoryDto.getName().isEmpty()) {
@@ -498,7 +499,7 @@ public class AdminService {
         }
 
         if (categoryDto.getParentId() != null) {
-            Category newParent = categoryRepository.findById(categoryDto.getParentId())
+            ItemCategory newParent = categoryRepository.findById(categoryDto.getParentId())
                     .orElseThrow(() -> new IllegalArgumentException("상위 카테고리가 존재하지 않습니다. ID: " + categoryDto.getParentId()));
 
             // 순환 참조 방지
@@ -520,7 +521,7 @@ public class AdminService {
             category.setParent(null);
         }
 
-        Category savedCategory = categoryRepository.save(category);
+        ItemCategory savedCategory = categoryRepository.save(category);
 
         return mapCategoryToDto(savedCategory);
     }
@@ -528,7 +529,7 @@ public class AdminService {
 
     // 12. 카테고리 삭제
     @Transactional
-    public void deleteCategory(Long categoryId) {
+    public void deleteItemCategory(Long categoryId) {
         if (!categoryRepository.existsById(categoryId)) {
             throw new IllegalArgumentException("해당 카테고리가 존재하지 않습니다. ID: " + categoryId);
         }
@@ -537,12 +538,12 @@ public class AdminService {
 
 
     // 재귀적으로 카테고리를 DTO로 매핑
-    private CategoryDto mapCategoryToDto(Category category) {
-        List<CategoryDto> childrenDtos = category.getChildren().stream()
+    private ItemCategoryDto mapCategoryToDto(ItemCategory category) {
+        List<ItemCategoryDto> childrenDtos = category.getChildren().stream()
                 .map(this::mapCategoryToDto)
                 .collect(Collectors.toList());
 
-        return new CategoryDto(
+        return new ItemCategoryDto(
                 category.getCategoryId(),
                 category.getCategoryName(),
                 category.getParent() != null ? category.getParent().getCategoryId() : null,
@@ -552,7 +553,7 @@ public class AdminService {
 
 
     //순환 참조를 방지하기 위한 메서드
-    private boolean isCircularReference(Category parent, Category child) {
+    private boolean isCircularReference(ItemCategory parent, ItemCategory child) {
         if (parent == null) {
             return false;
         }
@@ -662,12 +663,60 @@ public class AdminService {
     }
 
 
+    // ========= 포스트 카테고리 관리 ==========
+    // 게시글 카테고리 전체 조회
+    @Transactional(readOnly = true)
+    public List<PostCategoryDto> getAllPostCategories() {
+        return postCategoryRepository.findAll().stream()
+                .map(PostCategoryDto::from)
+                .collect(Collectors.toList());
+    }
+
+    // 게시글 카테고리 추가
+    @Transactional
+    public PostCategoryDto addPostCategory(PostCategoryDto categoryDto) {
+        if (postCategoryRepository.existsByCategoryName(categoryDto.getCategoryName())) {
+            throw new IllegalArgumentException("이미 존재하는 게시판 카테고리입니다.");
+        }
+
+        PostCategory postCategory = PostCategory.builder()
+                .categoryName(categoryDto.getCategoryName())
+                .build();
+
+        return PostCategoryDto.from(postCategoryRepository.save(postCategory));
+    }
+
+    // 게시글 카테고리 수정
+    @Transactional
+    public PostCategoryDto updatePostCategory(Long id, PostCategoryDto categoryDto) {
+        PostCategory category = postCategoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("게시판 카테고리를 찾을 수 없습니다."));
+
+        if (!category.getCategoryName().equals(categoryDto.getCategoryName()) &&
+                postCategoryRepository.existsByCategoryName(categoryDto.getCategoryName())) {
+            throw new IllegalArgumentException("이미 존재하는 게시판 카테고리 이름입니다.");
+        }
+
+        category.setCategoryName(categoryDto.getCategoryName());
+        return PostCategoryDto.from(postCategoryRepository.save(category));
+    }
+
+    // 게시글 카테고리 삭제
+    @Transactional
+    public void deletePostCategory(Long id) {
+        if (!postCategoryRepository.existsById(id)) {
+            throw new IllegalArgumentException("게시판 카테고리를 찾을 수 없습니다.");
+        }
+        postCategoryRepository.deleteById(id);
+    }
+
+
     // ===== 주문 관리 =====
 
     // 13. 전체 주문 목록 조회 (페이징 적용)
     @Transactional(readOnly = true)
     public Slice<OrderDto> getAllOrders(Pageable pageable) {
-        Slice<Order> ordersSlice = orderRepository.findAll(pageable);
+        Slice<Orders> ordersSlice = orderRepository.findAll(pageable);
         return ordersSlice.map(OrderDto::new);
     }
 

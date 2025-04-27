@@ -2,10 +2,11 @@ package Project.ProjectBackend.service;
 
 import Project.ProjectBackend.dto.*;
 import Project.ProjectBackend.entity.Image;
-import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.entity.Post;
+import Project.ProjectBackend.entity.PostCategory;
 import Project.ProjectBackend.repository.MemberRepository;
+import Project.ProjectBackend.repository.PostCategoryRepository;
 import Project.ProjectBackend.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -19,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,18 +28,24 @@ public class PostService {
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
     private final ImageService imageService;
+    private final PostCategoryRepository postCategoryRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(PostService.class);
 
     // 1. 게시글 등록
     @Transactional
     public Post createPost(PostRequestDto postRequestDto, Member currentUser, List<MultipartFile> imageFiles) {
+        // PostCategory 조회
+        PostCategory postCategory = postCategoryRepository.findById(postRequestDto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판 카테고리입니다."));
+
         // Post 엔티티 생성
         Post post = Post.builder()
                 .writer(currentUser)
                 .title(postRequestDto.getTitle())
                 .content(postRequestDto.getContent())
                 .postDate(postRequestDto.getPostDate())
+                .postCategory(postCategory)
                 .build();
 
         // post 먼저 저장하여 postno 확보
@@ -80,38 +86,44 @@ public class PostService {
     // 2. 게시글 수정
     @Transactional
     public Post updatePost(Long postId, PostRequestDto postRequestDto, List<MultipartFile> imageFiles, Member currentUser) {
-        Post existingpost = postRepository.findById(postId)
+        Post existingPost = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
         // 2. 소유자 확인
-        if (!existingpost.getWriter().equals(currentUser)) {
+        if (!existingPost.getWriter().equals(currentUser)) {
             throw new IllegalArgumentException("해당 게시글을 수정할 권한이 없습니다.");
         }
 
         // 3. 이미지 업데이트 처리
         if (imageFiles != null && !imageFiles.isEmpty()) {
             // 기존 이미지 삭제
-            imageService.deleteImages(existingpost.getImages());
+            imageService.deleteImages(existingPost.getImages());
 
             // 새로운 이미지 저장
-            List<Image> updatedImages = imageService.saveImagesForPost(imageFiles, existingpost);
+            List<Image> updatedImages = imageService.saveImagesForPost(imageFiles, existingPost);
 
             // post에 새로운 이미지 설정
-            existingpost.setImages(updatedImages);
+            existingPost.setImages(updatedImages);
 
             // 대표 이미지 설정
             if (!updatedImages.isEmpty()) {
-                existingpost.setRepresentativeImagePath(updatedImages.get(0).getImagePath());
+                existingPost.setRepresentativeImagePath(updatedImages.get(0).getImagePath());
             }
         }
         // 새 이미지가 없는 경우 기존 이미지를 유지하므로 별도의 처리 불필요
 
         // 4. 나머지 속성 업데이트
-        existingpost.setTitle(postRequestDto.getTitle());
-        existingpost.setContent(postRequestDto.getContent());
+        existingPost.setTitle(postRequestDto.getTitle());
+        existingPost.setContent(postRequestDto.getContent());
 
-        // 5. 게시글 저장
-        return postRepository.save(existingpost);
+        // 5. 카테고리 수정
+        if (postRequestDto.getCategoryId() != null) {
+            PostCategory postCategory = postCategoryRepository.findById(postRequestDto.getCategoryId())
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판 카테고리입니다."));
+            existingPost.setPostCategory(postCategory);
+        }
+        // 6. 게시글 저장
+        return postRepository.save(existingPost);
     }
 
 
@@ -141,9 +153,15 @@ public class PostService {
         return postRepository.findAll(pageable);
     }
 
+    // 6. 게시글 카테고리별 조회
+    @Transactional(readOnly = true)
+    public Slice<PostListDto> getPostsByCategory(Long categoryId, Pageable pageable) {
+        return postRepository.findByPostCategory_CategoryId(categoryId, pageable)
+                .map(PostListDto::from);
+    }
 
 
-    // 6. 게시글 삭제
+    // 7.  게시글 삭제
     @Transactional
     public void deletePost(Long postNo) {
         if (!postRepository.existsById(postNo)) {

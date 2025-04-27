@@ -1,9 +1,13 @@
 spring:
   datasource:
-    url: jdbc:h2:tcp://localhost/~/projectbackend
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://localhost:3306/backend_db?useSSL=false&serverTimezone=Asia/Seoul
+    username: root
+    password: "0000"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:h2:tcp://localhost/~/projectbackend
+#    username: sa
+#    password:
+#    driver-class-name: org.h2.Driver
     hikari:
       minimum-idle: 5
       maximum-pool-size: 20
@@ -19,7 +23,8 @@ spring:
     hibernate:
       ddl-auto: update
     properties:
-      hibernate.dialect: org.hibernate.dialect.H2Dialect
+      hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
+      #      hibernate.dialect: org.hibernate.dialect.H2Dialect
       hibernate.show_sql: true
       hibernate.format_sql: true
 jwt:

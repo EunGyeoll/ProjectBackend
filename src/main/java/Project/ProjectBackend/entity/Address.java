@@ -1,11 +1,13 @@
 package Project.ProjectBackend.entity;
 
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.Getter;
 
 @Embeddable
 @Data
+@Table(name="address")
 public class Address {
     private String city;
     private String street;

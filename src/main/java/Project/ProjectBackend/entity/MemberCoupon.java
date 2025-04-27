@@ -7,6 +7,7 @@
 
     @Entity
     @NoArgsConstructor
+    @Table(name = "member_coupon")
     public class MemberCoupon {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)

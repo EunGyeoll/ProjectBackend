@@ -11,6 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name="image")
 public class Image {
 
     @Id

@@ -1,7 +1,6 @@
 package Project.ProjectBackend.service;
 
 import Project.ProjectBackend.dto.ItemListDto;
-import Project.ProjectBackend.dto.ItemResponseDto;
 import Project.ProjectBackend.entity.*;
 import Project.ProjectBackend.dto.ItemRequestDto;
 import Project.ProjectBackend.repository.CategoryRepository;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.util.List;
 
 @Service
@@ -34,7 +32,7 @@ public class ItemService {
     public Item createItem(ItemRequestDto itemRequestDto, Member currentUser, List<MultipartFile> imageFiles) {
         logger.info("Creating item: {}", itemRequestDto.getItemName());
 
-        Category category = categoryRepository.findById(itemRequestDto.getCategoryId())
+        ItemCategory category = categoryRepository.findById(itemRequestDto.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 카테고리입니다."));
 
         // Item 엔티티 생성

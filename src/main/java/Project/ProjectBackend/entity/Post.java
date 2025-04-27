@@ -16,6 +16,7 @@ import java.util.List;
 @Entity
 @Data
 @NoArgsConstructor
+@Table(name="post")
 public class Post {
 
     @ManyToOne(fetch = FetchType.EAGER) // 작성자와 다대일 관계
@@ -39,10 +40,13 @@ public class Post {
     @Column(name = "REPRESENTATIVE_IMAGE_PATH")
     private String representativeImagePath; // 대표 이미지 경로
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_category_id", nullable = false)
+    private PostCategory postCategory;
+
     @CreationTimestamp
     @Column(updatable = false) // 수정 시 값 변경되지 않도록 설정
     private LocalDateTime postDate;
-
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL)
     @JsonIgnore
@@ -56,11 +60,12 @@ public class Post {
 
 
     @Builder
-    public Post(Member writer, String title, String content, LocalDateTime postDate) {
+    public Post(Member writer, String title, String content, LocalDateTime postDate, PostCategory postCategory) {
         this.writer = writer;
         this.title = title;
         this.content = content;
         this.postDate = postDate;
+        this.postCategory = postCategory;
     }
 
 

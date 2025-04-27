@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Positive;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +55,7 @@ public class Item {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
-    private Category category;
+    private ItemCategory category;
 
     @CreationTimestamp
     @Column(name = "ITEM_DATE", updatable = false) // 수정 시 날짜 변경되지 않도록
@@ -120,7 +119,7 @@ public class Item {
     }
 
 
-    public Item(Member seller, String itemName, Integer price, String description, Integer stockQuantity, Category category, LocalDateTime itemDate) {
+    public Item(Member seller, String itemName, Integer price, String description, Integer stockQuantity, ItemCategory category, LocalDateTime itemDate) {
         this.seller = seller;
         this.itemName = itemName;
         this.price = price;

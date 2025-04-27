@@ -1,5 +1,6 @@
 package Project.ProjectBackend.controller;
 
+import Project.ProjectBackend.dto.PostListDto;
 import Project.ProjectBackend.dto.PostRequestDto;
 import Project.ProjectBackend.dto.PostResponseDto;
 import Project.ProjectBackend.entity.Member;
@@ -84,8 +85,23 @@ public class PostController {
             return ResponseEntity.ok(postDtoSlice);
     }
 
+    // 5. 카테고리별 게시글 목록 조회
+    @GetMapping("/posts/category/{categoryId}")
+    public ResponseEntity<Slice<PostListDto>> getPostsByCategory(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "latest") String sortOption) { // ✅ sortOption 받기
 
-    // 5. 게시글 특정 멤버별 조회
+        Sort sortOrder = sortService.createSort(sortOption, "post");
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        Slice<PostListDto> posts = postService.getPostsByCategory(categoryId, pageable);
+        return ResponseEntity.ok(posts);
+    }
+
+
+    // 6. 게시글 특정 멤버별 조회
     @GetMapping("/posts/writer/{memberId}")
     public ResponseEntity<Slice<PostResponseDto>> getPostsBySeller(
             @PathVariable String memberId,
@@ -104,7 +120,7 @@ public class PostController {
     }
 
 
-    // 6. 게시글 삭제
+    // 7. 게시글 삭제
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/posts/{postNo}")
     public ResponseEntity<?> deletePost(@PathVariable Long postNo) {

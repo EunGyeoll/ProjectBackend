@@ -1,6 +1,6 @@
 package Project.ProjectBackend.dto;
 
-import Project.ProjectBackend.entity.Order;
+import Project.ProjectBackend.entity.Orders;
 import Project.ProjectBackend.entity.OrderStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,10 +24,10 @@ public class OrderDto {
     private String couponCode; // 추가
     private BigDecimal discountAmount; // 추가
 
-    public OrderDto(Order order) {
+    public OrderDto(Orders order) {
         this.orderId = order.getOrderId();
         this.memberId = order.getMember().getMemberId();
-        this.memberName = order.getMember().getName();
+        this.memberName = order.getMember().getMemberName();
         this.orderItems = order.getOrderItems().stream()
                 .map(OrderItemDto::new)
                 .collect(Collectors.toList());

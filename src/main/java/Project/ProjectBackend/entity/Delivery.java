@@ -7,6 +7,7 @@ import lombok.Setter;
 
 @Entity
 @Getter @Setter
+@Table(name="delivery")
 public class Delivery {
     @Id @GeneratedValue
     @Column(name = "delivery_id")
@@ -14,7 +15,7 @@ public class Delivery {
 
     @JsonIgnore
     @OneToOne(mappedBy = "delivery", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Order order;
+    private Orders order;
 
     @Embedded
     private Address address;

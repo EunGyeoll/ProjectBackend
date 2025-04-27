@@ -15,7 +15,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Entity
 @Table(name="orders")
 @Getter @Setter
-public class Order {
+public class Orders {
     @Id
     @GeneratedValue
     @Column(name = "order_id")
@@ -46,8 +46,8 @@ public class Order {
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
 
-    public static Order createOrder(Member member, Delivery delivery, OrderItem... orderItems) {
-        Order order = new Order();
+    public static Orders createOrder(Member member, Delivery delivery, OrderItem... orderItems) {
+        Orders order = new Orders();
         order.setMember(member);
         order.setDelivery(delivery);
         for (OrderItem orderItem : orderItems) {

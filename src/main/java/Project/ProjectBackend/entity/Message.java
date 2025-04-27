@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name="message")
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

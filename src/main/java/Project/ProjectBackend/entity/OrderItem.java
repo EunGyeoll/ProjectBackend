@@ -7,6 +7,7 @@ import lombok.Setter;
 
 @Entity
 @Getter @Setter
+@Table(name="order_item")
 public class OrderItem {
 
     @Id @GeneratedValue
@@ -19,7 +20,7 @@ public class OrderItem {
 
     @ManyToOne
     @JoinColumn(name = "order_id")
-    private Order order;
+    private Orders order;
 
     @Column
     private int orderPrice;

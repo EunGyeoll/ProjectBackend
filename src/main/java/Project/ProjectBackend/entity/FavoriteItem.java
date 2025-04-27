@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Data
 @Builder
+@Table(name="favorite_item")
 public class FavoriteItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

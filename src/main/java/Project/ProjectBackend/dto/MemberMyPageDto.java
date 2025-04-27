@@ -47,7 +47,7 @@ public class MemberMyPageDto {
     ) {
         return MemberMyPageDto.builder()
                 .memberId(member.getMemberId())
-                .name(isOwnProfile ? member.getName() : null)
+                .name(isOwnProfile ? member.getMemberName() : null)
                 .email(isOwnProfile ? member.getEmail() : null)
                 .role(member.getRole())
                 .enabled(member.isEnabled())

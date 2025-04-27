@@ -12,8 +12,8 @@ import java.util.List;
 
 @Entity
 @Getter @Setter
-@Table(name = "CATEGORY")
-public class Category {
+@Table(name = "item_category")
+public class ItemCategory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,16 +26,16 @@ public class Category {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     @JsonBackReference
-    private Category parent;
+    private ItemCategory parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private List<Category> children = new ArrayList<>();
+    private List<ItemCategory> children = new ArrayList<>();
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<Item> items = new ArrayList<>();
 
 
-    public void addChildCategory(Category child) {
+    public void addChildCategory(ItemCategory child) {
         children.add(child);
         child.setParent(this);
     }

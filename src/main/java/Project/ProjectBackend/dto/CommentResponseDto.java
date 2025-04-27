@@ -17,7 +17,7 @@ public class CommentResponseDto {
     public CommentResponseDto(Comment comment) {
         this.commentId = comment.getCommentId();                // 댓글 ID
         this.writerId = comment.getWriter().getMemberId();      // 작성자의 ID
-        this.writerName = comment.getWriter().getName();        // 작성자의 이름
+        this.writerName = comment.getWriter().getMemberName();        // 작성자의 이름
         this.content = comment.getContent();                    // 댓글 내용
         this.commentDate = comment.getCommentDate();
         this.parentCommentId = comment.getParentComment() != null ? comment.getParentComment().getCommentId() : null;

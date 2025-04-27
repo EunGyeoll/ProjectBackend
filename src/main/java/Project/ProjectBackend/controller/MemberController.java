@@ -2,7 +2,6 @@ package Project.ProjectBackend.controller;
 
 import Project.ProjectBackend.dto.*;
 import Project.ProjectBackend.entity.Member;
-import Project.ProjectBackend.repository.MemberRepository;
 import Project.ProjectBackend.security.JwtTokenProvider;
 import Project.ProjectBackend.service.MemberService;
 import jakarta.validation.constraints.NotEmpty;
@@ -95,7 +94,7 @@ public class MemberController {
         memberService.updateMember(memberId, updateRequestDto, profileImage);
 
         Member updatedMember = memberService.findOne(memberId);
-        return ResponseEntity.ok(new UpdateMemberResponse(updatedMember.getMemberId(), updatedMember.getName()));
+        return ResponseEntity.ok(new UpdateMemberResponse(updatedMember.getMemberId(), updatedMember.getMemberName()));
     }
 
 

@@ -4,6 +4,7 @@ import Project.ProjectBackend.entity.Image;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.entity.Post;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 
 @Data
 @AllArgsConstructor
+@Builder
 public class PostResponseDto {
 
     private Long postNo; // 게시글 번호
@@ -19,6 +21,8 @@ public class PostResponseDto {
     private String content;
     private String writerId; // writerName 은 memberId로
     private String profileImageUrl;
+    private Long categoryId;
+    private String categoryName;
     private LocalDateTime postDate;
     private int hitCount;
     private int likeCount; // 좋아요 수
@@ -41,19 +45,21 @@ public class PostResponseDto {
         // 댓글 수 계산
         int commentCount = post.getComments().size();
 
-        return new PostResponseDto(
-                post.getPostNo(),
-                post.getTitle(),
-                post.getContent(),
-                writer != null ? writer.getMemberId() : null,
-                writer != null ? writer.getProfileImageUrl(): null,
-                post.getPostDate(),
-                post.getHitCount(),
-                post.getLikeCount(),
-                representativeImagePath,
-                imagePaths,
-                commentCount
-        );
+        return PostResponseDto.builder()
+                .postNo(post.getPostNo())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .writerId(writer != null ? writer.getMemberId() : null)
+                .profileImageUrl(writer != null ? writer.getProfileImageUrl() : null)
+                .categoryId(post.getPostCategory().getCategoryId())
+                .categoryName(post.getPostCategory().getCategoryName())
+                .postDate(post.getPostDate())
+                .hitCount(post.getHitCount())
+                .likeCount(post.getLikeCount())
+                .representativeImagePath(representativeImagePath)
+                .imagePaths(imagePaths)
+                .commentCount(commentCount)
+                .build();
     }
 
 
@@ -66,18 +72,19 @@ public class PostResponseDto {
                 ? null
                 : post.getImages().get(0).getImagePath();
 
-        return new PostResponseDto(
-                post.getPostNo(),
-                post.getTitle(),
-                null, // 목록 조회에서는 내용을 포함하지 않음
-                writer != null ? writer.getMemberId() : null,
-                writer != null ? writer.getProfileImageUrl(): null,
-                post.getPostDate(),
-                post.getHitCount(),
-                post.getLikeCount(),
-                post.getImages().isEmpty() ? null : post.getImages().get(0).getImagePath(),
-                null, // 목록 조회에서는 이미지 경로 리스트를 포함하지 않음
-                0 // 목록 조회에서는 댓글 수를 포함하지 않음
-        );
+        return PostResponseDto.builder()
+                .postNo(post.getPostNo())
+                .title(post.getTitle())
+                .content(null) // 목록에서는 내용 제외
+                .writerId(writer != null ? writer.getMemberId() : null)
+                .profileImageUrl(writer != null ? writer.getProfileImageUrl() : null)
+                .categoryName(post.getPostCategory().getCategoryName()) // ✅ 카테고리 이름 추가
+                .postDate(post.getPostDate())
+                .hitCount(post.getHitCount())
+                .likeCount(post.getLikeCount())
+                .representativeImagePath(representativeImagePath)
+                .imagePaths(null) // 목록에서는 전체 이미지 리스트 제외
+                .commentCount(0) // 목록에서는 댓글 수 제외
+                .build();
     }
 }

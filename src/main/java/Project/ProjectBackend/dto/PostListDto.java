@@ -15,6 +15,8 @@ public class PostListDto {
     private String title;
     private String writerId;
     private LocalDateTime createdDate;
+    private Long categoryId;
+    private String categoryName;
     private int likeCount;
 
     public static PostListDto from(Post post) {
@@ -23,6 +25,8 @@ public class PostListDto {
                 .title(post.getTitle())
                 .writerId(post.getWriter().getMemberId())
                 .createdDate(post.getPostDate())
+                .categoryId(post.getPostCategory().getCategoryId())
+                .categoryName(post.getPostCategory().getCategoryName())
                 .likeCount(post.getLikeCount())
                 .build();
     }

@@ -1,6 +1,6 @@
 package Project.ProjectBackend.dto;
 
-import Project.ProjectBackend.entity.Category;
+import Project.ProjectBackend.entity.ItemCategory;
 import Project.ProjectBackend.entity.Image;
 import Project.ProjectBackend.entity.Item;
 import Project.ProjectBackend.entity.Member;
@@ -34,7 +34,7 @@ public class ItemResponseDto {
     // Item 엔티티를 기반으로 Dto 객체를 생성하는 메서드
     public static ItemResponseDto from(Item item) {
         Member seller = item.getSeller();
-        Category category = item.getCategory();
+        ItemCategory category = item.getCategory();
 
         // 이미지 경로 리스트 생성
         List<String> imagePaths = item.getImages().stream()

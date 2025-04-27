@@ -4,7 +4,7 @@ import Project.ProjectBackend.dto.DeliveryUpdateRequestDto;
 import Project.ProjectBackend.dto.OrderCreateRequestDto;
 import Project.ProjectBackend.dto.OrderDto;
 import Project.ProjectBackend.entity.Member;
-import Project.ProjectBackend.entity.Order;
+import Project.ProjectBackend.entity.Orders;
 import Project.ProjectBackend.service.AuthService;
 import Project.ProjectBackend.service.OrderService;
 import jakarta.validation.Valid;
@@ -17,7 +17,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -37,7 +36,7 @@ public class OrderController {
         Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
 
         try {
-            Order createdOrder = orderService.createOrder(requestDto, currentUser);
+            Orders createdOrder = orderService.createOrder(requestDto, currentUser);
             log.info("주문이 성공적으로 생성되었습니다.");
             return new ResponseEntity<>(new OrderDto(createdOrder), HttpStatus.CREATED);
         } catch (Exception e) {
@@ -55,7 +54,7 @@ public class OrderController {
 
         Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
 
-        Order updatedOrder = orderService.updateDeliveryAddress(orderId, deliveryUpdateRequestDto, currentUser);
+        Orders updatedOrder = orderService.updateDeliveryAddress(orderId, deliveryUpdateRequestDto, currentUser);
         return ResponseEntity.ok(new OrderDto(updatedOrder));
     }
 
@@ -80,7 +79,7 @@ public class OrderController {
 
         Member currentUser = authService.getCurrentUser();
 
-        Order order = orderService.getOrder(orderId, currentUser);
+        Orders order = orderService.getOrder(orderId, currentUser);
         return ResponseEntity.ok(new OrderDto(order));
     }
 
@@ -100,7 +99,7 @@ public class OrderController {
         Sort sort = sortOption.equalsIgnoreCase("latest") ? Sort.by(Sort.Direction.DESC, "orderDate") : Sort.unsorted();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Slice<Order> ordersSlice = orderService.getOrdersByMember(memberId, pageable, currentUser);
+        Slice<Orders> ordersSlice = orderService.getOrdersByMember(memberId, pageable, currentUser);
         Slice<OrderDto> orderDtosSlice = ordersSlice.map(OrderDto::new);
 
         return ResponseEntity.ok(orderDtosSlice);

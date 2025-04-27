@@ -1,6 +1,7 @@
 package Project.ProjectBackend.dto;
 
 import Project.ProjectBackend.entity.Address;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,7 @@ import java.time.LocalDate;
 public class MemberSignupRequestDto {
 
     @NotBlank(message = "아이디는 필수 입력 항목입니다.")
-    @Size(min = 5, max = 20, message = "아이디는 5~20자 사이여야 합니다.")
+    @Size(min = 4, max = 20, message = "아이디는 5~20자 사이여야 합니다.")
     private String memberId;
 
     @NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
@@ -27,7 +28,7 @@ public class MemberSignupRequestDto {
     private String password;
 
     @NotBlank(message = "이름은 필수 입력 항목입니다.")
-    private String name;
+    private String memberName;
 
     @NotBlank(message = "이메일은 필수 입력 항목입니다.")
     @Email(message = "유효한 이메일 주소를 입력해주세요.")
@@ -39,14 +40,15 @@ public class MemberSignupRequestDto {
 
     @NotNull(message = "생년월일은 필수 입력 항목입니다.")
     @Past(message = "생년월일은 과거 날짜여야 합니다.")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
     @Valid
     @NotNull(message = "주소 정보는 필수 입력 항목입니다.")
     private Address address;
 
-    @Size(max = 100, message = "상점 소개는 최대 100자까지 입력할 수 있습니다.") //
-    private String shopIntroduction;
+//    @Size(max = 100, message = "상점 소개는 최대 100자까지 입력할 수 있습니다.") //
+//    private String shopIntroduction;
 
     private String profileImageUrl;
 }

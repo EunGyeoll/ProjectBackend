@@ -11,12 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +25,7 @@ public class OrderService {
 
     // 1. 주문 생성
     @Transactional
-    public Order createOrder(OrderCreateRequestDto requestDto, Member currentUser) {
+    public Orders createOrder(OrderCreateRequestDto requestDto, Member currentUser) {
         // 회원 조회
         Member member = memberRepository.findById(currentUser.getMemberId())
                 .orElseThrow(() -> new IllegalArgumentException("인증된 사용자를 찾을 수 없습니다."));
@@ -59,7 +55,7 @@ public class OrderService {
         OrderItem orderItem = OrderItem.createOrderItem(item, item.getPrice(), count);
 
         // 주문 생성
-        Order order = Order.createOrder(member, delivery, orderItem);
+        Orders order = Orders.createOrder(member, delivery, orderItem);
 
         // 쿠폰 적용 (선택사항)
         Coupon coupon = null;
@@ -83,9 +79,9 @@ public class OrderService {
 
     // 2. 주문 수정 (배송지 변경)
     @Transactional
-    public Order updateDeliveryAddress(Long orderId, DeliveryUpdateRequestDto deliveryUpdateRequestDto, Member currentUser) {
+    public Orders updateDeliveryAddress(Long orderId, DeliveryUpdateRequestDto deliveryUpdateRequestDto, Member currentUser) {
         // 주문 조회
-        Order order = orderRepository.findById(orderId)
+        Orders order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다."));
 
         // 주문 소유자 확인
@@ -117,7 +113,7 @@ public class OrderService {
     // 3. 주문 취소
     @Transactional
     public void cancelOrder(Long orderId, Member currentUser) {
-        Order order = orderRepository.findById(orderId)
+        Orders order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다."));
 
         // 주문 소유자 확인
@@ -131,8 +127,8 @@ public class OrderService {
 
      // 4. 주문 조회
      @Transactional(readOnly = true)
-     public Order getOrder(Long orderId, Member currentUser) {
-         Order order = orderRepository.findById(orderId)
+     public Orders getOrder(Long orderId, Member currentUser) {
+         Orders order = orderRepository.findById(orderId)
                  .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다."));
 
          // 주문 소유자 확인 또는 관리자 권한 확인
@@ -148,7 +144,7 @@ public class OrderService {
 
     // 5. 특정 회원의 모든 주문 조회
     @Transactional(readOnly = true)
-    public Slice<Order> getOrdersByMember(String memberId, Pageable pageable, Member currentUser) {
+    public Slice<Orders> getOrdersByMember(String memberId, Pageable pageable, Member currentUser) {
 
         if (!currentUser.getMemberId().equals(memberId)) {
             throw new AccessDeniedException("해당 회원의 주문을 조회할 권한이 없습니다.");

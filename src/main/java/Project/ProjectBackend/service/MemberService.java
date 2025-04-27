@@ -42,7 +42,7 @@ public class MemberService {
         // DTO를 엔티티로 변환 (우선적으로 Member 엔티티 생성)
         Member member = Member.builder()
                 .memberId(requestDto.getMemberId())
-                .name(requestDto.getName())
+                .memberName(requestDto.getMemberName())
                 .email(requestDto.getEmail())
                 .password(encodedPassword)
                 .address(requestDto.getAddress())
@@ -50,8 +50,10 @@ public class MemberService {
                 .role(Role.ROLE_USER)
                 .phoneNum(requestDto.getPhoneNum())
                 .enabled(true)
-                .shopIntroduction(requestDto.getShopIntroduction())
                 .build();
+
+        // 먼저 member 저장
+        memberRepository.save(member);
 
         // 프로필 이미지 저장 (프로필 이미지가 있을 경우)
         if (profileImage != null && !profileImage.isEmpty()) {
@@ -59,7 +61,7 @@ public class MemberService {
             member.setProfileImageUrl(savedProfileImage.getImagePath());  // URL 저장
         }
 
-        // 회원 저장
+        // 프로필 이미지 경로 업데이트 했으니 다시 저장
         memberRepository.save(member);
     }
 
@@ -94,7 +96,7 @@ public class MemberService {
 
         // 이름
         if (updateRequestDto.getName() != null) {
-            member.setName(updateRequestDto.getName());
+            member.setMemberName(updateRequestDto.getName());
         }
         // 이메일
         if (updateRequestDto.getEmail() != null) {
@@ -109,9 +111,9 @@ public class MemberService {
             member.setAddress(updateRequestDto.getAddress());
         }
         // 상점소개
-        if (updateRequestDto.getShopIntroduction() != null) {
-            member.updateShopIntroduction(updateRequestDto.getShopIntroduction());
-        }
+//        if (updateRequestDto.getShopIntroduction() != null) {
+//            member.updateShopIntroduction(updateRequestDto.getShopIntroduction());
+//        }
         // 프로필사진
         if (profileImage != null && !profileImage.isEmpty()) {
             // 기존 프로필 이미지가 있는 경우 삭제
@@ -188,7 +190,7 @@ public class MemberService {
 
         return MemberSimpleDto.builder()
                 .memberId(member.getMemberId())
-                .name(member.getName())
+                .name(member.getMemberName())
                 .email(member.getEmail())
                 .role(member.getRole())
                 .enabled(member.isEnabled())

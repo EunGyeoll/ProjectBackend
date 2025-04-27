@@ -13,8 +13,9 @@ public class SortService {
             case "post":
                 return getPostSort(sortOption);
             case "favoriteItem":
+                return Sort.by(Sort.Direction.DESC, "createdAt"); // 찜한 상품 최신순
             case "likedPost":
-                return Sort.by(Sort.Direction.DESC, "createdAt"); // 찜한 상품 & 좋아요한 게시글 최신순
+                return Sort.by(Sort.Direction.DESC, "createdAt"); // 좋아요한 게시글 최신순
             default:
                 return Sort.by(Sort.Direction.DESC, "createdAt"); // 기본 정렬
         }

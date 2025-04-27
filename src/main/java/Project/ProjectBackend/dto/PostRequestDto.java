@@ -12,6 +12,7 @@ public class PostRequestDto {
     private String title;
     private String content;
     private LocalDateTime postDate;
+    private Long categoryId;
 //    private List<String> imagePaths;
 //    private List<String> originFileNames;
 }

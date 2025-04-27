@@ -9,7 +9,6 @@ import Project.ProjectBackend.service.AdminService;
 import Project.ProjectBackend.service.AuthService;
 import Project.ProjectBackend.service.ChatService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -71,7 +69,7 @@ public class AdminController {
         adminService.updateAdmin(memberId, updateRequestDto, profileImage);
 
         Member updatedAdmin = adminService.findOne(memberId);
-        return ResponseEntity.ok(new MemberController.UpdateMemberResponse(updatedAdmin.getMemberId(), updatedAdmin.getName()));
+        return ResponseEntity.ok(new MemberController.UpdateMemberResponse(updatedAdmin.getMemberId(), updatedAdmin.getMemberName()));
     }
 
     // ===== 회원 관리 =====
@@ -252,39 +250,39 @@ public class AdminController {
 
     // ===== 아이템의 카테고리 관리 =====
 
-    //  카테고리 목록 조회 (계층적)
-    @GetMapping("/admin/categories/list")
-    public ResponseEntity<List<CategoryDto>> getAllCategories() {
-        List<CategoryDto> categories = adminService.getAllCategories();
+    //  아이템 카테고리 목록 조회 (계층적)
+    @GetMapping("/admin/item-categories")
+    public ResponseEntity<List<ItemCategoryDto>> getAllCategories() {
+        List<ItemCategoryDto> categories = adminService.getAllCategories();
         logger.info("관리자 {} 가 모든 카테고리 목록을 조회했습니다.", authService.getCurrentUser().getMemberId());
 
         return ResponseEntity.ok(categories);
     }
 
-    // 카테고리 추가
-    @PostMapping("/admin/categories")
-    public ResponseEntity<CategoryDto> addCategory(
-            @RequestBody @Valid CategoryDto categoryDto ) {
-        CategoryDto category = adminService.addCategory(categoryDto);
+    // 아이템 카테고리 추가
+    @PostMapping("/admin/item-categories")
+    public ResponseEntity<ItemCategoryDto> addItemCategory(
+            @RequestBody @Valid ItemCategoryDto categoryDto ) {
+        ItemCategoryDto category = adminService.addItemCategory(categoryDto);
         logger.info("카테고리 {} 을 추가했습니다.", categoryDto.getName());
         return ResponseEntity.ok(category);
     }
 
 
-    // 카테고리 수정 (이름 및 상위 카테고리 변경 가능)
-    @PatchMapping("/admin/categories/{id}")
-    public ResponseEntity<CategoryDto> updateCategory(
+    // 아이템 카테고리 수정 (이름 및 상위 카테고리 변경 가능)
+    @PatchMapping("/admin/item-categories/{id}")
+    public ResponseEntity<ItemCategoryDto> updateItemCategory(
             @PathVariable("id") Long categoryId,
-            @RequestBody @Valid CategoryDto categoryDto) {
-        CategoryDto updatedCategory = adminService.updateCategory(categoryId, categoryDto);
+            @RequestBody @Valid ItemCategoryDto categoryDto) {
+        ItemCategoryDto updatedCategory = adminService.updateItemCategory(categoryId, categoryDto);
         logger.info("카테고리 {}을 수정했습니다.", updatedCategory.getName());
         return ResponseEntity.ok(updatedCategory);
     }
 
-    //  카테고리 삭제
-    @DeleteMapping("/admin/categories/{id}")
+    //  아이템 카테고리 삭제
+    @DeleteMapping("/admin/item-categories/{id}")
     public ResponseEntity<String> deleteCategory(@PathVariable("id") Long categoryId) {
-        adminService.deleteCategory(categoryId);
+        adminService.deleteItemCategory(categoryId);
         logger.info("카테고리 ID {}을 삭제했습니다.", categoryId);
         return ResponseEntity.ok("카테고리가 삭제되었습니다.");
     }
@@ -349,6 +347,38 @@ public class AdminController {
     }
 
 
+    //    ======= 포스트 카테고리 관리 =========
+
+    // 게시글 카테고리 전체 조회
+    @GetMapping("/admin/post-categories")
+    public ResponseEntity<List<PostCategoryDto>> getAllPostCategories() {
+        List<PostCategoryDto> categories = adminService.getAllPostCategories();
+        return ResponseEntity.ok(categories);
+    }
+
+    // 게시글 카테고리 추가
+    @PostMapping("/admin/post-categories")
+    public ResponseEntity<PostCategoryDto> addPostCategory(
+            @RequestBody @Valid PostCategoryDto categoryDto) {
+        PostCategoryDto createdCategory = adminService.addPostCategory(categoryDto);
+        return ResponseEntity.ok(createdCategory);
+    }
+
+    // 게시글 카테고리 수정
+    @PatchMapping("/admin/post-categories/{id}")
+    public ResponseEntity<PostCategoryDto> updatePostCategory(
+            @PathVariable Long id,
+            @RequestBody @Valid PostCategoryDto categoryDto) {
+        PostCategoryDto updatedCategory = adminService.updatePostCategory(id, categoryDto);
+        return ResponseEntity.ok(updatedCategory);
+    }
+
+    // 게시글 카테고리 삭제
+    @DeleteMapping("/admin/post-categories/{id}")
+    public ResponseEntity<String> deletePostCategory(@PathVariable Long id) {
+        adminService.deletePostCategory(id);
+        return ResponseEntity.ok("게시판 카테고리가 삭제되었습니다.");
+    }
 
 
 

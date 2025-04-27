@@ -21,14 +21,17 @@ import java.util.List;
 @Getter @Setter
 @NoArgsConstructor
 @DynamicUpdate
+@Table(name="member")
 public class Member {
     @Id
     @Column(name = "member_id")
     private String memberId;
     @NotEmpty
     private String password;
+
     @NotEmpty
-    private String name;
+    @Column(name="member_name")
+    private String memberName;
 
     @CreationTimestamp
     @Column(updatable = false) // 수정 시 값 변경되지 않도록 설정
@@ -69,7 +72,7 @@ public class Member {
 
     @JsonIgnore
     @OneToMany(mappedBy = "member")
-    private List<Order> orders = new ArrayList<>();
+    private List<Orders> orders = new ArrayList<>();
 
     @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL, orphanRemoval = true) // 양방향 관계 설정
     @JsonIgnore
@@ -129,10 +132,10 @@ public class Member {
 
 
     @Builder
-    public Member(String memberId, String password, String name, String email, LocalDate birthDate, Role role, Address address, String phoneNum, boolean enabled, String shopIntroduction, String profileImageUrl      ) {
+    public Member(String memberId, String password, String memberName, String email, LocalDate birthDate, Role role, Address address, String phoneNum, boolean enabled, String shopIntroduction, String profileImageUrl      ) {
         this.memberId = memberId;
         this.password = password;
-        this.name = name;
+        this.memberName = memberName;
         this.email = email;
         this.birthDate = birthDate;
         this.role = role;

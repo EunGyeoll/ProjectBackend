@@ -1,2 +1,22 @@
-# ERD
-![Image](https://github.com/user-attachments/assets/5f291432-add9-4fbb-9cfa-bbc5b8218a1e) 
+# 중고 거래 플랫폼 REST API
+**개인 프로젝트**
+
+## 💡 프로젝트 소개
+
+Spring Boot, Spring Data JPA, MySQL을 활용하여 설계한 중고 거래 플랫폼 REST API입니다. 
+
+## ✏️ 주요 기능
+
+- **회원 가입 및 로그인**: Spring Security 및 JWT 토큰 기반 인증으로 보안을 강화했습니다. 
+  
+- **채팅 기능**: Websocket을 통해 구현하였고, Websocket 통신에도 JWT 인증을 적용하였습니다. 채팅 기능을 테스트하고 본인의 채팅방을 조회할 수 있는 페이지를 만들어두었습니다. 
+  
+- **관리자 페이지**: 관리자 또한 일반 회원들이 가능한 기능들이 모두 가능하고, 사용자가 접수한 신고 내역을 관리할 수 있습니다. 
+  
+- **마이페이지**: 본인의 페이지일 경우에만 세부 개인정보를 조회 및 수정 가능합니다. 로그인하지 않았거나 타 회원의 페이지일 경우, 개인정보와 찜한 상품 및 좋아요한 게시물을 제외하고 상품 목록, 게시글 목록만 조회 가능합니다.
+  
+- **주문 기능**: '주문 완료(ORDER_PLACED)' 상태에만 주문 취소가 가능하도록 구현했습니다. 주문상태와 배송 상태는 ENUM으로 관리됩니다.
+
+  
+## ERD
+![Image](https://github.com/user-attachments/assets/507d32aa-95e7-4e6d-bb3e-284ed045221b)

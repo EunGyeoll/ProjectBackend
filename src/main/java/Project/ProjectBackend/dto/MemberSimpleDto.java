@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class MemberSimpleDto {
     private String memberId;
     private String name;
+    private String nickName;
     private String email;
     private Role role;
     private boolean enabled;
@@ -21,12 +22,14 @@ public class MemberSimpleDto {
     private String phoneNum;
     private AddressDto address;
     private LocalDateTime registrationDate;
+    private String profileImageUrl;
 
     // 엔티티를 DTO로 변환하는 정적 메서드
     public static MemberSimpleDto from(Member member) {
         return MemberSimpleDto.builder()
                 .memberId(member.getMemberId())
                 .name(member.getMemberName())
+                .nickName(member.getNickName())
                 .email(member.getEmail())
                 .role(member.getRole())
                 .enabled(member.isEnabled())
@@ -34,6 +37,7 @@ public class MemberSimpleDto {
                 .phoneNum(member.getPhoneNum())
                 .registrationDate(member.getRegistrationDate())
                 .address(AddressDto.from(member.getAddress()))
+                .profileImageUrl(member.getProfileImageUrl())
                 .build();
     }
 }

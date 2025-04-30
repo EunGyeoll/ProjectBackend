@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@RequestMapping("/api")
 //@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class AdminController {
 

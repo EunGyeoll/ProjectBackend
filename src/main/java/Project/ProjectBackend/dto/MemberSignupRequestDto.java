@@ -1,6 +1,6 @@
 package Project.ProjectBackend.dto;
 
-import Project.ProjectBackend.entity.Address;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -30,6 +30,9 @@ public class MemberSignupRequestDto {
     @NotBlank(message = "이름은 필수 입력 항목입니다.")
     private String memberName;
 
+    @NotBlank
+    private String nickName;
+
     @NotBlank(message = "이메일은 필수 입력 항목입니다.")
     @Email(message = "유효한 이메일 주소를 입력해주세요.")
     private String email;
@@ -45,7 +48,7 @@ public class MemberSignupRequestDto {
 
     @Valid
     @NotNull(message = "주소 정보는 필수 입력 항목입니다.")
-    private Address address;
+    private AddressDto address;
 
 //    @Size(max = 100, message = "상점 소개는 최대 100자까지 입력할 수 있습니다.") //
 //    private String shopIntroduction;

@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
+@RequestMapping("/api")
 public class OrderController {
     private final OrderService orderService;
     private final AuthService authService;

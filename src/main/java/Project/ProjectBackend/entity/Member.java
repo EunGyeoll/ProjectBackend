@@ -26,12 +26,16 @@ public class Member {
     @Id
     @Column(name = "member_id")
     private String memberId;
+
     @NotEmpty
     private String password;
 
     @NotEmpty
     @Column(name="member_name")
     private String memberName;
+
+    @Column(name="nick_name", nullable = false, unique = true)
+    private String nickName;
 
     @CreationTimestamp
     @Column(updatable = false) // 수정 시 값 변경되지 않도록 설정
@@ -132,10 +136,11 @@ public class Member {
 
 
     @Builder
-    public Member(String memberId, String password, String memberName, String email, LocalDate birthDate, Role role, Address address, String phoneNum, boolean enabled, String shopIntroduction, String profileImageUrl      ) {
+    public Member(String memberId, String password, String memberName, String nickName, String email, LocalDate birthDate, Role role, Address address, String phoneNum, boolean enabled, String shopIntroduction, String profileImageUrl      ) {
         this.memberId = memberId;
         this.password = password;
         this.memberName = memberName;
+        this.nickName = nickName;
         this.email = email;
         this.birthDate = birthDate;
         this.role = role;

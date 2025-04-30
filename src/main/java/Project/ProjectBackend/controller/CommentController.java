@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequiredArgsConstructor
 @PreAuthorize("hasAuthority('ROLE_USER')")
+@RequestMapping("/api")
 public class CommentController {
 
     private final CommentService commentService;

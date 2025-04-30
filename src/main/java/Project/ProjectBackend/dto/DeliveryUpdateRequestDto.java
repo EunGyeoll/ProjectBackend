@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DeliveryUpdateRequestDto {
 
-    @NotBlank(message = "도시는 필수입니다.")
-    private String city;
+    @NotBlank(message = "주소는 필수입니다.")
+    private String mainAddress;
 
-    @NotBlank(message = "도로명은 필수입니다.")
-    private String street;
+    @NotBlank(message = "상세주소는 필수입니다.")
+    private String detailAddress;
 
     @NotBlank(message = "우편번호는 필수입니다.")
     private String zipcode;

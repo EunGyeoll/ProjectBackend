@@ -1,6 +1,7 @@
 package Project.ProjectBackend.service;
 
 import Project.ProjectBackend.dto.*;
+import Project.ProjectBackend.entity.Address;
 import Project.ProjectBackend.entity.Image;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.repository.*;
@@ -39,13 +40,21 @@ public class MemberService {
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
+        // AddressDto → Address 변환
+        Address address = new Address(
+                requestDto.getAddress().getMainAddress(),
+                requestDto.getAddress().getDetailAddress(),
+                requestDto.getAddress().getZipcode()
+        );
+
         // DTO를 엔티티로 변환 (우선적으로 Member 엔티티 생성)
         Member member = Member.builder()
                 .memberId(requestDto.getMemberId())
                 .memberName(requestDto.getMemberName())
+                .nickName(requestDto.getNickName())
                 .email(requestDto.getEmail())
                 .password(encodedPassword)
-                .address(requestDto.getAddress())
+                .address(address) // 변환된 address 넣기
                 .birthDate(requestDto.getBirthDate())
                 .role(Role.ROLE_USER)
                 .phoneNum(requestDto.getPhoneNum())
@@ -92,7 +101,10 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 찾을 수 없습니다."));
 
-        // 전달된 값만 업데이트
+        // 현재 비밀번호 확인
+        if (!passwordEncoder.matches(updateRequestDto.getCurrentPassword(), member.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
 
         // 이름
         if (updateRequestDto.getName() != null) {
@@ -102,6 +114,10 @@ public class MemberService {
         if (updateRequestDto.getEmail() != null) {
             member.setEmail(updateRequestDto.getEmail());
         }
+        // 닉네임
+        if(updateRequestDto.getNickName() != null) {
+            member.setNickName(updateRequestDto.getNickName());
+        }
         // 생일
         if (updateRequestDto.getBirthDate() != null) {
             member.setBirthDate(updateRequestDto.getBirthDate());
@@ -110,10 +126,6 @@ public class MemberService {
         if (updateRequestDto.getAddress() != null) {
             member.setAddress(updateRequestDto.getAddress());
         }
-        // 상점소개
-//        if (updateRequestDto.getShopIntroduction() != null) {
-//            member.updateShopIntroduction(updateRequestDto.getShopIntroduction());
-//        }
         // 프로필사진
         if (profileImage != null && !profileImage.isEmpty()) {
             // 기존 프로필 이미지가 있는 경우 삭제
@@ -190,6 +202,7 @@ public class MemberService {
 
         return MemberSimpleDto.builder()
                 .memberId(member.getMemberId())
+                .nickName(member.getNickName())
                 .name(member.getMemberName())
                 .email(member.getEmail())
                 .role(member.getRole())
@@ -197,6 +210,8 @@ public class MemberService {
                 .birthDate(member.getBirthDate())
                 .phoneNum(member.getPhoneNum())
                 .address(AddressDto.from(member.getAddress()))
+                .profileImageUrl(member.getProfileImageUrl())
                 .build();
     }
+
 }

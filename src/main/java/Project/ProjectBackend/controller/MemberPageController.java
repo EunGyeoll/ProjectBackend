@@ -13,13 +13,14 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api")
 public class MemberPageController {
 
     private final MemberPageService memberPageService;
     private final AuthService authService;
     private final SortService sortService;
 
-    // 회원 페이지 단건 조회 (누구나 조회 가능 / 자신의 페이지일 경우에만 name, address, phoneNum 같은 상세한 개인정보 조회 & 수정 버튼 표시 )
+    // 회원 페이지 단건 조회 (누구나 조회 가능 / 자신의 페이지일 경우에만 name, address, phoneNum 같은 상세한 개인정보 조회)
     @GetMapping("/memberpage/{memberId}")
     public ResponseEntity<MemberMyPageDto> getMemberPage(
             @PathVariable String memberId,

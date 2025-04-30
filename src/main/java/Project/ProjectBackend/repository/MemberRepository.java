@@ -18,4 +18,10 @@ public interface MemberRepository extends JpaRepository<Member, String> {
 //    findByMemberId처럼 특정 컬럼을 기반으로 검색하는 메서드는 명시적으로 정의해야 함.
     @Query("SELECT m. profileImageUrl FROM Member m WHERE m.memberId=:memberId")
     String findProfileImageUrl(String memberId);
+
+    // 아이디 중복확인
+    boolean existsByMemberId(String memberId);
+    // 닉네임 중복확인
+    boolean existsByNickName(String nickName);
+
 }

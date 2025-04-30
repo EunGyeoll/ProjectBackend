@@ -42,8 +42,8 @@ public class OrderService {
 
         // 배송 주소 정보 변환
         Address address = new Address(
-                requestDto.getAddress().getCity(),
-                requestDto.getAddress().getStreet(),
+                requestDto.getAddress().getMainAddress(),
+                requestDto.getAddress().getDetailAddress(),
                 requestDto.getAddress().getZipcode()
         );
 
@@ -97,8 +97,8 @@ public class OrderService {
 
         // 새로운 주소 생성
         Address newAddress = new Address(
-                deliveryUpdateRequestDto.getCity(),
-                deliveryUpdateRequestDto.getStreet(),
+                deliveryUpdateRequestDto.getMainAddress(),
+                deliveryUpdateRequestDto.getDetailAddress(),
                 deliveryUpdateRequestDto.getZipcode()
         );
 

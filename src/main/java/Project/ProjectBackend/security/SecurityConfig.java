@@ -45,79 +45,78 @@
         // 보안 필터 체인 정의
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            http
-                    .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 설정
-                    .csrf(csrf -> csrf.ignoringRequestMatchers("/ws/chat/**", "/pub/**", "/sub/**")) // ✅ WebSocket 관련 CSRF 제외
-                    .csrf(csrf -> csrf.disable()) // CSRF 비활성화
-                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 사용으로 세션 비활성화
+            return http
+                    .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                    .csrf(csrf -> csrf.disable())
+                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 서버는 세션 안 만들고 jwt로 인증하겠다.
                     .authorizeHttpRequests(auth -> auth
+                            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 🔥 모든 OPTIONS 요청 허용
                             .requestMatchers("/", "/index.html", "/stomptest.html", "/static/**").permitAll()
-                            .requestMatchers("/members/**").permitAll() // 인증 없이 접근 가능한 경로 설정
-                            .requestMatchers("/ws/chat/**").permitAll() // WebSocket 엔드포인트 허용
-                            .requestMatchers("/sub/**", "/pub/**").permitAll() // STOMP 메시지 허용
+                            .requestMatchers("/ws/chat/**", "/sub/**", "/pub/**").permitAll()
+
+                            // 회원가입, 로그인
+                            .requestMatchers("/api/members/signup").permitAll()
+                            .requestMatchers("/api/members/login").permitAll()
+
+                            // 내 회원정보 조회
+                            .requestMatchers("/api/members/me").authenticated()
 
                             // 회원 페이지 조회
-                            .requestMatchers(HttpMethod.GET, "/memberpage/{memberId}").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/memberpage/{memberId}").permitAll()
 
                             // 아이템
-                            .requestMatchers(HttpMethod.GET, "/items/list").permitAll()
-                            .requestMatchers(HttpMethod.GET,"/items/seller/**").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/items/search").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/items/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/items/list").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/items/seller/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/items/search").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/items/**").permitAll()
 
-                            .requestMatchers(HttpMethod.POST, "/items/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.PUT, "/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.DELETE, "/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/items/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/api/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
                             // 게시글
-                            .requestMatchers(HttpMethod.GET, "/posts/list").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/posts/writer/**").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/posts/list").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/posts/writer/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
 
-                            .requestMatchers(HttpMethod.POST, "/posts/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.PUT, "/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.DELETE, "/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-
+                            .requestMatchers(HttpMethod.POST, "/api/posts/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/api/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
                             // 댓글
-                            .requestMatchers(HttpMethod.POST, "/comments/{postNo}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.PUT, "/comments/{commentId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.DELETE, "/comments/{commentId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.GET, "/comments/{postNo}").permitAll()
-
-
+                            .requestMatchers(HttpMethod.POST, "/api/comments/{postNo}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/comments/{commentId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/api/comments/{commentId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/comments/{postNo}").permitAll()
 
                             // 주문
-                            .requestMatchers(HttpMethod.POST, "/orders/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.PUT, "/orders/{orderId}/delivery").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.POST, "/orders/{orderId}/cancel").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.GET, "/orders/{orderId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.GET, "/orders/member/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/orders/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/orders/{orderId}/delivery").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/orders/{orderId}/cancel").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/orders/{orderId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/orders/member/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
                             // 리뷰
-                            .requestMatchers(HttpMethod.GET, "/store/reviews/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/store/reviews/**").permitAll()
 
                             // 신고하기
-                            .requestMatchers(HttpMethod.POST, "/reports/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-
+                            .requestMatchers(HttpMethod.POST, "/api/reports/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
                             // 관리자
-                            .requestMatchers(HttpMethod.POST, "/admin/new").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/admin/**").hasAuthority("ROLE_ADMIN")
-
+                            .requestMatchers(HttpMethod.POST, "/api/admin/new").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/admin/**").hasAuthority("ROLE_ADMIN")
 
                             // 채팅
-                            .requestMatchers(HttpMethod.GET, "/chat/list/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.GET, "/chat/history/{sender}/{receiver}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/chat/list/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/chat/history/{sender}/{receiver}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
-
-                            .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
+                            .anyRequest().authenticated()
                     )
-                    .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
-                    .formLogin(formLogin -> formLogin.disable()); // 기본 로그인 폼 비활성화
-
-            return http.build();
+                    .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                    .formLogin(formLogin -> formLogin.disable())
+                    .build();
         }
+
 
         // 역할 계층 설정
         @Bean
@@ -131,7 +130,8 @@
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
             CorsConfiguration configuration = new CorsConfiguration();
-            configuration.setAllowedOrigins(List.of("http://localhost:8010", "http://localhost:63342"));
+//            configuration.addAllowedOriginPattern("*"); // 🔥 모든 Origin 허용
+            configuration.setAllowedOrigins(List.of("http://localhost:8010")); // allowCredntials(true) 쓰면 "*"와일드카드랑 같이 사용 불가.
             configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
             configuration.setAllowedHeaders(List.of("*"));
             configuration.setAllowCredentials(true);

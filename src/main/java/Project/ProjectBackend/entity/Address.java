@@ -1,26 +1,30 @@
 package Project.ProjectBackend.entity;
 
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
-import lombok.Getter;
 
 @Embeddable
 @Data
-@Table(name="address")
 public class Address {
-    private String city;
-    private String street;
+
+    @NotEmpty
+    private String mainAddress;
+
+    private String detailAddress;
+
+    @NotEmpty
     private String zipcode;
 
-    protected Address() {
-    }
-    // @Embedabble인 값 타입
+    protected Address() {}
 
-    public Address(String city, String street, String zipcode) {
-        this.city = city;
-        this.street = street;
+    public Address(String mainAddress, String detailAddress, String zipcode) {
+        this.mainAddress = mainAddress;
+        this.detailAddress = detailAddress;
         this.zipcode = zipcode;
     }
 
+    public String fullAddress() {
+        return mainAddress + " " + detailAddress + " (" + zipcode + ")";
+    }
 }

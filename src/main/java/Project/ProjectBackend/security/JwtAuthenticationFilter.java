@@ -35,6 +35,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        String uri = request.getRequestURI();
+        if (uri.equals("/api/members/signup") || uri.equals("/api/members/login")) {
+            filterChain.doFilter(request, response); // 🔥 그냥 통과시킴
+            return;
+        }
+
+        String method = request.getMethod();
+
+        log.info("[요청 들어옴] URI: {}, Method: {}", uri, method); // 🔥 추가
+
+
         String token = getTokenFromHeader(request);
         if (token != null) {
             Jws<Claims> claimsJws = jwtTokenProvider.validateToken(token);
@@ -67,34 +79,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-//    @Override
-//    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-//            throws ServletException, IOException {
-//        String token = getTokenFromHeader(request);
-//        if (token != null) {
-//            Jws<Claims> claimsJws = jwtTokenProvider.validateToken(token);
-//            if (claimsJws != null) {
-//                Claims claims = claimsJws.getBody();
-//                String userId = claims.getSubject();
-//                String role = claims.get("role", String.class); // "roles" -> "role"
-//
-//                List<SimpleGrantedAuthority> authorities = role == null ?
-//                        Collections.emptyList() :
-//                        List.of(new SimpleGrantedAuthority(role));
-//
-//                UsernamePasswordAuthenticationToken authentication =
-//                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
-//                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-//
-//                SecurityContextHolder.getContext().setAuthentication(authentication);
-//                // JwtAuthenticationFilter에서 로그 추가
-//                log.debug("Authentication set in SecurityContextHolder: {}", SecurityContextHolder.getContext().getAuthentication());
-//                log.debug("Current authentication: {}", SecurityContextHolder.getContext().getAuthentication());
-//
-//            }
-//        }
-//        filterChain.doFilter(request, response);
-//    }
+
 
     private String getTokenFromHeader(HttpServletRequest request) {
         String header = request.getHeader("Authorization");

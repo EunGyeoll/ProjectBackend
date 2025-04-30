@@ -5,6 +5,7 @@ import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.security.JwtTokenProvider;
 import Project.ProjectBackend.service.MemberService;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@RequestMapping("/api")
 public class MemberController {
 
     private final MemberService memberService;
@@ -31,7 +33,7 @@ public class MemberController {
     // 회원가입, 로그인, 회원정보 수정, 탈퇴
 
     // 회원가입
-    @PostMapping("/members/new")
+    @PostMapping("/members/signup")
     public ResponseEntity<?> signup(
             @RequestPart(value = "memberData") @Valid MemberSignupRequestDto requestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
@@ -52,18 +54,21 @@ public class MemberController {
         }
 
         // 권한 정보 설정
-        String authority = member.getRole().name(); // ROLE_USER 여야 함.
+        String authority = member.getRole().name();
         String token = jwtTokenProvider.createAccessToken(member.getMemberId(), authority);
 
-        return ResponseEntity.ok(new AuthResponse(token));
+        return ResponseEntity.ok(new LoginResponse(token, member.getMemberId(), authority));
+
     }
 
-
+    // 로그인 - 로그인 요청
     @Data
     static class LoginRequest {
         private String memberId;
         private String password;
     }
+
+
 
     @Data
     static class AuthResponse {
@@ -95,6 +100,17 @@ public class MemberController {
 
         Member updatedMember = memberService.findOne(memberId);
         return ResponseEntity.ok(new UpdateMemberResponse(updatedMember.getMemberId(), updatedMember.getMemberName()));
+    }
+
+
+    // 회원정보 페이지에서 회원정보 불러오기
+    @GetMapping("/members/me")
+    public ResponseEntity<?> getMyInfo(Authentication authentication) {
+        String memberId = authentication.getName();
+
+        MemberSimpleDto response = memberService.getMemberById(memberId); // ✅ 여기!
+
+        return ResponseEntity.ok(response); // ✅ 닉네임 포함된 DTO 반환
     }
 
 
@@ -142,6 +158,8 @@ public class MemberController {
         @NotEmpty(message = "비밀번호는 필수 입력 항목입니다.")
         private String password;
     }
+
+
 
 
 }

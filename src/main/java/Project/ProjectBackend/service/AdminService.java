@@ -41,7 +41,6 @@ public class AdminService {
 
 
 
-    // 관리자로 회원가입
     @Transactional
     public void signup(MemberSignupRequestDto requestDto, MultipartFile profileImage) {
         // 이메일 중복 체크
@@ -50,33 +49,38 @@ public class AdminService {
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
-        // 먼저 회원(Member) 저장
+        // AddressDto → Address 변환
+        Address address = new Address(
+                requestDto.getAddress().getMainAddress(),
+                requestDto.getAddress().getDetailAddress(),
+                requestDto.getAddress().getZipcode()
+        );
+
+        // 회원(Member) 저장
         Member admin = Member.builder()
                 .memberId(requestDto.getMemberId())
                 .memberName(requestDto.getMemberName())
+                .nickName(requestDto.getNickName())
                 .email(requestDto.getEmail())
                 .password(encodedPassword)
-                .address(requestDto.getAddress())
+                .address(address) // ✅ 변환된 address 넣기
                 .birthDate(requestDto.getBirthDate())
-                .role(Role.ROLE_ADMIN)  // ✅ 관리자 역할 설정
+                .role(Role.ROLE_ADMIN)
                 .phoneNum(requestDto.getPhoneNum())
                 .enabled(true)
-//                .shopIntroduction(requestDto.getShopIntroduction())
                 .build();
 
-        // 먼저 데이터베이스에 저장 (회원이 영속 상태가 되어야 함)
         Member savedAdmin = memberRepository.save(admin);
 
-        // 프로필 이미지 저장
         if (profileImage != null && !profileImage.isEmpty()) {
             Image savedProfileImage = imageService.saveImageForProfile(profileImage, savedAdmin);
             savedAdmin.setProfileImageUrl(savedProfileImage.getImagePath());
             savedAdmin.setProfileImage(savedProfileImage);
         }
 
-        // 다시 저장 (프로필 이미지가 설정된 상태로 저장)
         memberRepository.save(savedAdmin);
     }
+
 
 
 

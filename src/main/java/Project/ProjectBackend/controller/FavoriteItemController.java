@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api")
 public class FavoriteItemController {
 
     private final FavoriteItemService favoriteItemService;

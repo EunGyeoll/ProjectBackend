@@ -23,5 +23,10 @@ public interface MemberRepository extends JpaRepository<Member, String> {
     boolean existsByMemberId(String memberId);
     // 닉네임 중복확인
     boolean existsByNickName(String nickName);
+    // 이메일 중복확인
+    boolean existsByEmail(String email);
+    // 폰번호 중복확인
+    boolean existsByPhoneNum(String phoneNum);
+
 
 }

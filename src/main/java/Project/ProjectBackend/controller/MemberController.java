@@ -19,6 +19,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -47,6 +49,7 @@ public class MemberController {
     // 로그인
     @PostMapping("/members/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequest loginRequest) {
+        log.debug("로그인 요청: {}", loginRequest); // 💡 실제 들어오는 값 로그 찍기
         // 사용자 인증 (서비스에서 DB 확인)
         Member member = memberService.authenticate(loginRequest.getMemberId(), loginRequest.getPassword());
         if (member == null) {
@@ -160,7 +163,36 @@ public class MemberController {
     }
 
 
+    @GetMapping("/members/check-id")
+    public ResponseEntity<?> checkDuplicateId(@RequestParam String memberId) {
+        if (memberService.existsByMemberId(memberId)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "이미 사용 중인 아이디입니다."));
+        }
+        return ResponseEntity.ok(Map.of("message", "사용 가능한 아이디입니다."));
+    }
 
+    @GetMapping("/members/check-nickname")
+    public ResponseEntity<?> checkDuplicateNickName(@RequestParam String nickName) {
+        if (memberService.existsByNickName(nickName)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "이미 사용 중인 닉네임입니다."));
+        }
+        return ResponseEntity.ok(Map.of("message", "사용 가능한 닉네임입니다."));
+    }
 
+    @GetMapping("/members/check-phone")
+    public ResponseEntity<?> checkDuplicatePhone(@RequestParam String phoneNum) {
+        if (memberService.existsByPhoneNum(phoneNum)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "이미 사용 중인 전화번호입니다."));
+        }
+        return ResponseEntity.ok(Map.of("message", "사용 가능한 전화번호입니다."));
+    }
+
+    @GetMapping("/members/check-email")
+    public ResponseEntity<?> checkDuplicateEmail(@RequestParam String email) {
+        if (memberService.existsByEmail(email)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "이미 사용 중인 이메일입니다."));
+        }
+        return ResponseEntity.ok(Map.of("message", "사용 가능한 이메일입니다."));
+    }
 }
 

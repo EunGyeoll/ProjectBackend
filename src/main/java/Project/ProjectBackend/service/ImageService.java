@@ -137,7 +137,7 @@ public class ImageService {
         String safeFileName = trimmedFileName.replaceAll("[^a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ()_+.-]", "");
 
         // UUID + 안전한 파일명 조합하여 새로운 파일명 생성
-        String uniqueFileName = extension + UUID.randomUUID().toString() + "_" + safeFileName + "." ;
+        String uniqueFileName = UUID.randomUUID().toString() + "_" + safeFileName + "." + extension;
 
         // 저장할 파일 경로 설정
         String filePath = Paths.get(uploadDir, uniqueFileName).toString().replace("\\", "/");

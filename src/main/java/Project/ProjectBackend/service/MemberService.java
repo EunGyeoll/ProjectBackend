@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -61,8 +62,8 @@ public class MemberService {
                 .enabled(true)
                 .build();
 
-        // 먼저 member 저장
-        memberRepository.save(member);
+//        // 먼저 member 저장
+//        memberRepository.save(member);
 
         // 프로필 이미지 저장 (프로필 이미지가 있을 경우)
         if (profileImage != null && !profileImage.isEmpty()) {
@@ -87,9 +88,17 @@ public class MemberService {
         Optional<Member> optionalMember = memberRepository.findByMemberId(memberId);
         if (optionalMember.isPresent()) {
             Member member = optionalMember.get();
+
+            // ✅ 디버깅용 출력
+            System.out.println("입력 비번: " + password);
+            System.out.println("DB 비번: " + member.getPassword());
+            System.out.println("matches? " + passwordEncoder.matches(password, member.getPassword()));
+
+
             if (passwordEncoder.matches(password, member.getPassword())) {
                 return member;
             }
+
         }
         return null;
     }
@@ -142,9 +151,8 @@ public class MemberService {
             logger.info("프로필 이미지가 설정되었습니다: " + newProfileImage.getImagePath());
         }
         // 비밀번호
-        if (updateRequestDto.getNewPassword() != null) {
-            if (updateRequestDto.getCurrentPassword() == null ||
-                    !passwordEncoder.matches(updateRequestDto.getCurrentPassword(), member.getPassword())) {
+        if (StringUtils.hasText(updateRequestDto.getNewPassword())) {
+            if (!passwordEncoder.matches(updateRequestDto.getCurrentPassword(), member.getPassword())) {
                 throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
             }
             member.updatePassword(passwordEncoder.encode(updateRequestDto.getNewPassword()));
@@ -212,6 +220,23 @@ public class MemberService {
                 .address(AddressDto.from(member.getAddress()))
                 .profileImageUrl(member.getProfileImageUrl())
                 .build();
+    }
+
+
+    public boolean existsByMemberId(String memberId) {
+        return memberRepository.existsByMemberId(memberId);
+    }
+
+    public boolean existsByNickName(String nickName) {
+        return memberRepository.existsByNickName(nickName);
+    }
+
+    public boolean existsByEmail(String email) {
+        return memberRepository.existsByEmail(email);
+    }
+
+    public boolean existsByPhoneNum(String phoneNum) {
+        return memberRepository.existsByPhoneNum(phoneNum);
     }
 
 }

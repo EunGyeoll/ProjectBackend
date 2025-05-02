@@ -18,23 +18,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 @DynamicUpdate
 @Table(name="member")
 public class Member {
     @Id
     @Column(name = "member_id")
+    @Setter
     private String memberId;
 
     @NotEmpty
     private String password;
 
     @NotEmpty
+    @Setter
     @Column(name="member_name")
     private String memberName;
 
     @Column(name="nick_name", nullable = false, unique = true)
+    @Setter
     private String nickName;
 
     @CreationTimestamp
@@ -43,67 +46,84 @@ public class Member {
 
     @NotNull
     @Enumerated(EnumType.STRING) // Enum 값이 숫자로 저장되는 것을 막기 위해
+    @Setter
     private Role role;
 
     @Column(name = "enabled", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    @Setter
     private boolean enabled = true; // 권한 있는지
 
     @NotEmpty
+    @Setter
     private String email;
 
     @Column(length = 100)  //  최대 100자 제한
+    @Setter
     private String shopIntroduction;
 
     @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Setter
     private Image profileImage;
 
     @Column
+    @Setter
     private String profileImageUrl;
 
 
     @NotNull
     @Column(name = "birth_date")
     @JsonFormat(pattern = "yyyy-MM-dd")
+    @Setter
     private LocalDate birthDate;
 
     @NotEmpty
     @Column(name = "phone_num")
+    @Setter
     private String phoneNum;
     // 숫자 필드엔 @NotEmpty 대신 @NotNull 또는 @Positive, @Min, @Max 등의 애노테이션을 사용
 
     @Embedded
+    @Setter
     private Address address;
 
     @JsonIgnore
     @OneToMany(mappedBy = "member")
+    @Setter
     private List<Orders> orders = new ArrayList<>();
 
     @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL, orphanRemoval = true) // 양방향 관계 설정
     @JsonIgnore
+    @Setter
     private List<Post> posts = new ArrayList<>(); // 작성한 게시글 목록
 
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore  // 직렬화에서 제외
+    @Setter
     private List<Item> items = new ArrayList<>(); // 회원이 등록한 상품 목록
 
     // 찜한 상품
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
+    @Setter
     private List<FavoriteItem> favoriteItems = new ArrayList<>(); // 사용자의 관심 상품 목록
 
     // 좋아요한 게시글
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
+    @Setter
     private List<LikedPost> likedPosts = new ArrayList<>(); // 사용자의 관심 상품 목록
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Setter
     private List<MemberCoupon> memberCoupons = new ArrayList<>(); // 중간 엔티티
 
 
     @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Setter
     private List<Review> writtenReviews = new ArrayList<>(); // 작성한 리뷰
 
     @OneToMany(mappedBy = "storeOwner", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Setter
     private List<Review> receivedReviews = new ArrayList<>(); // 받은 리뷰
 
 
@@ -150,5 +170,7 @@ public class Member {
         this.shopIntroduction = shopIntroduction;
         this.profileImageUrl = profileImageUrl;
     }
+
+
 
 }

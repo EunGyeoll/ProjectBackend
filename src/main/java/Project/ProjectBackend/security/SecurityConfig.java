@@ -55,8 +55,16 @@
                             .requestMatchers("/ws/chat/**", "/sub/**", "/pub/**").permitAll()
 
                             // 회원가입, 로그인
+
+
                             .requestMatchers("/api/members/signup").permitAll()
                             .requestMatchers("/api/members/login").permitAll()
+
+                            // 중복확인
+                            .requestMatchers("/api/members/check-id").permitAll()
+                            .requestMatchers("/api/members/check-nickname").permitAll()
+                            .requestMatchers("/api/members/check-phone").permitAll()
+                            .requestMatchers("/api/members/check-email").permitAll()
 
                             // 내 회원정보 조회
                             .requestMatchers("/api/members/me").authenticated()

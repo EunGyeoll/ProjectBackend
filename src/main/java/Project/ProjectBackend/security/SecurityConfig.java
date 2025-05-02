@@ -51,6 +51,7 @@
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 서버는 세션 안 만들고 jwt로 인증하겠다.
                     .authorizeHttpRequests(auth -> auth
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 🔥 모든 OPTIONS 요청 허용
+                            .requestMatchers("/api/images/**").permitAll()
                             .requestMatchers("/", "/index.html", "/stomptest.html", "/static/**").permitAll()
                             .requestMatchers("/ws/chat/**", "/sub/**", "/pub/**").permitAll()
 

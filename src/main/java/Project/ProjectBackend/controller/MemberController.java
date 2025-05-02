@@ -2,6 +2,7 @@ package Project.ProjectBackend.controller;
 
 import Project.ProjectBackend.dto.*;
 import Project.ProjectBackend.entity.Member;
+import Project.ProjectBackend.repository.MemberRepository;
 import Project.ProjectBackend.security.JwtTokenProvider;
 import Project.ProjectBackend.service.MemberService;
 import jakarta.validation.constraints.NotEmpty;
@@ -16,10 +17,12 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,7 +32,8 @@ public class MemberController {
 
     private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider;
-
+    private final PasswordEncoder passwordEncoder;
+    private final MemberRepository memberRepository;
 
 
     // 회원가입, 로그인, 회원정보 수정, 탈퇴
@@ -49,20 +53,28 @@ public class MemberController {
     // 로그인
     @PostMapping("/members/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequest loginRequest) {
-        log.debug("로그인 요청: {}", loginRequest); // 💡 실제 들어오는 값 로그 찍기
-        // 사용자 인증 (서비스에서 DB 확인)
-        Member member = memberService.authenticate(loginRequest.getMemberId(), loginRequest.getPassword());
-        if (member == null) {
-            return ResponseEntity.status(401).body("Invalid memberId or password");
+        log.debug("로그인 요청: {}", loginRequest);
+
+        Optional<Member> optionalMember = memberRepository.findByMemberId(loginRequest.getMemberId());
+
+        if (optionalMember.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("message", "존재하지 않는 아이디입니다."));
         }
 
-        // 권한 정보 설정
-        String authority = member.getRole().name();
-        String token = jwtTokenProvider.createAccessToken(member.getMemberId(), authority);
+        Member member = optionalMember.get();
 
-        return ResponseEntity.ok(new LoginResponse(token, member.getMemberId(), authority));
+        if (!member.isEnabled()) {
+            return ResponseEntity.status(403).body(Map.of("message", "비활성화된 계정입니다."));
+        }
 
+        if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
+            return ResponseEntity.status(401).body(Map.of("message", "비밀번호가 일치하지 않습니다."));
+        }
+
+        String token = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+        return ResponseEntity.ok(new LoginResponse(token, member.getMemberId(), member.getRole().name()));
     }
+
 
     // 로그인 - 로그인 요청
     @Data

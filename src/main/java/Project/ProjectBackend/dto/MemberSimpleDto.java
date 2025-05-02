@@ -4,6 +4,7 @@ import Project.ProjectBackend.entity.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @Builder
+@Slf4j
 public class MemberSimpleDto {
     private String memberId;
     private String name;
@@ -24,8 +26,22 @@ public class MemberSimpleDto {
     private LocalDateTime registrationDate;
     private String profileImageUrl;
 
+
+
     // 엔티티를 DTO로 변환하는 정적 메서드
     public static MemberSimpleDto from(Member member) {
+        String profileImageUrl = null;
+
+
+        if (member.getProfileImage() != null) {
+            String fileName = member.getProfileImage().getNewFileName();
+            profileImageUrl = "/api/images/" + fileName;
+
+            log.info("🎯 최종 프로필 이미지 URL: {}", profileImageUrl);
+        } else {
+            log.info("🛑 프로필 이미지가 null입니다.");
+        }
+
         return MemberSimpleDto.builder()
                 .memberId(member.getMemberId())
                 .name(member.getMemberName())
@@ -37,7 +53,7 @@ public class MemberSimpleDto {
                 .phoneNum(member.getPhoneNum())
                 .registrationDate(member.getRegistrationDate())
                 .address(AddressDto.from(member.getAddress()))
-                .profileImageUrl(member.getProfileImageUrl())
+                .profileImageUrl(profileImageUrl)
                 .build();
     }
 }

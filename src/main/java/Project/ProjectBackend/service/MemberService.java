@@ -204,22 +204,10 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public MemberSimpleDto getMemberById(String memberId) {
-
         Member member = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        return MemberSimpleDto.builder()
-                .memberId(member.getMemberId())
-                .nickName(member.getNickName())
-                .name(member.getMemberName())
-                .email(member.getEmail())
-                .role(member.getRole())
-                .enabled(member.isEnabled())
-                .birthDate(member.getBirthDate())
-                .phoneNum(member.getPhoneNum())
-                .address(AddressDto.from(member.getAddress()))
-                .profileImageUrl(member.getProfileImageUrl())
-                .build();
+        return MemberSimpleDto.from(member); // ✅ 이 한 줄로 교체
     }
 
 

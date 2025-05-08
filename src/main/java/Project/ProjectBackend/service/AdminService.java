@@ -437,125 +437,201 @@ public class AdminService {
 
 
 
-    // ===== 카테고리 관리 =====
+    // ============== 카테고리 관리 ==============
 
-    // 9. 카테고리 목록 조회 (계층적)
+    // 카테고리 조회
+    public List<ItemCategoryTreeDto> getAllCategoryTree() {
+        return categoryRepository.findByParentIsNull().stream()
+                .map(ItemCategoryTreeDto::from)
+                .toList();
+    }
+
+
+    // 부모 아이디로 자식 조회
     @Transactional(readOnly = true)
-    public List<ItemCategoryDto> getAllCategories() {
-        List<ItemCategory> allCategories = categoryRepository.findByParentIsNullOrderByCategoryNameAsc();
+    public List<ItemCategoryFlatDto> getChildrenByParentId(Long parentId) {
+        List<ItemCategory> children = categoryRepository.findByParent_CategoryId(parentId);
 
-        // 상위 카테고리만 필터링
-        List<ItemCategory> parentCategories = allCategories.stream()
-                .filter(category -> category.getParent() == null)
-                .collect(Collectors.toList());
-
-        // 각 상위 카테고리에 대해 재귀적으로 자식 카테고리를 매핑
-        List<ItemCategoryDto> result = parentCategories.stream()
-                .map(this::mapCategoryToDto)
-                .collect(Collectors.toList());
-
-        return result;
+        return children.stream()
+                .map(ItemCategoryFlatDto::from)
+                .toList();
     }
 
-    // 10. 카테고리 추가
-    @Transactional
-    public ItemCategoryDto addItemCategory(ItemCategoryDto categoryDto) {
-        // 카테고리 중복 체크
-        if (categoryRepository.existsByCategoryName(categoryDto.getName())) {
-            throw new IllegalArgumentException("이미 존재하는 카테고리입니다. 이름: " + categoryDto.getName());
-        }
 
+    // 추가
+    @Transactional
+    public ItemCategoryTreeDto addItemCategory(ItemCategoryRequestDto dto) {
         ItemCategory category = new ItemCategory();
-        category.setCategoryName(categoryDto.getName());
+        category.setCategoryName(dto.getName());
 
-        if (categoryDto.getParentId() != null) {
-            ItemCategory parentCategory = categoryRepository.findById(categoryDto.getParentId())
-                    .orElseThrow(() -> new IllegalArgumentException("상위 카테고리가 존재하지 않습니다. ID: " + categoryDto.getParentId()));
-
-            // 순환 참조 방지
-            if (isCircularReference(parentCategory, category)) {
-                throw new IllegalArgumentException("순환 참조가 발생합니다. 상위 카테고리를 변경할 수 없습니다.");
+        if (dto.getParentId() != null) {
+            ItemCategory parent = categoryRepository.findById(dto.getParentId())
+                    .orElseThrow(() -> new IllegalArgumentException("상위 카테고리가 존재하지 않습니다."));
+            if (isCircularReference(parent, category)) {
+                throw new IllegalArgumentException("순환 참조가 발생합니다.");
             }
-
-            category.setParent(parentCategory);
-            parentCategory.getChildren().add(category);
+            category.setParent(parent);
+            parent.getChildren().add(category);
         }
 
-        ItemCategory savedCategory = categoryRepository.save(category);
-
-        return mapCategoryToDto(savedCategory);
+        return ItemCategoryTreeDto.from(categoryRepository.save(category));
     }
 
 
-    // 11. 카테고리 수정 (이름 및 상위 카테고리 변경 가능)
+    // 카테고리 수정
     @Transactional
-    public ItemCategoryDto updateItemCategory(Long categoryId, ItemCategoryDto categoryDto) {
-        ItemCategory category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 카테고리가 존재하지 않습니다. ID: " + categoryId));
+    public ItemCategoryTreeDto updateItemCategory(Long id, ItemCategoryRequestDto dto) {
+        ItemCategory category = categoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("카테고리 없음"));
 
-        if (categoryDto.getName() != null && !categoryDto.getName().isEmpty()) {
-            // 이름 중복 체크
-            if (!category.getCategoryName().equals(categoryDto.getName()) &&
-                    categoryRepository.existsByCategoryName(categoryDto.getName())) {
-                throw new IllegalArgumentException("이미 존재하는 카테고리 이름입니다. 이름: " + categoryDto.getName());
-            }
-            category.setCategoryName(categoryDto.getName());
-        }
+        category.setCategoryName(dto.getName());
 
-        if (categoryDto.getParentId() != null) {
-            ItemCategory newParent = categoryRepository.findById(categoryDto.getParentId())
-                    .orElseThrow(() -> new IllegalArgumentException("상위 카테고리가 존재하지 않습니다. ID: " + categoryDto.getParentId()));
-
-            // 순환 참조 방지
+        if (dto.getParentId() != null) {
+            ItemCategory newParent = categoryRepository.findById(dto.getParentId())
+                    .orElseThrow(() -> new IllegalArgumentException("부모 없음"));
             if (isCircularReference(newParent, category)) {
-                throw new IllegalArgumentException("순환 참조가 발생합니다. 상위 카테고리를 변경할 수 없습니다.");
+                throw new IllegalArgumentException("순환 참조");
             }
 
-            // 기존 부모에서 제거
             if (category.getParent() != null) {
                 category.getParent().getChildren().remove(category);
             }
 
-            // 새로운 부모 설정
             category.setParent(newParent);
             newParent.getChildren().add(category);
-        } else if (categoryDto.getParentId() == null && category.getParent() != null) {
-            // 상위 카테고리를 제거하여 최상위 카테고리로 설정
-            category.getParent().getChildren().remove(category);
+        } else {
+            if (category.getParent() != null) {
+                category.getParent().getChildren().remove(category);
+            }
             category.setParent(null);
         }
 
-        ItemCategory savedCategory = categoryRepository.save(category);
-
-        return mapCategoryToDto(savedCategory);
+        return ItemCategoryTreeDto.from(categoryRepository.save(category));
     }
 
-
-    // 12. 카테고리 삭제
+    // 카테고리 삭제
     @Transactional
-    public void deleteItemCategory(Long categoryId) {
-        if (!categoryRepository.existsById(categoryId)) {
-            throw new IllegalArgumentException("해당 카테고리가 존재하지 않습니다. ID: " + categoryId);
+    public void deleteItemCategory(Long id) {
+        ItemCategory category = categoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 카테고리가 존재하지 않습니다."));
+
+        if (!category.getChildren().isEmpty()) {
+            throw new IllegalStateException("하위 카테고리가 존재하여 삭제할 수 없습니다.");
         }
-        categoryRepository.deleteById(categoryId);
+
+        categoryRepository.delete(category);
     }
 
 
-    // 재귀적으로 카테고리를 DTO로 매핑
-    private ItemCategoryDto mapCategoryToDto(ItemCategory category) {
-        List<ItemCategoryDto> childrenDtos = category.getChildren().stream()
-                .map(this::mapCategoryToDto)
-                .collect(Collectors.toList());
 
-        return new ItemCategoryDto(
-                category.getCategoryId(),
-                category.getCategoryName(),
-                category.getParent() != null ? category.getParent().getCategoryId() : null,
-                childrenDtos
-        );
-    }
-
-
+    //    // 9. 카테고리 목록 조회 (계층적)
+//    @Transactional(readOnly = true)
+//    public List<ItemCategoryDto> getAllCategories() {
+//        List<ItemCategory> allCategories = categoryRepository.findByParentIsNullOrderByCategoryNameAsc();
+//
+//        // 상위 카테고리만 필터링
+//        List<ItemCategory> parentCategories = allCategories.stream()
+//                .filter(category -> category.getParent() == null)
+//                .collect(Collectors.toList());
+//
+//        // 각 상위 카테고리에 대해 재귀적으로 자식 카테고리를 매핑
+//        List<ItemCategoryDto> result = parentCategories.stream()
+//                .map(this::mapCategoryToDto)
+//                .collect(Collectors.toList());
+//
+//        return result;
+//    }
+//
+//    // 10. 카테고리 추가
+//    @Transactional
+//    public ItemCategoryTreeDto addItemCategory(ItemCategoryRequestDto dto) {
+//        ItemCategory category = new ItemCategory();
+//        category.setCategoryName(dto.getName());
+//
+//        if (dto.getParentId() != null) {
+//            ItemCategory parent = categoryRepository.findById(dto.getParentId())
+//                    .orElseThrow(() -> new IllegalArgumentException("상위 카테고리가 존재하지 않습니다."));
+//            if (isCircularReference(parent, category)) {
+//                throw new IllegalArgumentException("순환 참조가 발생합니다.");
+//            }
+//            category.setParent(parent);
+//            parent.getChildren().add(category);
+//        }
+//
+//        return ItemCategoryTreeDto.from(categoryRepository.save(category));
+//    }
+//
+//
+//
+//    // 11. 카테고리 수정 (이름 및 상위 카테고리 변경 가능)
+//    @Transactional
+//    public ItemCategoryDto updateItemCategory(Long categoryId, ItemCategoryDto categoryDto) {
+//        ItemCategory category = categoryRepository.findById(categoryId)
+//                .orElseThrow(() -> new IllegalArgumentException("해당 카테고리가 존재하지 않습니다. ID: " + categoryId));
+//
+//        if (categoryDto.getName() != null && !categoryDto.getName().isEmpty()) {
+//            // 이름 중복 체크
+//            if (!category.getCategoryName().equals(categoryDto.getName()) &&
+//                    categoryRepository.existsByCategoryName(categoryDto.getName())) {
+//                throw new IllegalArgumentException("이미 존재하는 카테고리 이름입니다. 이름: " + categoryDto.getName());
+//            }
+//            category.setCategoryName(categoryDto.getName());
+//        }
+//
+//        if (categoryDto.getParentId() != null) {
+//            ItemCategory newParent = categoryRepository.findById(categoryDto.getParentId())
+//                    .orElseThrow(() -> new IllegalArgumentException("상위 카테고리가 존재하지 않습니다. ID: " + categoryDto.getParentId()));
+//
+//            // 순환 참조 방지
+//            if (isCircularReference(newParent, category)) {
+//                throw new IllegalArgumentException("순환 참조가 발생합니다. 상위 카테고리를 변경할 수 없습니다.");
+//            }
+//
+//            // 기존 부모에서 제거
+//            if (category.getParent() != null) {
+//                category.getParent().getChildren().remove(category);
+//            }
+//
+//            // 새로운 부모 설정
+//            category.setParent(newParent);
+//            newParent.getChildren().add(category);
+//        } else if (categoryDto.getParentId() == null && category.getParent() != null) {
+//            // 상위 카테고리를 제거하여 최상위 카테고리로 설정
+//            category.getParent().getChildren().remove(category);
+//            category.setParent(null);
+//        }
+//
+//        ItemCategory savedCategory = categoryRepository.save(category);
+//
+//        return mapCategoryToDto(savedCategory);
+//    }
+//
+//
+//    // 12. 카테고리 삭제
+//    @Transactional
+//    public void deleteItemCategory(Long categoryId) {
+//        if (!categoryRepository.existsById(categoryId)) {
+//            throw new IllegalArgumentException("해당 카테고리가 존재하지 않습니다. ID: " + categoryId);
+//        }
+//        categoryRepository.deleteById(categoryId);
+//    }
+//
+//
+//    // 재귀적으로 카테고리를 DTO로 매핑
+//    private ItemCategoryDto mapCategoryToDto(ItemCategory category) {
+//        List<ItemCategoryDto> childrenDtos = category.getChildren().stream()
+//                .map(this::mapCategoryToDto)
+//                .collect(Collectors.toList());
+//
+//        return new ItemCategoryDto(
+//                category.getCategoryId(),
+//                category.getCategoryName(),
+//                category.getParent() != null ? category.getParent().getCategoryId() : null,
+//                childrenDtos
+//        );
+//    }
+//
+//
     //순환 참조를 방지하기 위한 메서드
     private boolean isCircularReference(ItemCategory parent, ItemCategory child) {
         if (parent == null) {
@@ -676,6 +752,15 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
+    // 특정 그룹의 카테고리만 조회
+    @Transactional(readOnly = true)
+    public List<PostCategoryDto> getPostCategoriesByGroup(String groupName) {
+        return postCategoryRepository.findByGroupNameOrderByCategoryNameAsc(groupName)
+                .stream()
+                .map(PostCategoryDto::from)
+                .collect(Collectors.toList());
+    }
+
     // 게시글 카테고리 추가
     @Transactional
     public PostCategoryDto addPostCategory(PostCategoryDto categoryDto) {
@@ -685,6 +770,7 @@ public class AdminService {
 
         PostCategory postCategory = PostCategory.builder()
                 .categoryName(categoryDto.getCategoryName())
+                .groupName(categoryDto.getGroupName())
                 .build();
 
         return PostCategoryDto.from(postCategoryRepository.save(postCategory));
@@ -702,6 +788,8 @@ public class AdminService {
         }
 
         category.setCategoryName(categoryDto.getCategoryName());
+        category.setGroupName(categoryDto.getGroupName());
+
         return PostCategoryDto.from(postCategoryRepository.save(category));
     }
 

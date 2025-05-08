@@ -29,11 +29,14 @@ public class ItemCategory {
     private ItemCategory parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    @JsonBackReference
     private List<ItemCategory> children = new ArrayList<>();
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<Item> items = new ArrayList<>();
 
+    @Column(name = "sort_order")
+    private Integer sortOrder;
 
     public void addChildCategory(ItemCategory child) {
         children.add(child);

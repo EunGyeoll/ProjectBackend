@@ -1,5 +1,6 @@
 package Project.ProjectBackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
@@ -24,6 +25,9 @@ public class PostCategory {
     @Column(nullable = false, unique = true)
     private String categoryName;
 
+    @JsonProperty("groupName")
+    private String groupName;
+
     @OneToMany(mappedBy = "postCategory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
 
@@ -32,5 +36,8 @@ public class PostCategory {
         this.categoryName = categoryName;
         this.posts = new ArrayList<>();
     }
+
+    @Column(name = "sort_order")
+    private Integer sortOrder;
 
 }

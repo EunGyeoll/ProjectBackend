@@ -27,7 +27,20 @@ public class ItemService {
     private static final Logger logger = LoggerFactory.getLogger(ItemService.class);
 
 
-    // 1. 아이템 등록
+    // 1. 모든 아이템 조회 (페이징 및 정렬 적용)
+    @Transactional(readOnly = true)
+    public Slice<Item> getAllItems(Pageable pageable) {
+        return itemRepository.findAll(pageable);
+    }
+
+    // 카테고리별 아이템 조회
+    @Transactional(readOnly = true)
+    public Slice<Item> getItemsByCategoryName(String categoryName, Pageable pageable) {
+        return itemRepository.findByCategory_CategoryName(categoryName, pageable);
+    }
+
+
+    // 2. 아이템 등록
     @Transactional
     public Item createItem(ItemRequestDto itemRequestDto, Member currentUser, List<MultipartFile> imageFiles) {
         logger.info("Creating item: {}", itemRequestDto.getItemName());
@@ -69,7 +82,7 @@ public class ItemService {
     }
 
 
-    // 2. 아이템 수정
+    // 3. 아이템 수정
     @Transactional
     public Item updateItem(Long itemId, ItemRequestDto itemRequestDto, List<MultipartFile> imageFiles, Member currentUser) {
         // 1. 아이템 조회
@@ -111,7 +124,7 @@ public class ItemService {
 
 
 
-    // 3. 아이템 단건(상세) 조회
+    // 4. 아이템 단건(상세) 조회
     public Item getItemById(Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("아이템이 존재하지 않습니다."));
@@ -126,7 +139,7 @@ public class ItemService {
     }
 
 
-    // 4. 특정 판매자가 등록한 아이템 조회
+    // 5. 특정 판매자가 등록한 아이템 조회
     @Transactional(readOnly = true)
     public Slice<ItemListDto> getItemsBySeller(String memberId, Pageable pageable) {
         Slice<Item> itemsSlice = itemRepository.findBySeller_MemberId(memberId, pageable);
@@ -134,11 +147,6 @@ public class ItemService {
     }
 
 
-
-    // 5. 모든 아이템 조회 (페이징 및 정렬 적용)
-    public Slice<Item> getAllItems(Pageable pageable) {
-        return itemRepository.findAll(pageable);
-    }
 
 
 

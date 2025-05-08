@@ -113,7 +113,8 @@
 
                             // 관리자
                             .requestMatchers(HttpMethod.POST, "/api/admin/new").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/admin/**").hasAuthority("ROLE_ADMIN")
+                            .requestMatchers("/api/admin/**").permitAll()
+//                            .requestMatchers(HttpMethod.GET, "/api/admin/**").hasAuthority("ROLE_ADMIN")
 
                             // 채팅
                             .requestMatchers(HttpMethod.GET, "/api/chat/list/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")

@@ -29,7 +29,31 @@ public class ItemController {
     private final AuthService authService;
     private final SortService sortService;
 
-    // 1. 아이템 등록
+    // 1. 모든 아이템 목록 조회
+    @GetMapping("/items/list")
+    public ResponseEntity<Slice<ItemResponseDto>> getAllItems(
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "latest") String sortOption) {
+
+        Sort sortOrder = sortService.createSort(sortOption, "item"); // 🔹 SortService 사용
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        Slice<Item> itemSlice;
+
+        if(category!=null && category.isEmpty()) {
+            itemSlice =  itemService.getItemsByCategoryName(category, pageable);
+        } else {
+            // 카테고리 지정 없으면 전체 아이템 가져옴
+            itemSlice = itemService.getAllItems(pageable);
+        }
+
+        Slice<ItemResponseDto> itemDtoSlice = itemSlice.map(ItemResponseDto::fromForList);
+        return ResponseEntity.ok(itemDtoSlice);
+    }
+
+    // 2. 아이템 등록
     @PreAuthorize("hasAuthority('ROLE_USER')")
     @PostMapping("/items/new")
     public ResponseEntity<ItemResponseDto> createItem(
@@ -44,7 +68,7 @@ public class ItemController {
 
 
 
-    // 2. 아이템 수정
+    // 3. 아이템 수정
     @PreAuthorize("hasAuthority('ROLE_USER')")
     @PutMapping("/items/{itemId}")
     public ResponseEntity<ItemResponseDto> updateItem(
@@ -64,7 +88,7 @@ public class ItemController {
 
 
 
-    // 3. 아이템 상세(단건) 조회
+    // 4. 아이템 상세(단건) 조회
     @GetMapping("/items/{itemId}")
     public ResponseEntity<ItemResponseDto> getItem(@PathVariable Long itemId) {
         Item item = itemService.getItemById(itemId);
@@ -72,7 +96,7 @@ public class ItemController {
         return ResponseEntity.ok(responseDto);
     }
 
-    // 4. 특정 판매자가 등록한 아이템 조회
+    // 5. 특정 판매자가 등록한 아이템 조회
     @GetMapping("/items/seller/{memberId}")
     public ResponseEntity<Slice<ItemListDto>> getItemsBySeller(
             @PathVariable String memberId,
@@ -87,28 +111,6 @@ public class ItemController {
 
         return ResponseEntity.ok(itemDtoSlice);
     }
-
-
-    // 5. 모든 아이템 목록 조회
-    @GetMapping("/items/list")
-    public ResponseEntity<Slice<ItemResponseDto>> getAllItems(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "latest") String sortOption) {
-
-        Sort sortOrder = sortService.createSort(sortOption, "item"); // 🔹 SortService 사용
-        Pageable pageable = PageRequest.of(page, size, sortOrder);
-
-        Slice<Item> itemsSlice = itemService.getAllItems(pageable);
-        Slice<ItemResponseDto> itemDtoSlice = itemsSlice.map(ItemResponseDto::fromForList);
-
-
-        return ResponseEntity.ok(itemDtoSlice);
-    }
-
-
-
-
 
 
 

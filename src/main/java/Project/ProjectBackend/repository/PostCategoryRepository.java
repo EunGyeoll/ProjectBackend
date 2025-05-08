@@ -4,11 +4,12 @@ import Project.ProjectBackend.entity.PostCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface PostCategoryRepository extends JpaRepository<PostCategory, Long> {
-    Optional<PostCategory> findByCategoryName(String categoryName);
-    // 카테고리 이름 존재 여부
+    List<PostCategory> findByGroupNameOrderByCategoryNameAsc(String categoryName);
     boolean existsByCategoryName(String categoryName);
+    List<PostCategory> findByGroupNameOrderBySortOrderAsc(String groupName);
+
 }

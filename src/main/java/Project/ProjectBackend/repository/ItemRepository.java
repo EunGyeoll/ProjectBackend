@@ -21,6 +21,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @EntityGraph(attributePaths = "images")
     Slice<Item> findByItemNameContainingIgnoreCase(String itemName, Pageable pageable);
 
+    // 카테고리로 조회
+    Slice<Item> findByCategory_CategoryName(String categoryName, Pageable pageable);
 
 
 }

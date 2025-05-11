@@ -13,6 +13,7 @@ public class CommentResponseDto {
     private String content;      // 댓글 내용
     private LocalDateTime commentDate; // 댓글 작성일
     private Long parentCommentId;
+    private String imageUrl;
 
     public CommentResponseDto(Comment comment) {
         this.commentId = comment.getCommentId();                // 댓글 ID
@@ -21,5 +22,6 @@ public class CommentResponseDto {
         this.content = comment.getContent();                    // 댓글 내용
         this.commentDate = comment.getCommentDate();
         this.parentCommentId = comment.getParentComment() != null ? comment.getParentComment().getCommentId() : null;
+        this.imageUrl = comment.getImageUrl();
     }
 }

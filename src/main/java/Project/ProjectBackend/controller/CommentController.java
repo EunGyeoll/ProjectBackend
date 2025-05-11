@@ -16,6 +16,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,20 +31,22 @@ public class CommentController {
     private final AuthService authService;
 
 
-    // 1. 댓글 및 대댓글 작성
+    // 1. 댓글 작성
     @PostMapping("/comments/{postNo}")
     public ResponseEntity<CommentResponseDto> createComment(
-                @PathVariable Long postNo, @RequestBody @Valid  CommentRequestDto commentRequestDto) {
-        Member currentUser = authService.getCurrentUser();
+            @PathVariable Long postNo,
+            @RequestPart("commentData") @Valid CommentRequestDto commentRequestDto,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
 
+        Member currentUser = authService.getCurrentUser();
         Comment comment;
 
-        if(commentRequestDto.getParentCommentId() == null) {
+        if (commentRequestDto.getParentCommentId() == null) {
             // 댓글 작성
-            comment = commentService.addComment(postNo, commentRequestDto, currentUser);
+            comment = commentService.addCommentWithImage(postNo, commentRequestDto, currentUser, imageFile);
         } else {
             // 대댓글 작성
-            comment = commentService.addReply(postNo, commentRequestDto, currentUser);
+            comment = commentService.addReplyWithImage(postNo, commentRequestDto, currentUser, imageFile);
         }
         return ResponseEntity.ok(new CommentResponseDto(comment));
     }
@@ -52,17 +55,15 @@ public class CommentController {
 
     // 2. 댓글 수정
     @PutMapping("/comments/{commentId}")
-    public ResponseEntity<CommentResponseDto> updateComment(
+    public ResponseEntity<?> updateComment(
             @PathVariable Long commentId,
-            @RequestBody @Valid CommentUpdateRequestDto updateRequestDto) {
+            @RequestPart("commentData") @Valid CommentUpdateRequestDto commentData,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
 
-        Member currentUser = authService.getCurrentUser();
-
-        Comment updatedComment = commentService.updateComment(commentId, updateRequestDto, currentUser);
-
-        return ResponseEntity.ok(new CommentResponseDto(updatedComment));
+        Member currentUser = authService.getCurrentUser(); // 로그인 사용자
+        commentService.updateComment(commentId, commentData, imageFile, currentUser);
+        return ResponseEntity.ok().build();
     }
-
 
 
     // 3. 댓글 삭제

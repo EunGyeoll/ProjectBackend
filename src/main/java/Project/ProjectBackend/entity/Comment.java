@@ -50,6 +50,13 @@ public class Comment {
     @Column(nullable = false)
     private boolean isDeleted = false;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Image> images = new ArrayList<>();
+
 
     @Builder
     public Comment(Post post, Member writer, String content, Comment parentComment) {
@@ -72,5 +79,9 @@ public class Comment {
     // 삭제된 댓글으로 표시
     public void markAsdeleted() {
         this.isDeleted = true;
+    }
+
+    public void setImageUrl(String url) {
+        this.imageUrl = url;
     }
 }

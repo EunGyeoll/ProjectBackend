@@ -77,6 +77,27 @@ public class ImageService {
         return imageRepository.save(image);
     }
 
+
+    // 댓글 이미지 저장
+    public String saveCommentImage(MultipartFile imageFile, Comment comment) {
+        validateFile(imageFile);
+        String savedFilePath = saveSingleFile(imageFile);
+
+        // Image 엔티티 생성
+        Image image = Image.builder()
+                .imagePath(savedFilePath)
+                .originFileName(imageFile.getOriginalFilename())
+                .newFileName(new File(savedFilePath).getName())
+                .fileSize(imageFile.getSize())
+                .comment(comment) // 댓글과 연관 설정
+                .build();
+
+        imageRepository.save(image);
+
+        return savedFilePath;
+    }
+
+
     // 다중 이미지를 저장하는 공통 메서드 (게시글, 아이템, 리뷰에 사용)
     private List<Image> saveImagesInternal(List<MultipartFile> imageFiles, Post post, Item item, Review review) {
         List<Image> savedImages = new ArrayList<>();
@@ -197,6 +218,15 @@ public class ImageService {
     }
 
 
+    @Transactional
+    public void deleteImageByPath(String imagePath) {
+        if (imagePath == null) return;
+
+        Image image = imageRepository.findByImagePath(imagePath)
+                .orElseThrow(() -> new IllegalArgumentException("이미지를 찾을 수 없습니다: " + imagePath));
+
+        deleteImage(image); // 기존 deleteImage 메서드 재사용
+    }
 
 
 

@@ -2,6 +2,7 @@ package Project.ProjectBackend.entity;
 
 import Project.ProjectBackend.dto.ReviewResponseDto;
 import Project.ProjectBackend.entity.Item;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -47,9 +48,11 @@ public class Image {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    public void setItem(Item item) {
-        this.item = item;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comment_id")
+    @JsonIgnore
+    private Comment comment;
+
 
     public void setPost(Post post) {
         this.post = post;

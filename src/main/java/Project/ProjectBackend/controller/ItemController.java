@@ -42,10 +42,9 @@ public class ItemController {
 
         Slice<Item> itemSlice;
 
-        if(category!=null && category.isEmpty()) {
-            itemSlice =  itemService.getItemsByCategoryName(category, pageable);
+        if (category != null && !category.isEmpty()) {
+            itemSlice = itemService.getItemsByCategoryName(category, pageable);
         } else {
-            // 카테고리 지정 없으면 전체 아이템 가져옴
             itemSlice = itemService.getAllItems(pageable);
         }
 

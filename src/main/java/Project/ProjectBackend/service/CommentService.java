@@ -13,8 +13,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -24,6 +26,7 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final ImageService imageService;
 
     // 1-1. 댓글 작성
     @Transactional
@@ -66,21 +69,81 @@ public class CommentService {
         return commentRepository.save(reply);
     }
 
-
-    // 2. 댓글 수정
     @Transactional
-    public Comment updateComment(Long commentId, CommentUpdateRequestDto updateRequestDto, Member currentUser) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
+    public Comment addCommentWithImage(Long postId, CommentRequestDto requestDto, Member currentUser, MultipartFile imageFile) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다."));
 
-        if (!comment.getWriter().equals(currentUser)) {
-            throw new IllegalArgumentException("해당 댓글을 수정할 권한이 없습니다.");
+        Comment comment = Comment.builder()
+                .post(post)
+                .writer(currentUser)
+                .content(requestDto.getContent())
+                .build();
+
+        // 이미지 저장 로직 필요
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageUrl = imageService.saveCommentImage(imageFile, comment);
+            comment.setImageUrl(imageUrl);
         }
-
-        comment.setContent(updateRequestDto.getContent());
 
         return commentRepository.save(comment);
     }
+
+    @Transactional
+    public Comment addReplyWithImage(Long postId, CommentRequestDto requestDto, Member currentUser, MultipartFile imageFile) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다."));
+
+        Comment parent = commentRepository.findById(requestDto.getParentCommentId())
+                .orElseThrow(() -> new IllegalArgumentException("부모 댓글이 존재하지 않습니다."));
+
+        Comment reply = Comment.builder()
+                .post(post)
+                .writer(currentUser)
+                .content(requestDto.getContent())
+                .parentComment(parent)
+                .build();
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageUrl = imageService.saveCommentImage(imageFile, reply);
+            reply.setImageUrl(imageUrl);
+        }
+
+        parent.addChildComment(reply);
+        return commentRepository.save(reply);
+    }
+
+    // 2. 댓글 수정
+    @Transactional
+    public void updateComment(Long commentId, CommentUpdateRequestDto dto, MultipartFile imageFile, Member currentUser) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
+
+        // ✅ 작성자만 수정 가능
+        if (!comment.getWriter().getMemberId().equals(currentUser.getMemberId())) {
+            throw new AccessDeniedException("수정 권한이 없습니다.");
+        }
+
+        // ✅ 내용 수정
+        comment.setContent(dto.getContent());
+
+        // ✅ 이미지 수정 처리
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // 기존 이미지 삭제
+            if (comment.getImageUrl() != null) {
+                imageService.deleteImageByPath(comment.getImageUrl());
+                comment.setImageUrl(null);
+            }
+
+            // 새로운 이미지 저장
+            String imageUrl = imageService.saveCommentImage(imageFile, comment);
+            comment.setImageUrl(imageUrl);
+        }
+
+        // ✅ 저장
+        commentRepository.save(comment);
+    }
+
 
 
 

@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/post-categories")
@@ -18,29 +19,23 @@ public class PostCategoryController {
 
     // 전체 조회
     @GetMapping
-    public List<PostCategoryDto> getAll() {
-        return postCategoryRepository.findAll().stream()
+    public ResponseEntity<List<PostCategoryDto>> getAll() {
+        List<PostCategoryDto> categories = postCategoryRepository.findAll().stream()
                 .map(PostCategoryDto::from)
-                .toList();
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(categories);
     }
 
     // 그룹별 카테고리 조회
     @GetMapping("/group/{groupName}")
     public List<PostCategoryDto> getByGroup(@PathVariable String groupName) {
-        return postCategoryRepository.findByGroupNameOrderBySortOrderAsc(groupName).stream()
+        return postCategoryRepository.findByGroupNameOrderByCategoryNameAsc(groupName).stream()
+                // 관리자가 지정한 순서로 조회하려면 findByGroupNameOrderBySortOrderAsc으로
                 .map(PostCategoryDto::from)
                 .toList();
     }
 
-    
-    // 카테고리 정렬 순서 변경
-    @PatchMapping("/admin/post-categories/{id}/sort")
-    public ResponseEntity<?> updateSortOrder(@PathVariable Long id, @RequestParam Integer sortOrder) {
-        PostCategory category = postCategoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("카테고리 없음"));
-        category.setSortOrder(sortOrder);
-        postCategoryRepository.save(category);
-        return ResponseEntity.ok("정렬 순서 변경 완료");
-    }
+
 
 }

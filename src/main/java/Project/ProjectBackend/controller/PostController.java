@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
-public class PostController {
+public class  PostController {
 
     private final PostService postService;
     private final FileService fileService;
@@ -31,20 +31,27 @@ public class PostController {
     private final SortService sortService;
 
 
-    // 1. 게시글 등록
+
+    // 1-1. 게시글 등록 (이미지 없음, JSON 요청)
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @PostMapping("/posts/new")
-    public ResponseEntity<PostResponseDto> createPost(
-            @RequestPart(value = "postData") @Valid PostRequestDto postRequestDto,
-            @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
-
-        Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
-
-        // Post 생성 및 저장
-        Post createdPost = postService.createPost(postRequestDto, currentUser, imageFiles);
+    public ResponseEntity<PostResponseDto> createPost(@RequestBody PostRequestDto postRequestDto) {
+        Member currentUser = authService.getCurrentUser();
+        Post createdPost = postService.createPost(postRequestDto, currentUser, null);
         return ResponseEntity.ok(PostResponseDto.from(createdPost));
     }
 
+    // 2. 게시글 등록 (이미지 포함, multipart 요청)
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
+    @PostMapping("/posts/new-with-image")
+    public ResponseEntity<PostResponseDto> createPostWithImage(
+            @RequestPart("postData") @Valid PostRequestDto postRequestDto,
+            @RequestPart("imageFiles") List<MultipartFile> imageFiles) {
+
+        Member currentUser = authService.getCurrentUser();
+        Post createdPost = postService.createPost(postRequestDto, currentUser, imageFiles);
+        return ResponseEntity.ok(PostResponseDto.from(createdPost));
+    }
 
 
     // 2. 게시글 수정

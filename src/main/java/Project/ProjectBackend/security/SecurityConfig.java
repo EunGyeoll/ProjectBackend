@@ -84,9 +84,9 @@
                             .requestMatchers(HttpMethod.DELETE, "/api/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
                             // 게시글
+                             .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/posts/list").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/posts/writer/**").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
 
                             .requestMatchers(HttpMethod.POST, "/api/posts/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.PUT, "/api/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
@@ -115,6 +115,11 @@
                             .requestMatchers(HttpMethod.POST, "/api/admin/new").permitAll()
                             .requestMatchers("/api/admin/**").permitAll()
 //                            .requestMatchers(HttpMethod.GET, "/api/admin/**").hasAuthority("ROLE_ADMIN")
+
+
+                            // 카테고리
+                            .requestMatchers("/api/post-categories/**").permitAll()
+                            .requestMatchers("/api/item-categories/**").permitAll()
 
                             // 채팅
                             .requestMatchers(HttpMethod.GET, "/api/chat/list/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")

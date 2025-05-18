@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class FavoriteItemService {
 
+
     private final FavoriteRepository favoriteRepository;
     private final ItemRepository itemRepository;
     private final MemberRepository memberRepository;
@@ -74,6 +75,11 @@ public class FavoriteItemService {
         return favoriteRepository.existsByMemberAndItem(member, item);
     }
 
+
+    // 찜 된 횟수 카운트
+    public long countFavoritesByItemId(Long itemId) {
+        return favoriteRepository.countByItem_ItemId(itemId);
+    }
 
     // 특정 사용자가 찜한 상품 목록 조회
     @Transactional(readOnly = true)

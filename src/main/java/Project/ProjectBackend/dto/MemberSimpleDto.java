@@ -32,15 +32,11 @@ public class MemberSimpleDto {
     public static MemberSimpleDto from(Member member) {
         String profileImageUrl = null;
 
-
         if (member.getProfileImage() != null) {
-            String fileName = member.getProfileImage().getNewFileName();
-            profileImageUrl = "/api/images/" + fileName;
-
-            log.info("🎯 최종 프로필 이미지 URL: {}", profileImageUrl);
-        } else {
-            log.info("🛑 프로필 이미지가 null입니다.");
+            profileImageUrl = member.getProfileImage().getImagePath(); // S3 URL 직접 사용
+            log.info("최종 프로필 이미지 URL: {}", profileImageUrl);
         }
+
 
         return MemberSimpleDto.builder()
                 .memberId(member.getMemberId())

@@ -44,6 +44,13 @@ public class FavoriteItemController {
         return ResponseEntity.ok(isFavorite);
     }
 
+    // 찜 된 횟수 카운트
+    @GetMapping("/favorites/count/{itemId}")
+    public ResponseEntity<Long> countFavorite(@PathVariable Long itemId) {
+        long count = favoriteItemService.countFavoritesByItemId(itemId);
+        return ResponseEntity.ok(count);
+    }
+
 
     // 특정 사용자가 찜한 상품 목록
     @GetMapping("/favorites/list")

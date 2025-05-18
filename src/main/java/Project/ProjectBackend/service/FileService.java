@@ -12,47 +12,37 @@
     import java.nio.file.Paths;
     import java.util.UUID;
 
+
     @Service
     public class FileService {
 
         @Value("${file.upload-dir}") // application.yml의 경로 사용
         private String uploadDir;
 
-    //    @Value("${file.base-url}") // base URL 사용
-    //    private String baseUrl;
-
-        public Image uploadImage(MultipartFile file) {
-            // 이미지를 저장하면서 DTO 생성
-            String uniqueFilename = saveFile(file);
-            return Image.builder()
-                    .originFileName(file.getOriginalFilename())
-                    .imagePath(uniqueFilename)
-                    .fileSize(file.getSize())
-                    .build();
-        }
 
 
         public String saveFile(MultipartFile file) {
             try {
-                // 원본 파일 이름 가져오기
-                String originalFilename = file.getOriginalFilename();
-
-                // 저장 경로 설정
-                File destinationFile = new File(uploadDir, originalFilename);
-
-                // 같은 이름의 파일이 존재할 경우 충돌 방지
-                int count = 1;
-                while (destinationFile.exists()) {
-                    String fileNameWithoutExt = originalFilename.substring(0, originalFilename.lastIndexOf('.'));
-                    String fileExtension = originalFilename.substring(originalFilename.lastIndexOf('.'));
-                    destinationFile = new File(uploadDir, fileNameWithoutExt + "_" + count + fileExtension);
-                    count++;
+                // 1. 원본 파일 이름
+                String originalFilename = file.getOriginalFilename(); // 예: IMG_3594.jpg
+                if (originalFilename == null) {
+                    throw new RuntimeException("파일 이름이 존재하지 않습니다.");
                 }
 
-                // 4. 파일 저장
+                // 2. 파일 이름과 확장자 분리
+                String fileNameWithoutExt = originalFilename.substring(0, originalFilename.lastIndexOf('.'));
+                String fileExtension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+
+                // 3. UUID 붙이되, 뒤에 붙이기
+                String newFileName = fileNameWithoutExt + "_" + UUID.randomUUID() + fileExtension;
+
+                // 4. 저장 경로 설정
+                File destinationFile = new File(uploadDir, newFileName);
+
+                // 5. 파일 저장
                 file.transferTo(destinationFile);
 
-                // 5. 저장된 파일 경로 반환
+                // 6. 저장된 파일 경로 반환
                 return destinationFile.getAbsolutePath();
             } catch (IOException e) {
                 throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);

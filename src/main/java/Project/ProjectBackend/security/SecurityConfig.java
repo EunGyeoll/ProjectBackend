@@ -54,10 +54,9 @@
                             .requestMatchers("/api/images/**").permitAll()
                             .requestMatchers("/", "/index.html", "/stomptest.html", "/static/**").permitAll()
                             .requestMatchers("/ws/chat/**", "/sub/**", "/pub/**").permitAll()
+                            .requestMatchers( "/test-upload", "/test-upload/**").permitAll()
 
                             // 회원가입, 로그인
-
-
                             .requestMatchers("/api/members/signup").permitAll()
                             .requestMatchers("/api/members/login").permitAll()
 
@@ -83,7 +82,13 @@
                             .requestMatchers(HttpMethod.PUT, "/api/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.DELETE, "/api/items/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
-                            // 게시글
+                            // 아이템 찜
+                            .requestMatchers(HttpMethod.GET, "/api/favorites/check/{itemId}").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/favorites/count/{itemId}").permitAll()
+                            .requestMatchers("/api/favorites/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+
+
+                             // 게시글
                              .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/posts/list").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/posts/writer/**").permitAll()
@@ -91,6 +96,9 @@
                             .requestMatchers(HttpMethod.POST, "/api/posts/new").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.PUT, "/api/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.DELETE, "/api/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+
+                            // 게시글 좋아요
+
 
                             // 댓글
                             .requestMatchers(HttpMethod.POST, "/api/comments/{postNo}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")

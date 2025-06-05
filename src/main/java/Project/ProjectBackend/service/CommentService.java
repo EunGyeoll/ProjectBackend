@@ -115,7 +115,7 @@ public class CommentService {
 
     // 2. 댓글 수정
     @Transactional
-    public void updateComment(Long commentId, CommentUpdateRequestDto dto, MultipartFile imageFile, Member currentUser) {
+    public void updateComment(Long commentId, CommentUpdateRequestDto dto, MultipartFile imageFile, String deleteImageFlag,Member currentUser) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
 
@@ -126,23 +126,44 @@ public class CommentService {
 
         // ✅ 내용 수정
         comment.setContent(dto.getContent());
+        // ✅ 이미지 삭제 요청 처리 (삭제만 할 경우)
+        if ("true".equals(deleteImageFlag)) {
+            if (comment.getImageUrl() != null) {
+                imageService.deleteImageByPath(comment.getImageUrl());
+                comment.setImageUrl(null);
+            }
+        }
 
-        // ✅ 이미지 수정 처리
+        // ✅ 새 이미지 업로드 요청
         if (imageFile != null && !imageFile.isEmpty()) {
-            // 기존 이미지 삭제
+            // 기존 이미지 삭제 (중복 방지)
             if (comment.getImageUrl() != null) {
                 imageService.deleteImageByPath(comment.getImageUrl());
                 comment.setImageUrl(null);
             }
 
-            // 새로운 이미지 저장
             String imageUrl = imageService.saveCommentImage(imageFile, comment);
             comment.setImageUrl(imageUrl);
         }
 
-        // ✅ 저장
         commentRepository.save(comment);
     }
+//        // ✅ 이미지 수정 처리
+//        if (imageFile != null && !imageFile.isEmpty()) {
+//            // 기존 이미지 삭제
+//            if (comment.getImageUrl() != null) {
+//                imageService.deleteImageByPath(comment.getImageUrl());
+//                comment.setImageUrl(null);
+//            }
+//
+//            // 새로운 이미지 저장
+//            String imageUrl = imageService.saveCommentImage(imageFile, comment);
+//            comment.setImageUrl(imageUrl);
+//        }
+//
+//        // ✅ 저장
+//        commentRepository.save(comment);
+//    }
 
 
 
@@ -162,6 +183,7 @@ public class CommentService {
         comment.markAsdeleted();
         commentRepository.save(comment);
     }
+
 
 
     // 4. 특정 게시글의 댓글, 대댓글 조회

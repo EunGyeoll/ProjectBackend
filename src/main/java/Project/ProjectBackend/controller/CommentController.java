@@ -57,10 +57,11 @@ public class CommentController {
     public ResponseEntity<?> updateComment(
             @PathVariable Long commentId,
             @RequestPart("commentData") @Valid CommentUpdateRequestDto commentData,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
+            @RequestPart(value = "image", required = false) MultipartFile imageFile,
+            @RequestPart(value = "deleteImage", required = false) String deleteImageFlag) {
 
         Member currentUser = authService.getCurrentUser(); // 로그인 사용자
-        commentService.updateComment(commentId, commentData, imageFile, currentUser);
+        commentService.updateComment(commentId, commentData, imageFile, deleteImageFlag, currentUser);
         return ResponseEntity.ok().build();
     }
 

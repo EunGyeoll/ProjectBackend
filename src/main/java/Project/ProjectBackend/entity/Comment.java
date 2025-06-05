@@ -47,7 +47,7 @@ public class Comment {
     private List<Comment> childComments = new ArrayList<>(); // 대댓글 리스트
 
 
-    @Column(nullable = false)
+    @Column(name = "deleted", nullable = false)
     private boolean isDeleted = false;
 
     @Column(name = "image_url")

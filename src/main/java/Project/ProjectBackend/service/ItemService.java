@@ -148,19 +148,6 @@ public class ItemService {
 
 
 
-
-
-    // 6. 키워드 검색 조회
-    public Slice<Item> searchItemsByKeyword(String keyword, Pageable pageable) {
-
-        Slice<Item> items = itemRepository.findByItemNameContainingIgnoreCase(
-                keyword, pageable);
-
-        return items;
-    }
-
-
-
     // 7. 아이템 삭제
     public void deleteItem(Long itemId) {
         Item item = itemRepository.findById(itemId)
@@ -168,6 +155,17 @@ public class ItemService {
         itemRepository.delete(item);
     }
 
+
+    // 아이템 검색
+    @Transactional(readOnly = true)
+    public Slice<Item> searchItemsByKeyword(String keyword, Pageable pageable) {
+        return itemRepository.searchByKeyword(keyword, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Slice<Item> searchItemsByKeywordAndCategory(String keyword, String category, Pageable pageable) {
+        return itemRepository.searchByKeywordAndCategory(keyword, category, pageable);
+    }
 
 
 //    private String extractFileNameFromPath(String path) {

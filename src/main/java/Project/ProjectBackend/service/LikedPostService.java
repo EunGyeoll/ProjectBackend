@@ -69,6 +69,11 @@ public class LikedPostService {
         return likedPostRepository.existsByMemberAndPost(member, post);
     }
 
+    // 좋아요 된 횟수 카운트
+    public long countLikesByPostNo(Long postNo) {
+        return likedPostRepository.countByPost_PostNo(postNo);
+    }
+
     // 특정 사용자가 좋아요한 게시글 목록 조회
     @Transactional(readOnly = true)
     public Slice<LikedPostListDto> getLikedPostsByMember(String memberId, Pageable pageable) {

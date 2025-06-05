@@ -14,6 +14,8 @@ public class CommentResponseDto {
     private LocalDateTime commentDate; // 댓글 작성일
     private Long parentCommentId;
     private String imageUrl;
+    private boolean isDeleted;
+
 
     public CommentResponseDto(Comment comment) {
         this.commentId = comment.getCommentId();                // 댓글 ID
@@ -23,5 +25,6 @@ public class CommentResponseDto {
         this.commentDate = comment.getCommentDate();
         this.parentCommentId = comment.getParentComment() != null ? comment.getParentComment().getCommentId() : null;
         this.imageUrl = comment.getImageUrl();
+        this.isDeleted = comment.isDeleted();
     }
 }

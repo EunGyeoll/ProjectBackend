@@ -18,6 +18,5 @@ public interface FavoriteRepository extends JpaRepository<FavoriteItem, Long> {
     Optional<FavoriteItem> findByMemberAndItem(Member member, Item item);
     Slice<FavoriteItem> findByMember(Member member, Pageable pageable);
     long countByItem_ItemId(Long itemId);
-
     }
 

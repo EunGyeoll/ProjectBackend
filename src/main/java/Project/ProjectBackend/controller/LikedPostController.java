@@ -45,6 +45,13 @@ public class LikedPostController {
     }
 
 
+    // 좋아요 된 횟수 카운트
+    @GetMapping("/likes/count/{postNo}")
+    public ResponseEntity<Long> countLiked(@PathVariable Long postNo) {
+        long count = likedPostService.countLikesByPostNo(postNo);
+        return ResponseEntity.ok(count);
+    }
+
     // 로그인한 사용자의 좋아요한 게시글 목록 조회
     @GetMapping("/likes/list")
     public ResponseEntity<Slice<LikedPostListDto>> getLikedPosts(

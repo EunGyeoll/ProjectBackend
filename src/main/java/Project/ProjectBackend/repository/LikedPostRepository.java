@@ -13,5 +13,5 @@ public interface LikedPostRepository extends JpaRepository<LikedPost, Long> {
     boolean existsByMemberAndPost(Member member, Post post);
     Optional<LikedPost> findByMemberAndPost(Member member, Post post);
     Slice<LikedPost> findByMember(Member member, Pageable pageable);
-
+    long countByPost_PostNo(long postNo);
 }

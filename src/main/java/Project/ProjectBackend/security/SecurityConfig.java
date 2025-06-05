@@ -98,7 +98,9 @@
                             .requestMatchers(HttpMethod.DELETE, "/api/posts/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
                             // 게시글 좋아요
-
+                            .requestMatchers(HttpMethod.GET, "/api/likes/check/{postNo}").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/likes/count/{postNo}").permitAll()
+                            .requestMatchers("/api/likes/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
                             // 댓글
                             .requestMatchers(HttpMethod.POST, "/api/comments/{postNo}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
@@ -133,6 +135,8 @@
                             .requestMatchers(HttpMethod.GET, "/api/chat/list/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                             .requestMatchers(HttpMethod.GET, "/api/chat/history/{sender}/{receiver}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 
+                            // 검색
+                            .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
                             .anyRequest().authenticated()
                     )
                     .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

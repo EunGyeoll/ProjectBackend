@@ -169,4 +169,14 @@ public class PostService {
         }
         postRepository.deleteById(postNo);
     }
+
+    @Transactional(readOnly = true)
+    public Slice<Post> searchPostsByKeyword(String keyword, Pageable pageable) {
+        return postRepository.searchByKeyword(keyword, pageable);
+    }
+
+    public Slice<Post> searchPostsByKeywordAndCategory(String keyword, String categoryName, Pageable pageable) {
+        return postRepository.searchByKeywordAndCategory(keyword, categoryName, pageable);
+    }
+
 }

@@ -4,6 +4,7 @@ import Project.ProjectBackend.controller.AdminController;
 import Project.ProjectBackend.entity.Image;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.entity.Post;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +22,7 @@ public class PostResponseDto {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
-    private Long postNo; // 게시글 번호
+    private Long postId; // 게시글 번호
     private String title;
     private String content;
     private String writerId; // writerName 은 memberId로
@@ -35,6 +36,9 @@ public class PostResponseDto {
     private String representativeImagePath; // 대표 이미지 경로
     private List<String> imagePaths; // 이미지 경로 리스트
     private int commentCount; // 댓글 수
+    @JsonProperty("isOwner")
+    private boolean isOwner;
+
 
     // 게시글 단일 조회를 위한 Dto 변환 메서드
     public static PostResponseDto from(Post post) {
@@ -53,7 +57,7 @@ public class PostResponseDto {
         int commentCount = post.getComments().size();
 
         return PostResponseDto.builder()
-                .postNo(post.getPostNo())
+                .postId(post.getPostId())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .writerId(writer != null ? writer.getMemberId() : null)
@@ -71,6 +75,52 @@ public class PostResponseDto {
     }
 
 
+
+    public static PostResponseDto from(Post post, String currentUserId) {
+        Member writer = post.getWriter();
+        String writerId = writer != null ? writer.getMemberId() : null;
+        boolean isOwner = writerId != null && writerId.equals(currentUserId);
+
+        logger.info("currentUserId = {}", currentUserId);
+        logger.info("writerId = {}", writerId);
+        logger.info("isOwner = {}", isOwner);
+
+
+        // 이미지 경로 리스트 생성
+        List<String> imagePaths = post.getImages().stream()
+                .map(Image::getImagePath)
+                .collect(Collectors.toList());
+
+        // 대표 이미지 경로
+        String representativeImagePath = imagePaths.isEmpty() ? null : imagePaths.get(0);
+        logger.info("이미지 경로 목록: {}", imagePaths);
+
+        // 댓글 수 계산
+        int commentCount = post.getComments().size();
+
+        return PostResponseDto.builder()
+                .postId(post.getPostId())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .writerId(writerId)
+                .writerNickname(writer != null ? writer.getNickName() : null)
+                .profileImageUrl(writer != null ? writer.getProfileImageUrl() : null)
+                .categoryId(post.getPostCategory().getCategoryId())
+                .categoryName(post.getPostCategory().getCategoryName())
+                .postDate(post.getPostDate())
+                .hitCount(post.getHitCount())
+                .likeCount(post.getLikeCount())
+                .representativeImagePath(representativeImagePath)
+                .imagePaths(imagePaths)
+                .commentCount(post.getComments().size())
+                .isOwner(isOwner)
+                .build();
+    }
+
+
+
+
+
     // 게시글 목록 조회를 위한 Dto 변환 메서드
     public static PostResponseDto fromForList(Post post) {
         Member writer = post.getWriter();
@@ -81,7 +131,7 @@ public class PostResponseDto {
                 : post.getImages().get(0).getImagePath();
 
         return PostResponseDto.builder()
-                .postNo(post.getPostNo())
+                .postId(post.getPostId())
                 .title(post.getTitle())
                 .content(null) // 목록에서는 내용 제외
                 .writerId(writer != null ? writer.getMemberId() : null)
@@ -97,4 +147,6 @@ public class PostResponseDto {
                 .build();
 
     }
+
+
 }

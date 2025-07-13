@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -26,7 +25,8 @@ public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long postNo; // 게시글 번호
+    @Column(name = "post_id") // ❗ 필수
+    private Long postId; // 게시글 번호
 
     @Column(length = 30, nullable = false)
     private String title; // 제목
@@ -42,6 +42,7 @@ public class Post {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_category_id", nullable = false)
+
     private PostCategory postCategory;
 
     @CreationTimestamp

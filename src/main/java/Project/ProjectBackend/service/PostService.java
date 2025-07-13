@@ -5,9 +5,7 @@ import Project.ProjectBackend.entity.Image;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.entity.Post;
 import Project.ProjectBackend.entity.PostCategory;
-import Project.ProjectBackend.repository.MemberRepository;
-import Project.ProjectBackend.repository.PostCategoryRepository;
-import Project.ProjectBackend.repository.PostRepository;
+import Project.ProjectBackend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +29,10 @@ public class PostService {
     private final PostCategoryRepository postCategoryRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(PostService.class);
+    private final LikedPostRepository likedPostRepository;
+    private final CommentRepository commentRepository;
+    private final ImageRepository imageRepository;
+
 
     // 1. 게시글 등록
     @Transactional
@@ -50,7 +52,7 @@ public class PostService {
 
         // post 먼저 저장하여 postno 확보
         Post savedPost = postRepository.save(post);
-        logger.info("Item created with ID: {}", savedPost.getPostNo());
+        logger.info("Item created with ID: {}", savedPost.getPostId());
 
         // 이미지 저장
         if (imageFiles != null && !imageFiles.isEmpty()) {
@@ -128,15 +130,26 @@ public class PostService {
 
 
     // 3. 게시글 상세(단건) 조회
-    public PostResponseDto getPost(Long postNo) {
+//    public PostResponseDto getPost(Long postNo) {
+//        Post post = postRepository.findById(postNo)
+//                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+//
+//        // 조회수 증가
+//        post.increaseHitCount();
+//        postRepository.save(post);
+//
+//        return PostResponseDto.from(post); // DTO 반환
+//    }
+
+    @Transactional
+    public PostResponseDto getPost(Long postNo, String currentUserId) {
         Post post = postRepository.findById(postNo)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
 
-        // 조회수 증가
         post.increaseHitCount();
         postRepository.save(post);
 
-        return PostResponseDto.from(post); // DTO 반환
+        return PostResponseDto.from(post, currentUserId);
     }
 
 
@@ -163,11 +176,23 @@ public class PostService {
 
     // 7.  게시글 삭제
     @Transactional
-    public void deletePost(Long postNo) {
-        if (!postRepository.existsById(postNo)) {
+    public void deletePost(Long postId) {
+        if (!postRepository.existsById(postId)) {
             throw new IllegalArgumentException("게시글이 존재하지 않습니다.");
         }
-        postRepository.deleteById(postNo);
+
+        // 게시글 이미지 삭제 (S3 + DB)
+        List<Image> images = imageRepository.findAllByPost_PostId(postId);
+        imageService.deleteImages(images);  // S3Uploader도 같이 처리
+
+        // 좋아요 삭제
+        likedPostRepository.deleteAllByPost_PostId(postId);
+
+        // 댓글 삭제
+        commentRepository.deleteAllByPost_PostId(postId);
+
+        // 게시글 삭제
+        postRepository.deleteById(postId);
     }
 
     @Transactional(readOnly = true)

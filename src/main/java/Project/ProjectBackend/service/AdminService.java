@@ -669,11 +669,11 @@ public class AdminService {
 
         // post 먼저 저장하여 postId 확보
         Post savedPost = postRepository.save(post);
-        logger.info("Item created with ID: {}", savedPost.getPostNo());
+        logger.info("Item created with ID: {}", savedPost.getPostId());
 
         // 이미지 저장
         if (imageFiles != null && !imageFiles.isEmpty()) {
-            logger.info("Saving {} images for item: {}", imageFiles.size(), post.getPostNo());
+            logger.info("Saving {} images for item: {}", imageFiles.size(), post.getPostId());
             List<Image> images = imageService.saveImagesForPost(imageFiles, post);
             post.setImages(images);
 
@@ -684,7 +684,7 @@ public class AdminService {
 
             // 이미지 설정 후 다시 저장
             savedPost = postRepository.save(savedPost);
-            logger.info("Post created with ID: {}", savedPost.getPostNo());
+            logger.info("Post created with ID: {}", savedPost.getPostId());
         }
 
         return savedPost;

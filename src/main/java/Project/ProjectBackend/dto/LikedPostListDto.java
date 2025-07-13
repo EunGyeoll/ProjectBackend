@@ -24,7 +24,7 @@ public class LikedPostListDto {
         return LikedPostListDto.builder()
                 .likedId(likedPost.getLikedId())
                 .memberId(likedPost.getMember().getMemberId()) // 좋아요 누른 회원 ID
-                .postNo(likedPost.getPost().getPostNo()) // 좋아요 눌린 게시글 ID
+                .postNo(likedPost.getPost().getPostId()) // 좋아요 눌린 게시글 ID
                 .title(likedPost.getPost().getTitle())
                 .postDate(likedPost.getPost().getPostDate())
                 .representativeImagePath(likedPost.getPost().getRepresentativeImagePath()) // 게시글의 대표 이미지 경로

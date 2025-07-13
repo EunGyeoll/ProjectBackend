@@ -56,26 +56,40 @@ public class  PostController {
 
     // 2. 게시글 수정
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
-    @PutMapping("/posts/{postNo}")
+    @PutMapping("/posts/{postId}")
     public ResponseEntity<PostResponseDto> updatePost(
-            @PathVariable Long postNo,
+            @PathVariable Long postId,
             @RequestPart("postData") @Valid PostRequestDto postRequestDto,
             @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
 
         Member currentUser = authService.getCurrentUser(); // 현재 로그인된 사용자
 
-        PostResponseDto updatedPost = PostResponseDto.from(postService.updatePost(postNo, postRequestDto, imageFiles, currentUser));
+        PostResponseDto updatedPost = PostResponseDto.from(postService.updatePost(postId, postRequestDto, imageFiles, currentUser));
 
         return ResponseEntity.ok(updatedPost);
     }
 
 
     // 3. 게시글 상세(단건) 조회
-    @GetMapping("/posts/{postNo}")
-    public ResponseEntity<PostResponseDto> getPost(@PathVariable Long postNo) {
-        PostResponseDto post = postService.getPost(postNo);
-        return ResponseEntity.ok(post);
+//    @GetMapping("/posts/{postNo}")
+//    public ResponseEntity<PostResponseDto> getPost(@PathVariable Long postNo) {
+//        PostResponseDto post = postService.getPost(postNo);
+//        return ResponseEntity.ok(post);
+//    }
+
+    @GetMapping("/posts/{postId}")
+    public ResponseEntity<PostResponseDto> getPost(@PathVariable Long postId) {
+        Member currentUser = authService.getCurrentUserOrNull();
+
+        // 로그인되지 않았다면 null 반환
+        String currentUserId = (currentUser != null) ? currentUser.getMemberId() : null;
+
+        PostResponseDto responseDto = postService.getPost(postId, currentUserId);
+
+        return ResponseEntity.ok(responseDto);
     }
+
+
 
     // 4. 모든 게시글 목록 조회
     @GetMapping("/posts/list")

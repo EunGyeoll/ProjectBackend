@@ -46,4 +46,19 @@ public class AuthService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken);
     }
+
+    // 현재 사용자 정보 가져오거나 null 반환
+    public Member getCurrentUserOrNull() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication instanceof AnonymousAuthenticationToken ||
+                "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
+
+        String userId = authentication.getName();
+        return memberRepository.findByMemberId(userId).orElse(null);
+    }
+
 }

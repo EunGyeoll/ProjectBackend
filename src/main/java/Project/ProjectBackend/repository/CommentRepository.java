@@ -13,5 +13,5 @@ import java.util.List;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     Slice<Comment> findByPostOrderByCommentDateAsc(Post post, Pageable pageable); // 특정 게시글의 댓글 조회
-
+    void deleteAllByPost_PostId(Long postId);
 }

@@ -3,11 +3,15 @@ package Project.ProjectBackend.service;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,6 +20,7 @@ import java.util.UUID;
 public class S3Uploader {
 
     private final AmazonS3 amazonS3;
+    private final Logger logger = LoggerFactory.getLogger(S3Uploader.class);
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -44,7 +49,12 @@ public class S3Uploader {
 
     public void delete(String fileUrl) {
         String fileKey = fileUrl.substring(fileUrl.indexOf(".com/") + 5);
-        amazonS3.deleteObject(bucket, fileKey);
+        String decodedKey = URLDecoder.decode(fileKey, StandardCharsets.UTF_8);
+
+//        logger.info("S3 삭제 대상 key: {}", fileKey);  // 이 값이 실제 S3의 키와 일치해야 함
+        logger.info("디코딩된 S3 삭제 대상 key: {}", decodedKey);
+
+        amazonS3.deleteObject(bucket, decodedKey);
     }
 
     private void validateImageFile(MultipartFile file) {

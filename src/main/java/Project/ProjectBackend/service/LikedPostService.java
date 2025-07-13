@@ -70,8 +70,8 @@ public class LikedPostService {
     }
 
     // 좋아요 된 횟수 카운트
-    public long countLikesByPostNo(Long postNo) {
-        return likedPostRepository.countByPost_PostNo(postNo);
+    public long countLikesByPostNo(Long postId) {
+        return likedPostRepository.countByPost_PostId(postId);
     }
 
     // 특정 사용자가 좋아요한 게시글 목록 조회

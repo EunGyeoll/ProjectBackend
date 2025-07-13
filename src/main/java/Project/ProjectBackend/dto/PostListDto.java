@@ -21,7 +21,7 @@ public class PostListDto {
 
     public static PostListDto from(Post post) {
         return PostListDto.builder()
-                .postNo(post.getPostNo())
+                .postNo(post.getPostId())
                 .title(post.getTitle())
                 .writerId(post.getWriter().getMemberId())
                 .createdDate(post.getPostDate())

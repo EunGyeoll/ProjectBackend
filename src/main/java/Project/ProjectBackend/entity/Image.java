@@ -5,6 +5,9 @@ import Project.ProjectBackend.entity.Item;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -19,6 +22,10 @@ public class Image {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "image_id")
     private Long imageId;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime imageDate;
 
     @Column(nullable = false)
     private String originFileName;

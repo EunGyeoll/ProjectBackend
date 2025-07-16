@@ -52,6 +52,7 @@ dependencies {
 	// AWS S3
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.686'
 
+	implementation 'org.jsoup:jsoup:1.15.3'
 
 }
 

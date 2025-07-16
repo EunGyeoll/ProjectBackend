@@ -11,12 +11,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/test-upload")
+@RequestMapping("/api")
 public class S3TestController {
 
     private final S3Uploader s3Uploader;
 
-    @PostMapping
+    @PostMapping("/test-upload")
     public ResponseEntity<String> upload(@RequestPart MultipartFile file) {
         String url = s3Uploader.upload(file, "test");
         return ResponseEntity.ok(url);

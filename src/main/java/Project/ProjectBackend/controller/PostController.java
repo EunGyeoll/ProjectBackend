@@ -32,27 +32,15 @@ public class  PostController {
 
 
 
-    // 1-1. 게시글 등록 (이미지 없음, JSON 요청)
+    // 1. 게시글 등록
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
-    @PostMapping("/posts/new")
-    public ResponseEntity<PostResponseDto> createPost(@RequestBody PostRequestDto postRequestDto) {
+    @PostMapping("/posts")
+    public ResponseEntity<PostResponseDto> createPost(@RequestBody @Valid PostRequestDto postRequestDto) {
         Member currentUser = authService.getCurrentUser();
-        Post createdPost = postService.createPost(postRequestDto, currentUser, null);
+        Post createdPost = postService.createPost(postRequestDto, currentUser);
+
         return ResponseEntity.ok(PostResponseDto.from(createdPost));
     }
-
-    // 2. 게시글 등록 (이미지 포함, multipart 요청)
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
-    @PostMapping("/posts/new-with-image")
-    public ResponseEntity<PostResponseDto> createPostWithImage(
-            @RequestPart("postData") @Valid PostRequestDto postRequestDto,
-            @RequestPart("imageFiles") List<MultipartFile> imageFiles) {
-
-        Member currentUser = authService.getCurrentUser();
-        Post createdPost = postService.createPost(postRequestDto, currentUser, imageFiles);
-        return ResponseEntity.ok(PostResponseDto.from(createdPost));
-    }
-
 
     // 2. 게시글 수정
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
@@ -71,12 +59,6 @@ public class  PostController {
 
 
     // 3. 게시글 상세(단건) 조회
-//    @GetMapping("/posts/{postNo}")
-//    public ResponseEntity<PostResponseDto> getPost(@PathVariable Long postNo) {
-//        PostResponseDto post = postService.getPost(postNo);
-//        return ResponseEntity.ok(post);
-//    }
-
     @GetMapping("/posts/{postId}")
     public ResponseEntity<PostResponseDto> getPost(@PathVariable Long postId) {
         Member currentUser = authService.getCurrentUserOrNull();
@@ -147,6 +129,8 @@ public class  PostController {
     @DeleteMapping("/posts/{postNo}")
     public ResponseEntity<?> deletePost(@PathVariable Long postNo) {
         postService.deletePost(postNo);
+
+
         return ResponseEntity.ok("게시글 삭제 성공!");
     }
 }

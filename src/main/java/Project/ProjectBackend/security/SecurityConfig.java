@@ -137,6 +137,9 @@
 
                             // 검색
                             .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
+
+                            // 사진 업로드
+                            .requestMatchers("/api/test-upload").permitAll()
                             .anyRequest().authenticated()
                     )
                     .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

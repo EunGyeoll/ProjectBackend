@@ -7,6 +7,8 @@ import Project.ProjectBackend.entity.Post;
 import Project.ProjectBackend.entity.PostCategory;
 import Project.ProjectBackend.repository.*;
 import lombok.RequiredArgsConstructor;
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
 
 import java.io.File;
 import java.util.List;
@@ -36,12 +39,12 @@ public class PostService {
 
     // 1. 게시글 등록
     @Transactional
-    public Post createPost(PostRequestDto postRequestDto, Member currentUser, List<MultipartFile> imageFiles) {
-        // PostCategory 조회
+    public Post createPost(PostRequestDto postRequestDto, Member currentUser) {
+        // 1. 게시판 카테고리 조회
         PostCategory postCategory = postCategoryRepository.findById(postRequestDto.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판 카테고리입니다."));
 
-        // Post 엔티티 생성
+        // 2. Post 생성 및 저장
         Post post = Post.builder()
                 .writer(currentUser)
                 .title(postRequestDto.getTitle())
@@ -50,38 +53,21 @@ public class PostService {
                 .postCategory(postCategory)
                 .build();
 
-        // post 먼저 저장하여 postno 확보
         Post savedPost = postRepository.save(post);
-        logger.info("Item created with ID: {}", savedPost.getPostId());
 
-        // 이미지 저장
-        if (imageFiles != null && !imageFiles.isEmpty()) {
-            List<Image> images = imageService.saveImagesForPost(imageFiles, post);
+        // 3. HTML 내용에서 이미지 url 추출 -> DB 저장
+        List<String> imageUrls = imageService.extractImageUrlsFromContent(postRequestDto.getContent());
+        if(!imageUrls.isEmpty()) {
+            List<Image> images = imageService.registerImagesFromContent(imageUrls, savedPost);
             post.setImages(images);
 
-            // 대표 이미지 설정
-            if (!images.isEmpty()) {
-                post.setRepresentativeImagePath(images.get(0).getImagePath());
-            }
+            // 대표이미지 설정
+            post.setRepresentativeImagePath(images.get(0).getImagePath());
 
-            // 이미지 설정 후 다시 저장
-            savedPost= postRepository.save(post);
+            savedPost = postRepository.save(post);
         }
+
         return savedPost;
-    }
-
-
-    private String extractFileNameFromPath(String path) {
-        return path.substring(path.lastIndexOf("/") + 1);
-    }
-
-    private String generateUniqueFileName(String path) {
-        return UUID.randomUUID() + "_" + extractFileNameFromPath(path);
-    }
-
-    private long getFileSize(String path) {
-        File file = new File(path);
-        return file.exists() ? file.length() : 0L;
     }
 
 
@@ -203,5 +189,8 @@ public class PostService {
     public Slice<Post> searchPostsByKeywordAndCategory(String keyword, String categoryName, Pageable pageable) {
         return postRepository.searchByKeywordAndCategory(keyword, categoryName, pageable);
     }
+
+
+
 
 }

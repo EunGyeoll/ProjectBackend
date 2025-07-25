@@ -1,5 +1,7 @@
 package Project.ProjectBackend.service;
 
+
+import Project.ProjectBackend.config.S3Properties;
 import Project.ProjectBackend.dto.*;
 import Project.ProjectBackend.entity.Address;
 import Project.ProjectBackend.entity.Image;
@@ -10,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,14 +26,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class MemberService {
 
+    private static final Logger logger = LoggerFactory.getLogger(MemberService.class);
+
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ItemRepository itemRepository;
-    private final PostRepository postRepository;
-    private final FavoriteRepository favoriteRepository;
-    private final LikedPostRepository likedPostRepository;
     private final ImageService imageService;
-    private static final Logger logger = LoggerFactory.getLogger(MemberService.class);
+    private final S3Properties s3Properties;
+
 
     // 회원가입
     @Transactional
@@ -61,9 +63,6 @@ public class MemberService {
                 .phoneNum(requestDto.getPhoneNum())
                 .enabled(true)
                 .build();
-
-//        // 먼저 member 저장
-//        memberRepository.save(member);
 
         // 프로필 이미지 저장 (프로필 이미지가 있을 경우)
         if (profileImage != null && !profileImage.isEmpty()) {
@@ -105,60 +104,52 @@ public class MemberService {
 
     // 회원 정보 수정
     @Transactional
-    public void updateMember(String memberId, MemberUpdateRequestDto updateRequestDto, MultipartFile profileImage) {
-        // 기존 회원 정보 조회
+    public void updateMember(String memberId, MemberUpdateRequestDto updateRequestDto, MultipartFile profileImage, boolean isImageRemoved) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 찾을 수 없습니다."));
 
-        // 현재 비밀번호 확인
+        // 비밀번호 확인
         if (!passwordEncoder.matches(updateRequestDto.getCurrentPassword(), member.getPassword())) {
             throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
         }
 
-        // 이름
-        if (updateRequestDto.getName() != null) {
-            member.setMemberName(updateRequestDto.getName());
-        }
-        // 이메일
-        if (updateRequestDto.getEmail() != null) {
-            member.setEmail(updateRequestDto.getEmail());
-        }
-        // 닉네임
-        if(updateRequestDto.getNickName() != null) {
-            member.setNickName(updateRequestDto.getNickName());
-        }
-        // 생일
-        if (updateRequestDto.getBirthDate() != null) {
-            member.setBirthDate(updateRequestDto.getBirthDate());
-        }
-        // 주소
-        if (updateRequestDto.getAddress() != null) {
-            member.setAddress(updateRequestDto.getAddress());
-        }
-        // 프로필사진
-        if (profileImage != null && !profileImage.isEmpty()) {
-            // 기존 프로필 이미지가 있는 경우 삭제
+        // 기본 필드 업데이트
+        if (updateRequestDto.getName() != null) member.setMemberName(updateRequestDto.getName());
+        if (updateRequestDto.getEmail() != null) member.setEmail(updateRequestDto.getEmail());
+        if (updateRequestDto.getNickName() != null) member.setNickName(updateRequestDto.getNickName());
+        if (updateRequestDto.getBirthDate() != null) member.setBirthDate(updateRequestDto.getBirthDate());
+        if (updateRequestDto.getAddress() != null) member.setAddress(updateRequestDto.getAddress());
+
+        // 이미지 제거 요청 + 새 업로드 없음 → 기본 이미지로 설정
+        if (isImageRemoved && (profileImage == null || profileImage.isEmpty())) {
             if (member.getProfileImage() != null) {
                 imageService.deleteImage(member.getProfileImage());
             }
-            // 새로운 프로필 이미지 저장
-            Image newProfileImage = imageService.saveImageForProfile(profileImage, member);
 
-            // Member 엔티티의 프로필 이미지 정보 업데이트
-            member.updateProfileImage(newProfileImage.getImagePath()); // URL 업데이트
-            member.setProfileImage(newProfileImage); // Image 엔티티 연관 관계 설정
+            member.setProfileImage(null);
+            member.updateProfileImage(s3Properties.getDefaultProfileUrl());
 
-            logger.info("프로필 이미지가 설정되었습니다: " + newProfileImage.getImagePath());
+            logger.info("기본 프로필 이미지로 설정됨");
         }
-        // 비밀번호
-        if (StringUtils.hasText(updateRequestDto.getNewPassword())) {
-            if (!passwordEncoder.matches(updateRequestDto.getCurrentPassword(), member.getPassword())) {
-                throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
+
+        // 새 프로필 이미지 업로드
+        else if (profileImage != null && !profileImage.isEmpty()) {
+            if (member.getProfileImage() != null) {
+                imageService.deleteImage(member.getProfileImage());
             }
+
+            Image newProfileImage = imageService.saveImageForProfile(profileImage, member);
+            member.setProfileImage(newProfileImage);
+            member.updateProfileImage(newProfileImage.getImagePath());
+
+            logger.info("새 프로필 이미지 설정됨: " + newProfileImage.getImagePath());
+        }
+
+        // 비밀번호 변경
+        if (StringUtils.hasText(updateRequestDto.getNewPassword())) {
             member.updatePassword(passwordEncoder.encode(updateRequestDto.getNewPassword()));
         }
 
-        // 업데이트된 데이터를 저장
         memberRepository.save(member);
     }
 

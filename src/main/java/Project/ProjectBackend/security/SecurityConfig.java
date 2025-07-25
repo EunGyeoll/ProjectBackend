@@ -128,8 +128,10 @@
 
 
                             // 카테고리
-                            .requestMatchers("/api/post-categories/**").permitAll()
-                            .requestMatchers("/api/item-categories/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/post-categories/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/post-categories/group/{groupName}").permitAll()
+
+                            .requestMatchers(HttpMethod.GET, "/api/item-categories/**").permitAll()
 
                             // 채팅
                             .requestMatchers(HttpMethod.GET, "/api/chat/list/{memberId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")

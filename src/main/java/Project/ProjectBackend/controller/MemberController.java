@@ -1,5 +1,6 @@
 package Project.ProjectBackend.controller;
 
+import Project.ProjectBackend.config.S3Properties;
 import Project.ProjectBackend.dto.*;
 import Project.ProjectBackend.entity.Member;
 import Project.ProjectBackend.repository.MemberRepository;
@@ -34,7 +35,7 @@ public class MemberController {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
-
+    private final S3Properties s3Properties;
 
     // 회원가입, 로그인, 회원정보 수정, 탈퇴
 
@@ -107,16 +108,37 @@ public class MemberController {
     @PatchMapping("/members/update")
     public ResponseEntity<?> updateMember(
             Authentication authentication,
-            @RequestPart(value = "memberData") @Valid MemberUpdateRequestDto updateRequestDto,
-            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
-
+            @RequestPart("memberData") @Valid MemberUpdateRequestDto updateRequestDto,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestPart(value = "removeProfileImage", required = false) String removeProfileImage
+    ) {
         String memberId = authentication.getName();
-        memberService.updateMember(memberId, updateRequestDto, profileImage);
+        boolean isRemoved = "true".equals(removeProfileImage); // 문자열로 온 true 처리
+
+        memberService.updateMember(memberId, updateRequestDto, profileImage, isRemoved);
 
         Member updatedMember = memberService.findOne(memberId);
-        return ResponseEntity.ok(new UpdateMemberResponse(updatedMember.getMemberId(), updatedMember.getMemberName()));
-    }
 
+        String imageUrl = (updatedMember.getProfileImage() != null && updatedMember.getProfileImage().getImagePath() != null)
+                ? updatedMember.getProfileImage().getImagePath()
+                : s3Properties.getDefaultProfileUrl();
+
+        return ResponseEntity.ok(
+                new MemberUpdateResponseDto(
+                        updatedMember.getMemberId(),
+                        updatedMember.getMemberName(),
+                        updatedMember.getNickName(),
+                        updatedMember.getEmail(),
+                        updatedMember.getPhoneNum(),
+                        new AddressDto(
+                                updatedMember.getAddress().getMainAddress(),
+                                updatedMember.getAddress().getDetailAddress(),
+                                updatedMember.getAddress().getZipcode()
+                        ),
+                        imageUrl
+                )
+        );
+    }
 
     // 회원정보 페이지에서 회원정보 불러오기
     @GetMapping("/members/me")

@@ -116,17 +116,6 @@ public class PostService {
 
 
     // 3. 게시글 상세(단건) 조회
-//    public PostResponseDto getPost(Long postNo) {
-//        Post post = postRepository.findById(postNo)
-//                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
-//
-//        // 조회수 증가
-//        post.increaseHitCount();
-//        postRepository.save(post);
-//
-//        return PostResponseDto.from(post); // DTO 반환
-//    }
-
     @Transactional
     public PostResponseDto getPost(Long postNo, String currentUserId) {
         Post post = postRepository.findById(postNo)
@@ -152,11 +141,16 @@ public class PostService {
         return postRepository.findAll(pageable);
     }
 
+
     // 6. 게시글 카테고리별 조회
+//    @Transactional(readOnly = true)
+//    public Slice<PostListDto> getPostsByCategory(Long categoryId, Pageable pageable) {
+//        return postRepository.findByPostCategory_CategoryId(categoryId, pageable)
+//                .map(PostListDto::from);
+//    }
     @Transactional(readOnly = true)
-    public Slice<PostListDto> getPostsByCategory(Long categoryId, Pageable pageable) {
-        return postRepository.findByPostCategory_CategoryId(categoryId, pageable)
-                .map(PostListDto::from);
+    public Slice<Post> getPostsByCategoryId(Long categoryId, Pageable pageable) {
+        return postRepository.findByPostCategory_CategoryId(categoryId, pageable);
     }
 
 

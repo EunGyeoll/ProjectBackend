@@ -76,34 +76,42 @@ public class  PostController {
     // 4. 모든 게시글 목록 조회
     @GetMapping("/posts/list")
     public ResponseEntity<Slice<PostResponseDto>> getAllPosts(
+            @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "latest") String sortOption) { // sortOption 추가
+            @RequestParam(defaultValue = "latest") String sortOption) {
 
            Sort sortOrder = sortService.createSort(sortOption, "post");
            Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-           Slice<Post> postSlice = postService.getAllPosts(pageable);
+           Slice<Post> postSlice;
+
+            if (categoryId != null) {
+                postSlice = postService.getPostsByCategoryId(categoryId, pageable);
+            } else {
+                postSlice = postService.getAllPosts(pageable);
+            }
+
            Slice<PostResponseDto> postDtoSlice = postSlice.map(PostResponseDto::from);
 
             return ResponseEntity.ok(postDtoSlice);
     }
 
     // 5. 카테고리별 게시글 목록 조회
-    @GetMapping("/posts/category/{categoryId}")
-    public ResponseEntity<Slice<PostListDto>> getPostsByCategory(
-            @PathVariable Long categoryId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "latest") String sortOption) { // ✅ sortOption 받기
-
-        Sort sortOrder = sortService.createSort(sortOption, "post");
-        Pageable pageable = PageRequest.of(page, size, sortOrder);
-
-        Slice<PostListDto> posts = postService.getPostsByCategory(categoryId, pageable);
-        return ResponseEntity.ok(posts);
-    }
-
+//    @GetMapping("/posts/category/{categoryId}")
+//    public ResponseEntity<Slice<PostListDto>> getPostsByCategory(
+//            @PathVariable Long categoryId,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size,
+//            @RequestParam(defaultValue = "latest") String sortOption) { // ✅ sortOption 받기
+//
+//        Sort sortOrder = sortService.createSort(sortOption, "post");
+//        Pageable pageable = PageRequest.of(page, size, sortOrder);
+//
+//        Slice<PostListDto> posts = postService.getPostsByCategory(categoryId, pageable);
+//        return ResponseEntity.ok(posts);
+//    }
+//
 
     // 6. 게시글 특정 멤버별 조회
     @GetMapping("/posts/writer/{memberId}")

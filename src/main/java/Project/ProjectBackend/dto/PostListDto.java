@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class PostListDto {
-    private Long postNo;
+    private Long postId;
     private String title;
     private String writerId;
     private LocalDateTime createdDate;
@@ -21,7 +21,7 @@ public class PostListDto {
 
     public static PostListDto from(Post post) {
         return PostListDto.builder()
-                .postNo(post.getPostId())
+                .postId(post.getPostId())
                 .title(post.getTitle())
                 .writerId(post.getWriter().getMemberId())
                 .createdDate(post.getPostDate())

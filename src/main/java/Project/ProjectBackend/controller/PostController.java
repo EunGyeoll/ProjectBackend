@@ -31,7 +31,7 @@ public class  PostController {
     private final SortService sortService;
 
 
-    // 1. 모든 게시글 목록 조회
+    // 모든 게시글 목록 조회
     // 카테고리 이름(category)이 전달되면 해당 카테고리에 속한 게시글만 조회
     @GetMapping("/posts/list")
     public ResponseEntity<Slice<PostResponseDto>> getAllPosts(
@@ -55,7 +55,9 @@ public class  PostController {
 
         return ResponseEntity.ok(postDtoSlice);
     }
-    // 1. 게시글 등록
+
+
+    // 게시글 등록
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @PostMapping("/posts")
     public ResponseEntity<PostResponseDto> createPost(@RequestBody @Valid PostRequestDto postRequestDto) {
@@ -65,7 +67,7 @@ public class  PostController {
         return ResponseEntity.ok(PostResponseDto.from(createdPost));
     }
 
-    // 2. 게시글 수정
+    // 게시글 수정
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @PutMapping("/posts/{postId}")
     public ResponseEntity<PostResponseDto> updatePost(
@@ -81,7 +83,7 @@ public class  PostController {
     }
 
 
-    // 3. 게시글 상세(단건) 조회
+    // 게시글 상세(단건) 조회
     @GetMapping("/posts/{postId}")
     public ResponseEntity<PostResponseDto> getPost(@PathVariable Long postId) {
         Member currentUser = authService.getCurrentUserOrNull();
@@ -99,7 +101,7 @@ public class  PostController {
 
 
 
-    // 6. 게시글 특정 멤버별 조회
+    // 게시글 특정 멤버별 조회
     @GetMapping("/posts/writer/{memberId}")
     public ResponseEntity<Slice<PostResponseDto>> getPostsBySeller(
             @PathVariable String memberId,
@@ -118,7 +120,7 @@ public class  PostController {
     }
 
 
-    // 7. 게시글 삭제
+    // 게시글 삭제
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/posts/{postNo}")
     public ResponseEntity<?> deletePost(@PathVariable Long postNo) {

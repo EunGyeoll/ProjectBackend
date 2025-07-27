@@ -14,7 +14,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Slice<Post> findByWriter_MemberId(String memberId, Pageable pageable);
     Slice<Post> findByWriter_MemberIdOrderByPostDateDesc(String memberId, Pageable pageable);
     // 카테고리별 글 조회 (Slice 반환)
-    Slice<Post> findByPostCategory_CategoryId(Long categoryId, Pageable pageable);
+    Slice<Post> findByPostCategory_CategoryName(String categoryName, Pageable pageable);
 
     // 검색
     @Query("SELECT p FROM Post p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +

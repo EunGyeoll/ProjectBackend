@@ -30,6 +30,7 @@
             private final SortService sortService;
 
             // 1. 모든 아이템 목록 조회
+            // 카테고리 이름(category)이 전달되면 해당 카테고리에 속한 게시글만 조회
             @GetMapping("/items/list")
             public ResponseEntity<Slice<ItemResponseDto>> getAllItems(
                     @RequestParam(required = false) String category,

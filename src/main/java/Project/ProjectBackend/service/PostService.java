@@ -143,14 +143,9 @@ public class PostService {
 
 
     // 6. 게시글 카테고리별 조회
-//    @Transactional(readOnly = true)
-//    public Slice<PostListDto> getPostsByCategory(Long categoryId, Pageable pageable) {
-//        return postRepository.findByPostCategory_CategoryId(categoryId, pageable)
-//                .map(PostListDto::from);
-//    }
     @Transactional(readOnly = true)
-    public Slice<Post> getPostsByCategoryId(Long categoryId, Pageable pageable) {
-        return postRepository.findByPostCategory_CategoryId(categoryId, pageable);
+    public Slice<Post> getPostsByCategoryName(String categoryName, Pageable pageable) {
+        return postRepository.findByPostCategory_CategoryName(categoryName, pageable);
     }
 
 

@@ -22,4 +22,4 @@ Spring Boot, Spring Data JPA, MySQL을 활용하여 설계한 중고 거래 플�
 
   
 ## ERD
-![Image](https://github.com/user-attachments/assets/507d32aa-95e7-4e6d-bb3e-284ed045221b)
+ERD 추후 넣기

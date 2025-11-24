@@ -15,9 +15,14 @@ public interface MemberRepository extends JpaRepository<Member, String> {
 
     Optional<Member> findByEmail(String email);
     Optional<Member> findByMemberId(String memberId);
-//    findByMemberId처럼 특정 컬럼을 기반으로 검색하는 메서드는 명시적으로 정의해야 함.
+
+    // 닉네임 조회
+    @Query("SELECT m.nickName FROM Member m WHERE m.memberId = :memberId")
+    String findNicknameByMemberId(@Param("memberId") String memberId);
+
+    //프로필 이미지 url 조회
     @Query("SELECT m. profileImageUrl FROM Member m WHERE m.memberId=:memberId")
-    String findProfileImageUrl(String memberId);
+    String findProfileImageUrl(@Param("memberId") String memberId);
 
     // 아이디 중복확인
     boolean existsByMemberId(String memberId);

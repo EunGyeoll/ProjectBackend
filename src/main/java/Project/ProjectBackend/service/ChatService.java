@@ -34,29 +34,47 @@ public class ChatService {
     public Slice<ChatListDto> getMemberChatList(String memberId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Slice<ChatListDto> chatList = chatMessageRepository.findLatestMessages(memberId, pageable)
-                .map(message -> {
-                    String chatPartner = message.getSender().equals(memberId)
+        Slice<Message> chatList = chatMessageRepository.findLatestMessages(memberId, pageable);
+
+        List<ChatListDto> dtoList = new ArrayList<>();
+
+        Set<String> uniqueChatPartners = new HashSet<>();
+
+        for (Message message : chatList) {
+
+            String chatPartner =
+                    message.getSender().equals(memberId)
                             ? message.getReceiver()
                             : message.getSender();
 
-                    String profileImageUrl = memberRepository.findProfileImageUrl(chatPartner);
-                    return new ChatListDto(chatPartner, message.getContent(), message.getTimestamp(), profileImageUrl);
-                });
+            // 중복 방지
+            if (!uniqueChatPartners.add(chatPartner)) continue;
 
-        // 🔥 중복 제거 (HashSet 사용)
-        Set<String> uniqueChatPartners = new HashSet<>();
-        List<ChatListDto> uniqueChatList = new ArrayList<>();
+            // 상대방 닉네임 조회
+            String nickname = memberRepository.findNicknameByMemberId(chatPartner);
 
-        for (ChatListDto chat : chatList) {
-            if (!uniqueChatPartners.contains(chat.getChatPartner())) {
-                uniqueChatPartners.add(chat.getChatPartner());
-                uniqueChatList.add(chat);
-            }
+            // 상대방 프로필 이미지
+            String profileImageUrl = memberRepository.findProfileImageUrl(chatPartner);
+
+            // 미읽은 메시지 수 구하기 (나중에 구현)
+            long unreadCount = 0L;
+
+            // DTO 생성
+            ChatListDto dto = new ChatListDto(
+                    chatPartner,
+                    nickname,
+                    message.getContent(),
+                    message.getTimestamp(),
+                    profileImageUrl,
+                    unreadCount
+            );
+
+            dtoList.add(dto);
         }
 
-        return new SliceImpl<>(uniqueChatList, pageable, chatList.hasNext());
+        return new SliceImpl<>(dtoList, pageable, chatList.hasNext());
     }
+
 
     // 특정 채팅방(roomId) 내 1:1 채팅 내역 조회
     public Slice<ChatHistoryDto> getMessagesByRoomId(String roomId, int page, int size) {
@@ -71,7 +89,7 @@ public class ChatService {
     }
 
 
-    //  특정 사용자간의 1:1 채팅 내역 조회
+    //  두 사람간의 1:1 채팅 내역 조회
     public Slice<ChatHistoryDto> getMessagesBetweenUsers(String sender, String receiver, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
@@ -84,18 +102,29 @@ public class ChatService {
                 ));
     }
 
-    // (관리자용) 모든 채팅 목록 조회
+    // 관리자: 모든 채팅 목록 조회
     public Slice<ChatListDto> getAllChatList(int page, int size) {
+
         Pageable pageable = PageRequest.of(page, size);
+
         return chatMessageRepository.findAllChats(pageable)
                 .map(message -> {
+
                     String chatPartner = message.getReceiver();
                     String profileImageUrl = memberRepository.findProfileImageUrl(chatPartner);
-                    return new ChatListDto(chatPartner, message.getContent(), message.getTimestamp(), profileImageUrl);
+
+                    return new ChatListDto(
+                            chatPartner,
+                            null,                       // 관리자에서는 닉네임 불필요
+                            message.getContent(),
+                            message.getTimestamp(),
+                            profileImageUrl,
+                            0L                          // 읽음처리는 나중에
+                    );
                 });
     }
 
-    // (관리자용) 특정 사용자의 모든 채팅 내역 조회
+    //  관리자: 특정 유저의 메시지 전체 조회
     public Slice<ChatHistoryDto> getUserChatHistory(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return chatMessageRepository.findLatestMessages(userId, pageable)

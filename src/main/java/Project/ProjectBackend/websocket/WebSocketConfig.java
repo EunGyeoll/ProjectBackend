@@ -19,9 +19,7 @@
             // stomp 접속 주소 url = ws://localhost:8080/ws/chat 즉, 프로토콜이 http가 아니다.
             registry.addEndpoint("/ws/chat")
                     .setAllowedOrigins("*")
-                    .addInterceptors(new WebSocketHandshakeInterceptor(jwtTokenProvider)); // 🔥 JWT 인터셉터 추가
-
-
+                    .addInterceptors(new WebSocketHandshakeInterceptor(jwtTokenProvider));
         }
 
         @Override

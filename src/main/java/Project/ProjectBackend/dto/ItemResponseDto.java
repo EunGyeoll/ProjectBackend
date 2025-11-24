@@ -24,6 +24,7 @@ public class ItemResponseDto {
     private String description;
     private Integer stockQuantity;
     private String sellerId;
+    private String sellerNickname;
     private String profileImageUrl;
     private Long categoryId;
     private String categoryName;
@@ -44,21 +45,23 @@ public class ItemResponseDto {
         // 대표 이미지 경로 설정
         String representativeImagePath = imagePaths.isEmpty() ? null : imagePaths.get(0);
 
-        return new ItemResponseDto(
-                item.getItemId(),
-                item.getItemName(),
-                item.getPrice(),
-                item.getDescription(),
-                item.getStockQuantity(),
-                seller != null ? seller.getMemberId() : null,
-                seller != null ? seller.getProfileImageUrl(): null,
-                category != null ? category.getCategoryId() : null,
-                category != null ? category.getCategoryName() : null,
-                item.getItemDate(),
-                representativeImagePath,
-                imagePaths
-        );
+        return ItemResponseDto.builder()
+                .itemId(item.getItemId())
+                .itemName(item.getItemName())
+                .price(item.getPrice())
+                .description(item.getDescription())
+                .stockQuantity(item.getStockQuantity())
+                .sellerId(seller != null ? seller.getMemberId() : null)
+                .sellerNickname(seller != null ? seller.getNickName() : null)
+                .profileImageUrl(seller != null ? seller.getProfileImageUrl() : null)
+                .categoryId(category != null ? category.getCategoryId() : null)
+                .categoryName(category != null ? category.getCategoryName() : null)
+                .itemDate(item.getItemDate())
+                .representativeImagePath(representativeImagePath)
+                .imagePaths(imagePaths)
+                .build();
     }
+
 
 
     // 목록 조회용 메소드 (대표 이미지만 포함)

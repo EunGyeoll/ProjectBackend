@@ -7,6 +7,7 @@ import Project.ProjectBackend.entity.Message;
 import Project.ProjectBackend.service.AuthService;
 import Project.ProjectBackend.service.ChatService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -22,8 +23,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.domain.Slice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @Slf4j
 public class ChatController {
@@ -73,10 +76,15 @@ public class ChatController {
 
         // 현재 로그인한 사용자 확인
         Member currentUser = authService.getCurrentUser();
+        log.info("currentUser = {}", currentUser != null ? currentUser.getMemberId() : "null");
+
+        if (currentUser == null) {
+            throw new RuntimeException("인증 정보 없음 (currentUser == null)");
+        }
 
         // 본인 또는 관리자만 접근 가능
         if (!currentUser.getMemberId().equals(memberId) && !currentUser.getRole().equals("ROLE_ADMIN")) {
-            throw new SecurityException("본인만 채팅 목록을 조회할 수 있습니다.");
+           throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인만 채팅 목록을 조회할 수 있습니다.");
         }
 
         log.info("{} 사용자가 자신의 채팅 목록 조회", currentUser.getMemberId());

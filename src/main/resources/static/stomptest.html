@@ -128,26 +128,28 @@
     let memberId = null;
     let currentReceiver = null;
 
+
     function login() {
+        console.log("HOST:", location.host);
+        console.log("LOGIN URL:", new URL("/api/members/login", location.origin).href);
+
         const memberIdInput = document.getElementById("memberId").value;
         const passwordInput = document.getElementById("password").value;
 
-        fetch("http://localhost:8080/members/login", {
+        fetch("/api/members/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ memberId: memberIdInput, password: passwordInput })
         })
-            .then(response => response.json())
+            .then(async (response) => {
+                const text = await response.text();
+                let data; try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+                if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+                return data;
+            })
             .then(data => {
                 jwtToken = data.token;
                 memberId = memberIdInput;
-
-                if (jwtToken) {
-                    console.log("✅ 로그인 성공! JWT 토큰:", jwtToken);
-                } else {
-                    console.error("⛔ JWT 토큰이 없습니다.");
-                }
-
                 document.getElementById("status").innerText = "🔑 로그인 성공!";
                 loadChatRooms();
             })
@@ -162,7 +164,7 @@
             return;
         }
 
-        fetch("http://localhost:8080/members/logout", {
+        fetch("/api/members/logout", {
             method: "POST",
             headers: { "Authorization": `Bearer ${jwtToken}` }
         })
@@ -170,7 +172,7 @@
                 if (response.ok) {
                     console.log("✅ 로그아웃 성공!");
                     jwtToken = null;
-                    userId = null;
+                    memberId = null;
                     document.getElementById("status").innerText = "🔑 로그아웃됨";
                     alert("로그아웃 완료!");
                 } else {
@@ -186,8 +188,18 @@
             return;
         }
 
-        const socket = new WebSocket(`ws://localhost:8080/ws/chat?token=${jwtToken}`);
+        const socket = new WebSocket(`ws://${location.host}/ws/chat?token=${jwtToken}`);
         stompClient = Stomp.over(socket);
+
+        // stompClient.debug = function (str) {
+        //     console.log(str);
+        // };
+
+         if (stompClient) {
+               stompClient.debug = function (str) {
+                     console.log(str);
+                   };
+             }
 
         stompClient.connect({}, function (frame) {
             console.log("✅ STOMP 연결 성공: " + frame);
@@ -216,7 +228,7 @@
             return;
         }
 
-        fetch(`http://localhost:8080/chat/list/${memberId}?page=0&size=10`, {
+        fetch(`/api/chat/list/${memberId}?page=0&size=10`, {
             method: "GET",
             headers: { "Authorization": `Bearer ${jwtToken}` }
         })
@@ -238,7 +250,7 @@
         currentReceiver = receiverId;
         document.getElementById("receiverId").value = receiverId; // 입력창에 자동 설정
 
-        fetch(`http://localhost:8080/chat/history/${memberId}/${receiverId}?page=0&size=20`, {
+        fetch(`/api/chat/history/${memberId}/${receiverId}?page=0&size=20`, {
             method: "GET",
             headers: { "Authorization": `Bearer ${jwtToken}` }
         })
@@ -287,9 +299,9 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    stompClient.debug = function (str) {
-        console.log(str);
-    };
+    // stompClient.debug = function (str) {
+    //     console.log(str);
+    // };
 </script>
 </body>
 </html>

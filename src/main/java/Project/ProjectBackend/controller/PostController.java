@@ -34,7 +34,7 @@ public class  PostController {
     // 모든 게시글 목록 조회
     // 카테고리 이름(category)이 전달되면 해당 카테고리에 속한 게시글만 조회
     @GetMapping("/posts/list")
-    public ResponseEntity<Slice<PostResponseDto>> getAllPosts(
+    public ResponseEntity<Slice<PostListDto>> getAllPosts(
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -51,7 +51,7 @@ public class  PostController {
             postSlice = postService.getAllPosts(pageable);
         }
 
-        Slice<PostResponseDto> postDtoSlice = postSlice.map(PostResponseDto::from);
+        Slice<PostListDto> postDtoSlice = postSlice.map(PostListDto::from);
 
         return ResponseEntity.ok(postDtoSlice);
     }
@@ -103,7 +103,7 @@ public class  PostController {
 
     // 게시글 특정 멤버별 조회
     @GetMapping("/posts/writer/{memberId}")
-    public ResponseEntity<Slice<PostResponseDto>> getPostsBySeller(
+    public ResponseEntity<Slice<PostListDto>> getPostsBySeller(
             @PathVariable String memberId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -113,7 +113,7 @@ public class  PostController {
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
         Slice<Post> postSlice = postService.getAllPosts(pageable);
-        Slice<PostResponseDto> postDtoSlice = postSlice.map(PostResponseDto::from);
+        Slice<PostListDto> postDtoSlice = postSlice.map(PostListDto::from);
 
         return ResponseEntity.ok(postDtoSlice);
 

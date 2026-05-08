@@ -65,7 +65,7 @@ public class Member {
     @Setter
     private Image profileImage;
 
-    @Column
+    @Column(name = "profile_image_url")
     @Setter
     private String profileImageUrl;
 

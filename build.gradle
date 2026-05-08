@@ -37,7 +37,7 @@ dependencies {
 	implementation 'commons-io:commons-io:2.18.0'
 
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.mysql:mysql-connector-j'
+	implementation 'com.mysql:mysql-connector-j'
 //	runtimeOnly 'com.h2database:h2'
 	annotationProcessor 'org.projectlombok:lombok'
 

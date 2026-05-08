@@ -1,9 +1,12 @@
-# 중고 거래 플랫폼 REST API
+# 커뮤니티 MODI - REST API
 **개인 프로젝트**
 
 ## 💡 프로젝트 소개
 
 Spring Boot, Spring Data JPA, MySQL을 활용하여 설계한 중고 거래 플랫폼 REST API입니다. 
+
+<img width="1522" height="853" alt="Image" src="https://github.com/user-attachments/assets/c7025f03-a58b-4628-8943-dd9fd16b0084" />
+
 
 ## ✏️ 주요 기능
 
@@ -19,4 +22,4 @@ Spring Boot, Spring Data JPA, MySQL을 활용하여 설계한 중고 거래 플�
 
   
 ## ERD
-![Image](https://github.com/user-attachments/assets/507d32aa-95e7-4e6d-bb3e-284ed045221b)
+ERD 추후 넣기
